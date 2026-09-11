@@ -9,7 +9,7 @@ The original dataset documentation is limited. Several descriptions below are th
 | Field | Preliminary interpretation | Type | Proposed use | Notes / limitations |
 |---|---|---|---|---|
 | `Unnamed: 0` | Row/index field | Integer | Exclude | Administrative index; no predictive meaning. |
-| `msisdn` | Mobile subscriber identifier / phone-related customer ID | Identifier | Exclude as predictor | Useful only for grouping repeat customers and train/test checks. Direct identifier or quasi-identifier. |
+| `msisdn` | Mobile subscriber identifier / phone-related customer ID | Identifier | Exclude as predictor | Customer identifier. Retain only for grouping, deduplication and train/test split checks. Exclude from the model feature set and from scoring inputs. |
 | `aon` | Age on network / customer tenure | Numeric | Candidate | Likely useful tenure measure. Check units and implausible values before use. |
 | `daily_decr30` | 30-day decrease/activity-derived measure | Numeric | Candidate, verify | Exact construction is not clearly documented. Use only if meaning and scoring-time availability are confirmed. |
 | `daily_decr90` | 90-day decrease/activity-derived measure | Numeric | Candidate, verify | Exact construction is not clearly documented. |
