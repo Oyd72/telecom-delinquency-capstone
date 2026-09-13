@@ -1,6 +1,6 @@
 # Data cleaning and treatment policy
 
-This policy defines how the Module 3 pipeline will treat ambiguous, invalid, contaminated, and unusual values in the Delinquency Telecom Dataset. It is designed to keep the raw data intact, make every transformation reproducible, and distinguish hard semantic errors from statistical unusualness.
+This policy defines how the Module 3 pipeline will treat ambiguous, invalid, contaminated, and unusual values in the Delinquency Telecom Dataset. It is designed to keep the raw data intact and make every transformation reproducible.
 
 ## Evidence hierarchy
 
@@ -14,8 +14,8 @@ This policy defines how the Module 3 pipeline will treat ambiguous, invalid, con
 
 - `data/raw/` is immutable. Source values are never overwritten.
 - Cleaning takes place in `data/interim/` and preserves an audit trail of every flagged or changed value.
-- A questionable cell is normally flagged and converted to missing in the cleaned analytical copy rather than causing the entire row to be deleted.
-- Rows are removed only where there is a defensible record-level reason, such as an exact duplicate or an unusable target/date record. Any removal must be logged.
+- A questionable cell is normally flagged and converted to missing in the cleaned analytical copy instead of causing the entire row to be deleted.
+- Rows are removed only where there is a defensible record-level reason (such as an exact duplicate or an unusable target/date record). Any record or value removed or altered during pipeline execution must be recorded automatically in the pipeline audit log, including the applicable rule and treatment. Git history separately records changes to the code, configuration, and governance decisions that define those rules.
 - Model-ready data in `data/processed/` contain only approved predictors and derived fields.
 - Arbitrary winsorisation or clipping is not used. Monetary heavy tails are retained unless semantic, cross-field, or longitudinal evidence supports a stronger conclusion.
 - Dataset-specific contamination boundaries are not presented as universal business limits.
@@ -174,4 +174,4 @@ Great Expectations will implement:
 - diagnostic expectations for distributions, categories, and cross-field consistency;
 - observed contamination rates as monitoring evidence, not as universal business thresholds.
 
-The cleaning policy is therefore the bridge between the data dictionary and executable validation. Any material change to this policy or to the dictionary must be recorded in `docs/data_dictionary_changelog.md` and Git history.
+The cleaning policy is the bridge between the data dictionary and executable validation. Any material change to this policy or to the dictionary must be recorded in `docs/data_dictionary_changelog.md` and Git history.
