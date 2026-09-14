@@ -2,6 +2,53 @@
 
 This document defines the predictors, control fields, target, and exclusions used to create the first model-ready dataset for Module 3. It is deliberately conservative: a field is included only where its meaning is sufficiently supported and there is no unresolved identifier, redundancy, or obvious point-in-time concern.
 
+The current feature set should not be interpreted as the result of a single conventional statistical feature-selection algorithm. It represents **Stage 1: governance and point-in-time eligibility screening**. Formal statistical feature selection will follow as a separate analytical stage using established feature-selection methods.
+
+## Feature-selection methodology
+
+The project uses a staged approach so that predictive usefulness is assessed only after a feature has passed basic semantic, temporal, data-quality, and governance checks.
+
+### Stage 1: governance and point-in-time eligibility screening
+
+A field is eligible for the first model-ready dataset only where all of the following can be defended:
+
+- its source-supported meaning is sufficiently clear;
+- it can plausibly be available at the time of the current credit decision;
+- any known data-quality problems have a documented and reproducible treatment;
+- it does not function primarily as an identifier, constant field, redundant derived measure, or unresolved encoding;
+- its use does not create an obvious target- or point-in-time leakage risk.
+
+This stage is a precondition for statistical feature selection rather than a substitute for it. A statistically predictive variable will not be retained if its meaning, timing, or governance position cannot be defended.
+
+### Stage 2: statistical relevance and redundancy screening
+
+The eligible predictors will later be assessed with established **filter methods**, including appropriate measures such as correlation structure, low-variance checks, mutual information, and univariate predictive screening where suitable for the variable type and target.
+
+The purpose of this stage is to identify weak, redundant, or highly overlapping predictors before more computationally intensive selection methods are used.
+
+### Stage 3: embedded and wrapper methods
+
+The project will then compare established model-based selection approaches. These may include:
+
+- L1-regularised logistic regression as an embedded feature-selection method;
+- recursive feature elimination (RFE), likely using logistic regression or another suitable baseline estimator.
+
+These methods will be applied within the training data only so that validation and test information do not influence feature selection.
+
+### Stage 4: nonlinear and model-agnostic confirmation
+
+For nonlinear models, feature contribution will be compared using tree-based importance and model-agnostic methods such as permutation importance and SHAP.
+
+No single importance method will be treated as authoritative. The objective is to compare whether important variables remain stable across model families and evaluation methods.
+
+### Selection principle
+
+The final feature set will therefore be based on converging evidence rather than on one algorithm. The intended sequence is:
+
+**semantic and governance eligibility → point-in-time eligibility → data-quality eligibility → filter methods → embedded/wrapper methods → nonlinear/model-agnostic confirmation → stability across validation splits**
+
+A feature may be statistically strong and still be rejected if its timing or meaning cannot be defended. Conversely, a semantically valid feature may remain available for modelling even if it is later removed because it adds little predictive value.
+
 ## Modelling population
 
 The ordinary labelled modelling population is restricted to records dated through **23 July 2016**. All later records remain outside this population because the 58,825 later observations in the source data are labelled successful, which would make them unsuitable for ordinary supervised model development without further explanation.
@@ -21,7 +68,7 @@ The original `label` field is not carried into the processed modelling table bec
 
 ## Approved predictors
 
-The first model-ready dataset contains the following predictors:
+The first model-ready dataset contains the following predictors after Stage 1 eligibility screening:
 
 ### Network tenure
 
@@ -86,4 +133,4 @@ Values converted to missing during cleaning remain missing in the model-ready da
 
 ## Status
 
-This is the approved feature set for the **first Module 3 model-ready dataset**. It can be revised only where additional source evidence or reproducible analysis supports a change. Material revisions should be reflected in the data dictionary/change log and Git history.
+This is the approved feature set for the **first Module 3 model-ready dataset** after Stage 1 governance and point-in-time eligibility screening. It is not yet the final statistically selected feature set. Later stages will compare established filter, embedded, wrapper, and model-agnostic methods, with material revisions reflected in the data dictionary/change log and Git history.
