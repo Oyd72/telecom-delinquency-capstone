@@ -16,7 +16,9 @@ import pandas as pd
 import great_expectations as gx
 
 
+# Exact source-column order observed in sample_data_intw.csv.
 EXPECTED_COLUMNS = [
+    "label",
     "msisdn",
     "aon",
     "daily_decr30",
@@ -52,7 +54,6 @@ EXPECTED_COLUMNS = [
     "payback90",
     "pcircle",
     "pdate",
-    "label",
 ]
 
 COUNT_FIELDS = [
