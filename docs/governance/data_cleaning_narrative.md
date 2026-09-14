@@ -36,7 +36,7 @@ The same caution applies to several balance-like and expenditure variables. Nega
 
 This distinction is deliberate: statistical extremeness alone is not treated as proof of invalidity.
 
-## First cleaning pass
+## Initial cleaning pass
 
 The first executable cleaning stage implemented only the high-confidence rules already supported by the data dictionary and cleaning policy.
 
@@ -48,7 +48,7 @@ The pipeline converted the following invalid values to missing in the interim an
 - 1,047 fractional `cnt_da_rech30` values;
 - 1,047 fractional `cnt_loans90` values.
 
-This produced 4,962 changed cells in total. No rows were removed, and the cleaned interim dataset therefore retained all 209,593 records.
+This produced 4,962 changed cells in total. No rows were removed, and the interim dataset retained all 209,593 records.
 
 The cleaning run produced three outputs:
 
@@ -58,25 +58,41 @@ The cleaning run produced three outputs:
 
 The raw file was not overwritten.
 
+## Extended cleaning pass
+
+After the initial rules had been validated, the cleaning script was extended to implement the remaining high-confidence treatments already documented in the policy.
+
+The separated contamination regimes identified in the upper tails of `aon`, `last_rech_date_ma`, `last_rech_date_da`, `fr_ma_rech30`, and `fr_da_rech30` were converted to missing in the interim copy. These treatments are based on clear discontinuities in this dataset, including large empty gaps and implausible jumps, and are not presented as universal business thresholds.
+
+The script also removed the one exact duplicate row identified during profiling. Repeated customers and repeated transaction dates were not treated as duplicates unless the complete record was identical.
+
+The extended cleaning run produced:
+
+- 11,239 changed cells;
+- 1 exact duplicate row removed;
+- 209,592 output rows.
+
+The audit log records every altered value and the duplicate-removal event, while the aggregate summary records the counts by rule. The immutable raw dataset remains unchanged.
+
 ## Validation after cleaning
 
-A separate Great Expectations validation was then run against the interim cleaned dataset. The cleaned-data validation is intentionally different from the raw validation because values that were converted to missing are expected at this stage.
+A separate Great Expectations validation was run against the interim cleaned dataset. The cleaned-data validation is intentionally different from the raw validation because values converted to missing are expected at this stage.
 
-The interim validation confirmed that the dataset still has the expected structure, row count, valid target values, and required structural fields. It also confirmed that the retained values in the cleaned duration fields are non-negative.
+The interim validation confirmed that the dataset still has the expected structure, valid target values, and required structural fields. It also confirmed that retained values in the cleaned duration fields are non-negative.
 
-The count fields were checked separately for mathematical integer semantics so that missing values introduced by cleaning would not create false failures simply because pandas reloads the column as floating point. No retained fractional values remained after cleaning, and the overall cleaned-data validation passed.
+The count fields were checked separately for mathematical integer semantics so that missing values introduced by cleaning would not create false failures simply because pandas reloads the column as floating point. No retained fractional values remained after the extended cleaning pass, and the overall cleaned-data validation passed.
 
-For example, `cnt_loans90` retained 208,546 non-missing valid values, exactly 1,047 fewer than the raw 209,593 records, matching the number of fractional values removed from analytical use.
+For example, `cnt_loans90` retained 208,545 non-missing valid values in the 209,592-row interim dataset, exactly reflecting the 1,047 fractional values removed from analytical use together with the single duplicate-row removal.
 
-## What has deliberately not been done yet
+## What remains unresolved
 
-The first cleaning pass is not the final modelling dataset. Several decisions remain intentionally separate from this stage.
+The current interim dataset has passed the agreed cleaning-stage validation, but it is not yet the final modelling dataset.
 
-The pipeline has not yet applied the dataset-specific high-confidence contamination regimes identified in the upper tails of `aon`, `last_rech_date_ma`, `last_rech_date_da`, `fr_ma_rech30`, and `fr_da_rech30`. Those regimes require explicit treatment because their thresholds are empirical properties of this dataset rather than universal business rules.
-
-The one exact duplicate row has also not yet been removed in the first cleaning pass. Likewise, unresolved fields such as the `fr_*` measures and `medianamnt_loans30/90` remain excluded from the approved modelling feature set rather than being reinterpreted.
+The `fr_*` fields remain excluded from the approved model feature set because their exact construction is unresolved. `medianamnt_loans30` and `medianamnt_loans90` are likewise retained only for provenance and analysis because their encoding cannot yet be reconciled confidently with the documented meaning.
 
 `payback30` and `payback90` remain excluded pending point-in-time leakage review, and the `maxamnt_loans30/90` fields are treated as consistency checks rather than independent predictors.
+
+Further steps will therefore focus on approved feature selection, privacy treatment, derived customer-history features, and preparation of the model-ready dataset rather than additional arbitrary cleaning.
 
 ## Relationship to the other governance artefacts
 
@@ -84,6 +100,6 @@ This narrative explains the observed sequence of work on this specific dataset.
 
 `docs/governance/data_cleaning_policy.md` defines the standing rules and treatment principles that the pipeline is expected to follow. It answers questions such as what counts as a hard-invalid value, when values may be converted to missing, and how audit logging should work.
 
-This narrative answers a different question: what did those rules reveal when applied to the telecom delinquency data, what was changed in the first cleaning pass, and what remains unresolved.
+This narrative answers a different question: what did those rules reveal when applied to the telecom delinquency data, what changed during cleaning, how the result was validated, and what remains unresolved.
 
 `docs/data_dictionary.md` provides the current operational meaning and modelling status of each field, while `docs/data_dictionary_changelog.md` explains how those interpretations changed over time. Git history remains the authoritative technical record of the exact code and document changes.
