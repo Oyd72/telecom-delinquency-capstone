@@ -16,7 +16,6 @@ import pandas as pd
 import great_expectations as gx
 
 
-# Exact source-column order observed in sample_data_intw.csv.
 EXPECTED_COLUMNS = [
     "label",
     "msisdn",
@@ -63,6 +62,17 @@ COUNT_FIELDS = [
     "cnt_da_rech90",
     "cnt_loans30",
     "cnt_loans90",
+]
+
+INTEGER_TYPES = [
+    "int64",
+    "int32",
+    "int16",
+    "int8",
+    "uint64",
+    "uint32",
+    "uint16",
+    "uint8",
 ]
 
 NONNEGATIVE_AMOUNT_FIELDS = [
@@ -155,6 +165,17 @@ def build_suite(context: gx.data_context.AbstractDataContext):
             gx.expectations.ExpectColumnValuesToBeBetween(
                 column=field,
                 min_value=0,
+                severity="critical",
+            )
+        )
+        # Count fields are non-null by policy. With pandas CSV ingestion, a genuine
+        # integer-valued count column therefore resolves to an integer dtype. A float
+        # dtype here is a blocking signal that at least one value violates count
+        # semantics (as observed for cnt_da_rech30 and cnt_loans90).
+        suite.add_expectation(
+            gx.expectations.ExpectColumnValuesToBeInTypeList(
+                column=field,
+                type_list=INTEGER_TYPES,
                 severity="critical",
             )
         )
