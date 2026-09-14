@@ -114,7 +114,9 @@ def build_model_dataset(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
         raise ValueError(f"Missing required input columns: {missing_columns}")
 
     working = df.copy(deep=True)
-    working["pdate"] = pd.to_datetime(working["pdate"], errors="coerce")
+    working["pdate"] = pd.to_datetime(
+        working["pdate"], dayfirst=True, errors="coerce"
+    )
     if working["pdate"].isna().any():
         raise ValueError("Interim dataset contains unparseable pdate values.")
 
