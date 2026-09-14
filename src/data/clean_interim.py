@@ -1,12 +1,21 @@
 """Create an interim cleaned copy of the telecom delinquency dataset.
 
-This script implements only the currently agreed first-stage cleaning rules:
+This script implements the currently agreed interim cleaning rules:
 - negative duration values in `aon`, `last_rech_date_ma`, and `last_rech_date_da`
   are flagged and converted to missing;
+- values in the separated high-confidence contamination regime (>= 500,000)
+  are flagged and converted to missing for `aon`, `last_rech_date_ma`,
+  `last_rech_date_da`, `fr_ma_rech30`, and `fr_da_rech30`;
 - fractional values in the genuine count fields `cnt_da_rech30` and
   `cnt_loans90` are flagged and converted to missing;
 - valid integer-like count values are retained;
-- every changed value is written automatically to a companion audit log.
+- one copy of an exact duplicate row is removed;
+- every changed value or removed row is written automatically to a companion
+  audit log without recording `msisdn`.
+
+The 500,000 boundary is dataset-specific. It reflects the large empirical gap
+between the ordinary value range and a separate implausible numeric regime; it
+is not presented as a universal business maximum.
 
 The raw source file is read only and is never overwritten.
 """
@@ -24,6 +33,14 @@ import pandas as pd
 
 DURATION_FIELDS = ["aon", "last_rech_date_ma", "last_rech_date_da"]
 FRACTIONAL_COUNT_FIELDS = ["cnt_da_rech30", "cnt_loans90"]
+SEPARATED_CONTAMINATION_FIELDS = [
+    "aon",
+    "last_rech_date_ma",
+    "last_rech_date_da",
+    "fr_ma_rech30",
+    "fr_da_rech30",
+]
+SEPARATED_CONTAMINATION_MIN = 500_000
 
 
 def parse_args() -> argparse.Namespace:
@@ -87,10 +104,34 @@ def _audit_rows(
     return rows
 
 
+def _audit_duplicate_rows(
+    df: pd.DataFrame,
+    mask: pd.Series,
+    run_id: str,
+    run_timestamp: str,
+) -> list[dict]:
+    """Create audit entries for removed duplicate rows without copying row contents."""
+    rows: list[dict] = []
+    for idx in df.index[mask]:
+        rows.append(
+            {
+                "run_id": run_id,
+                "run_timestamp_utc": run_timestamp,
+                "source_row_number": int(idx) + 1,
+                "field": "__row__",
+                "original_value": "<exact duplicate row>",
+                "rule_triggered": "exact_duplicate",
+                "treatment_applied": "remove_duplicate_copy",
+            }
+        )
+    return rows
+
+
 def clean_dataframe(df: pd.DataFrame, run_id: str, run_timestamp: str):
     """Return an interim cleaned copy, audit table, and aggregate summary."""
     cleaned = df.copy(deep=True)
     audit_records: list[dict] = []
+    changed_cells = 0
     summary: dict[str, object] = {
         "run_id": run_id,
         "run_timestamp_utc": run_timestamp,
@@ -114,7 +155,27 @@ def clean_dataframe(df: pd.DataFrame, run_id: str, run_timestamp: str):
             )
         )
         cleaned.loc[mask, field] = np.nan
+        changed_cells += count
         summary["rules"][f"{field}:negative_duration"] = count
+
+    for field in SEPARATED_CONTAMINATION_FIELDS:
+        numeric = pd.to_numeric(cleaned[field], errors="coerce")
+        mask = numeric >= SEPARATED_CONTAMINATION_MIN
+        count = int(mask.sum())
+        audit_records.extend(
+            _audit_rows(
+                cleaned,
+                mask,
+                field,
+                rule_id="separated_contamination_regime",
+                treatment="set_to_missing",
+                run_id=run_id,
+                run_timestamp=run_timestamp,
+            )
+        )
+        cleaned.loc[mask, field] = np.nan
+        changed_cells += count
+        summary["rules"][f"{field}:separated_contamination_regime"] = count
 
     for field in FRACTIONAL_COUNT_FIELDS:
         mask = _is_fractional(cleaned[field])
@@ -131,11 +192,27 @@ def clean_dataframe(df: pd.DataFrame, run_id: str, run_timestamp: str):
             )
         )
         cleaned.loc[mask, field] = np.nan
+        changed_cells += count
 
         # After removing fractional contamination, preserve valid count semantics
         # using pandas' nullable integer type so missing values remain explicit.
         cleaned[field] = pd.to_numeric(cleaned[field], errors="coerce").round().astype("Int64")
         summary["rules"][f"{field}:fractional_count"] = count
+
+    # An exact duplicate is a record-level issue rather than an unusual repeat-customer
+    # event. Keep the first occurrence and remove later exact copies only.
+    duplicate_mask = cleaned.duplicated(keep="first")
+    duplicate_count = int(duplicate_mask.sum())
+    audit_records.extend(
+        _audit_duplicate_rows(
+            cleaned,
+            duplicate_mask,
+            run_id=run_id,
+            run_timestamp=run_timestamp,
+        )
+    )
+    cleaned = cleaned.loc[~duplicate_mask].copy()
+    summary["rules"]["exact_duplicate:removed"] = duplicate_count
 
     audit = pd.DataFrame(
         audit_records,
@@ -150,9 +227,9 @@ def clean_dataframe(df: pd.DataFrame, run_id: str, run_timestamp: str):
         ],
     )
 
-    summary["changed_cells"] = int(len(audit))
+    summary["changed_cells"] = int(changed_cells)
     summary["output_rows"] = int(len(cleaned))
-    summary["rows_removed"] = 0
+    summary["rows_removed"] = duplicate_count
 
     return cleaned, audit, summary
 
