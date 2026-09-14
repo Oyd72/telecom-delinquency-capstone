@@ -30,11 +30,19 @@ The project uses historical telecom microcredit data for academic and demonstrat
   - `reports/tables/` – generated analytical and validation tables
 - `docs/` – documentation, data dictionary, governance, and methodology material
   - `docs/governance/` – governance, privacy, bias, and control documentation
+  - `docs/governance/data_cleaning_policy.md` – standing cleaning rules and treatment principles used by the pipeline
+  - `docs/governance/data_cleaning_narrative.md` – dataset-specific account of what the validation and cleaning steps found, changed, and left unresolved
   - `docs/data_dictionary.md` – current operational data dictionary
   - `docs/data_dictionary_changelog.md` – human-readable audit trail of material dictionary changes
 - `great_expectations/` – Great Expectations project/configuration and validation artefacts
 - `.github/workflows/` – workflow automation
 - `Dockerfile` – reproducible container build for the pipeline
+
+## Data cleaning documentation
+
+The cleaning policy and the cleaning narrative serve different purposes. The policy defines the rules the pipeline is expected to follow, including how hard-invalid values, contamination, missing values, and audit logging are treated. The narrative describes what happened when those rules were applied to this dataset: the issues found in the raw data, the transformations made in the first cleaning pass, the validation outcome, and the questions that remain open.
+
+Together with the data dictionary and its change log, these documents provide both the operational rules and the reasoning trail behind the evolving treatment of the data.
 
 ## Planned delivery
 
