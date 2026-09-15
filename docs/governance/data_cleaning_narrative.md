@@ -96,7 +96,7 @@ The first model-ready dataset therefore uses records through 23 July 2016 only. 
 
 ## End-to-end pipeline orchestration
 
-The cleaning and validation stages are now connected through a Prefect orchestration flow in `src/pipeline/prefect_etl.py`. The flow reuses the existing scripts rather than duplicating their business logic and runs them in a fixed sequence:
+The cleaning and validation stages are connected through a Prefect orchestration flow in `src/pipeline/prefect_etl.py`. The flow reuses the existing scripts rather than duplicating their business logic and runs them in a fixed sequence:
 
 `raw validation → cleaning → interim validation → model-ready transformation → processed validation`
 
@@ -110,13 +110,15 @@ This distinction between **diagnostic raw validation** and **blocking downstream
 
 ## Unit-test verification
 
-The transformation logic is now covered by a focused Pytest suite under `tests/unit/`. The first verified run on 15 September 2026 executed five tests and all five passed.
+The transformation logic is covered by a focused Pytest suite under `tests/unit/`. The initial verified run executed five tests successfully. After privacy audit logging was added, the suite expanded to seven tests and all seven passed on 15 September 2026.
 
 The cleaning tests confirm that integer-like values are distinguished correctly from fractional contamination, the agreed high-confidence cleaning rules are applied, exact duplicates are removed, and the cleaning audit output does not expose `msisdn`.
 
 The model-dataset tests confirm that the modelling cutoff is enforced, the delinquency target is derived correctly from the source label, `msisdn` and the source `label` are absent from the processed output, prior-transaction features use strictly earlier dates only, and invalid source labels are rejected.
 
-These unit tests complement Great Expectations rather than replace it. Great Expectations validates datasets at stage boundaries; Pytest verifies that the transformation functions themselves behave as intended on controlled examples.
+The privacy-specific tests confirm that structured JSONL audit events are written without identifier values and that attempts to log forbidden personal-data keys are rejected.
+
+These unit tests complement Great Expectations rather than replace it. Great Expectations validates datasets at stage boundaries; Pytest verifies that transformation and privacy-control functions behave as intended on controlled examples.
 
 ## Containerization verification
 
@@ -128,21 +130,33 @@ The image was then run with the local `data` and `reports` directories mounted i
 
 This verifies that the pipeline is reproducible outside the developer's local Python virtual environment. The container uses its own isolated Python runtime while reading the mounted raw data and writing outputs back to the project directories.
 
+## Privacy treatment and audit logging verification
+
+A separate privacy audit layer is now integrated into the Prefect flow. It records pipeline-level processing events in append-only JSON Lines at `reports/privacy/privacy_audit_log.jsonl`.
+
+The verified run on 15 September 2026 recorded the expected sequence: pipeline start, raw-data access, diagnostic raw-validation findings, cleaning completion, interim validation, model-ready identifier minimisation, processed validation, and pipeline completion.
+
+The log records the field name `msisdn` only as control metadata in the identifier-minimisation event. It contains no raw identifier value and confirms `identifier_retained_in_output: false`. The processed dataset also omits the source `label` after the analytical target has been derived.
+
+The privacy audit is intentionally separate from the cell-level cleaning audit. The cleaning audit explains which values were changed under cleaning rules; the privacy audit explains when datasets were accessed or transformed and records whether privacy-relevant controls succeeded.
+
 ## What remains unresolved
 
-The current interim dataset has passed the agreed cleaning-stage validation, the full raw-to-processed ETL path has been orchestrated and verified, the first unit-test suite has passed, and the same ETL path has now been built and executed successfully inside Docker. Several modelling decisions remain intentionally cautious.
+The current interim dataset has passed the agreed cleaning-stage validation, the full raw-to-processed ETL path has been orchestrated and verified, the unit-test suite has passed, the same ETL path has been built and executed successfully inside Docker, and privacy treatment/audit logging has been verified. Several modelling decisions remain intentionally cautious.
 
 The `fr_*` fields remain excluded from the approved model feature set because their exact construction is unresolved. `medianamnt_loans30` and `medianamnt_loans90` are likewise retained only for provenance and analysis because their encoding cannot yet be reconciled confidently with the documented meaning.
 
 `payback30` and `payback90` remain excluded pending point-in-time leakage review, and the `maxamnt_loans30/90` fields are treated as consistency checks rather than independent predictors. Loan count and amount fields also remain outside the first approved predictor set until it can be established whether their historical-window construction excludes the current transaction.
 
-The remaining Module 3 engineering work therefore focuses on privacy controls, bias checks, governance documentation, and presentation artefacts rather than further basic pipeline reproducibility work.
+The remaining Module 3 work therefore focuses on representation/bias checks, the broader governance framework, and presentation artefacts rather than further basic pipeline reproducibility work.
 
 ## Relationship to the other governance artefacts
 
 This narrative explains the observed sequence of work on this specific dataset.
 
 `docs/governance/data_cleaning_policy.md` defines the standing rules and treatment principles that the pipeline is expected to follow. It answers questions such as what counts as a hard-invalid value, when values may be converted to missing, and how audit logging should work.
+
+`docs/governance/data_anonymization_plan.md` defines identifier minimisation and the privacy-audit design, including the distinction between temporary use of `msisdn` for chronology and its removal before model-ready output.
 
 This narrative answers a different question: what did those rules reveal when applied to the telecom delinquency data, what changed during cleaning, how the result was validated, and how the cleaned population was transitioned into a defensible modelling population.
 
