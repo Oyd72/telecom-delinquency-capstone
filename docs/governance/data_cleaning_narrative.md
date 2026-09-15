@@ -108,15 +108,25 @@ This treatment does not weaken downstream controls. Interim validation and proce
 
 This distinction between **diagnostic raw validation** and **blocking downstream validation** is intentional. It allows the pipeline to preserve evidence of source-data defects while preventing invalid cleaned or model-ready outputs from progressing silently.
 
+## Unit-test verification
+
+The transformation logic is now covered by a focused Pytest suite under `tests/unit/`. The first verified run on 15 September 2026 executed five tests and all five passed.
+
+The cleaning tests confirm that integer-like values are distinguished correctly from fractional contamination, the agreed high-confidence cleaning rules are applied, exact duplicates are removed, and the cleaning audit output does not expose `msisdn`.
+
+The model-dataset tests confirm that the modelling cutoff is enforced, the delinquency target is derived correctly from the source label, `msisdn` and the source `label` are absent from the processed output, prior-transaction features use strictly earlier dates only, and invalid source labels are rejected.
+
+These unit tests complement Great Expectations rather than replace it. Great Expectations validates datasets at stage boundaries; Pytest verifies that the transformation functions themselves behave as intended on controlled examples.
+
 ## What remains unresolved
 
-The current interim dataset has passed the agreed cleaning-stage validation, and the full raw-to-processed ETL path has now been orchestrated and verified. Several modelling decisions remain intentionally cautious.
+The current interim dataset has passed the agreed cleaning-stage validation, the full raw-to-processed ETL path has been orchestrated and verified, and the first unit-test suite has passed. Several modelling decisions remain intentionally cautious.
 
 The `fr_*` fields remain excluded from the approved model feature set because their exact construction is unresolved. `medianamnt_loans30` and `medianamnt_loans90` are likewise retained only for provenance and analysis because their encoding cannot yet be reconciled confidently with the documented meaning.
 
 `payback30` and `payback90` remain excluded pending point-in-time leakage review, and the `maxamnt_loans30/90` fields are treated as consistency checks rather than independent predictors. Loan count and amount fields also remain outside the first approved predictor set until it can be established whether their historical-window construction excludes the current transaction.
 
-The next engineering steps focus on unit tests, containerization, privacy controls, bias checks, and the remaining Module 3 reproducibility requirements rather than additional arbitrary cleaning.
+The next engineering steps focus on containerization, privacy controls, bias checks, and the remaining Module 3 reproducibility requirements rather than additional arbitrary cleaning.
 
 ## Relationship to the other governance artefacts
 
