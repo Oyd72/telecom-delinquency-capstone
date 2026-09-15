@@ -194,6 +194,22 @@ No universal calibrator is frozen at this stage. Platt scaling is the leading ca
 
 The next calibration question is therefore not simply “Platt or isotonic?” but whether calibration should adapt to recent prevalence and temporal regime, and how stable that adaptation is under rolling evaluation. The project should test rolling calibration windows and recent-period prevalence before a final calibrated production specification is declared.
 
+## Rolling calibration stability
+
+To investigate whether the previous result was driven by the arbitrary seven-day calibration window, Platt scaling was retested using nested recent calibration windows of 3, 5, 7, and 10 days. Within each evaluation fold, the underlying XGBoost model was held fixed: it was trained once using only data before the longest calibration window. The different recent windows then recalibrated the same base-model probabilities. This isolates the effect of calibration-window length from changes in the underlying training sample.
+
+Across the twelve fold/window comparisons, Platt scaling improved expected calibration error in 11 of 12 cases and reduced the absolute calibration-in-the-large gap in 10 of 12 cases. Brier score improved in two of the three evaluation folds for every window length. The average calibration benefit was therefore reasonably robust, but not universal.
+
+Window length did not produce one globally optimal setting. In both July evaluation periods, the best Brier/ECE combination came from a three-day calibration window. In late June, the ten-day window was preferable. The recent calibration-window delinquency rate was also closer to the subsequent evaluation rate as the window length increased on average, but this did not translate into a simple monotonic improvement in calibration performance.
+
+The prevalence diagnostics do not justify an automatic regime rule. The Spearman relationship between absolute prevalence mismatch and the Platt-minus-raw Brier change was only about -0.30, and about -0.36 for ECE. The stronger relationship was between the signed prevalence gap and the direction of the Platt probability shift (about -0.71), which is consistent with the idea that the calibrator reacts to recent outcome prevalence. With only three evaluation folds, however, these correlations are descriptive and cannot establish a stable operating rule.
+
+### Rolling calibration decision
+
+Platt scaling remains the preferred post-hoc calibration method because it improves calibration substantially in most tested windows while preserving ranking. However, the project does not adopt a fixed universal calibration-window length, nor a prevalence-triggered adaptive rule, from this dataset alone.
+
+The evidence suggests that shorter recent windows may respond more effectively to changing July conditions, while a longer window can be preferable in a more stable period such as late June. This is treated as an operating and monitoring issue rather than as a solved hyperparameter choice. In a production setting, calibration quality and recent outcome prevalence should be monitored over time, with the calibration policy revalidated on a longer history before automated window selection is introduced.
+
 ## Narrative status
 
 This file is the running narrative for model-development decisions. It should be updated whenever a material modelling choice changes because of new evidence. Exact code changes remain traceable through Git history, while generated analytical outputs remain under `reports/`.
