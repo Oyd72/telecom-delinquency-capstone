@@ -108,6 +108,41 @@ The left-censored history variable `is_repeat_customer` illustrates why sensitiv
 
 No final feature set is declared after Stage 3. The principal evidence so far favours `daily_decr30` and `cnt_ma_rech90` as the most stable candidates across filter, embedded, and wrapper methods, while several additional recharge and account-behaviour variables remain plausible. The next stage should test nonlinear and model-agnostic importance before any irreversible feature removal is made.
 
+## Stage 4: nonlinear and model-agnostic confirmation
+
+Stage 4 used forward-chaining XGBoost models so that each evaluation period was predicted only from earlier data. Feature importance was measured on the next chronological period with both permutation importance and SHAP. The process was repeated with all 20 features and with the two left-censored customer-history features removed.
+
+Predictive performance remained materially useful across all three forward evaluations. With all features, ROC-AUC was about 0.896 for late June, 0.823 for early July, and 0.832 for late July. Average precision was about 0.704, 0.502, and 0.580 respectively. Performance therefore declined after the earliest evaluation period but remained substantially above random ranking in the later periods.
+
+Removing `prior_tx_count` and `is_repeat_customer` did not reduce performance in a meaningful way. ROC-AUC changed from approximately 0.896 to 0.896 in late June, 0.823 to 0.825 in early July, and 0.832 to 0.832 in late July. Average precision was likewise effectively unchanged or slightly better without the history variables. This supports excluding those fields from the primary production-oriented candidate set: their left-censoring risk is real, while their incremental predictive contribution appears negligible.
+
+Across permutation importance and SHAP, `cnt_ma_rech90` was the most consistently strong nonlinear predictor. It ranked first or near first under both approaches and remained the top feature after the history variables were removed. `last_rech_date_ma` also showed strong and comparatively stable importance, ranking second by mean permutation importance and remaining near the top by SHAP.
+
+`daily_decr30` remained a major predictor, particularly under SHAP, where its average absolute contribution was the largest of the candidate variables. Its permutation rank was less stable, which is consistent with the earlier finding that this feature has strong calendar-position structure and is correlated with related account-behaviour variables. This divergence is interpreted as evidence that the variable is important but shares predictive information with other features rather than as a reason to remove it.
+
+`aon` and `sumamnt_ma_rech90` remained credible across the nonlinear methods and also had support from earlier stages. `rental30`, `last_rech_amt_ma`, and `medianmarechprebal90` showed secondary but persistent nonlinear importance. `daily_decr90` had relatively weak permutation importance but stronger SHAP importance, again suggesting shared or interacting information with `daily_decr30` rather than a clean independent effect.
+
+The forward-chaining sensitivity path without history variables produced a very similar top-importance structure. This is important because it shows that the principal model signal is not dependent on the potentially biased repeat-customer fields.
+
+## Consolidated candidate feature position after Stages 2–4
+
+The project does not treat any single feature-selection method as authoritative. The current recommendation is based on convergence across filter methods, linear embedded/wrapper methods, nonlinear importance, temporal stability, and governance constraints.
+
+A **core candidate set** is supported most consistently by the combined evidence:
+
+- `cnt_ma_rech90` — strong and stable across filter, RFE, permutation importance, and SHAP;
+- `daily_decr30` — strong across all stages, but requiring explicit monitoring for calendar-position sensitivity;
+- `last_rech_date_ma` — moderate filter evidence but strong nonlinear importance and stable practical interpretation;
+- `sumamnt_ma_rech90` — strong filter evidence and persistent nonlinear importance;
+- `aon` — consistent model-based contribution across linear and nonlinear methods;
+- `last_rech_amt_ma` — stable secondary contribution across methods.
+
+Several **secondary candidates** remain reasonable and should be tested in model-comparison runs rather than removed immediately: `daily_decr90`, `sumamnt_ma_rech30`, `medianamnt_ma_rech30`, `medianmarechprebal90`, `rental30`, and `cnt_ma_rech30`. Their evidence is less uniform, often because of correlation with stronger variables or calendar-position effects.
+
+`prior_tx_count` and `is_repeat_customer` should remain outside the primary production-oriented feature set unless a future dataset provides reliable pre-observation customer history. Their exclusion is supported both by governance reasoning and by the Stage 4 sensitivity result showing essentially unchanged predictive performance without them.
+
+This consolidated position is still a candidate-set recommendation rather than an irreversible deletion decision. The next modelling step should compare predictive performance, calibration, and stability for a full approved model versus reduced core/secondary feature variants before declaring the final model specification.
+
 ## Narrative status
 
 This file is the running narrative for model-development decisions. It should be updated whenever a material modelling choice changes because of new evidence. Exact code changes remain traceable through Git history, while generated analytical outputs remain under `reports/`.
