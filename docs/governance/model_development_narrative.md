@@ -210,6 +210,12 @@ Platt scaling remains the preferred post-hoc calibration method because it impro
 
 The evidence suggests that shorter recent windows may respond more effectively to changing July conditions, while a longer window can be preferable in a more stable period such as late June. This is treated as an operating and monitoring issue rather than as a solved hyperparameter choice. In a production setting, calibration quality and recent outcome prevalence should be monitored over time, with the calibration policy revalidated on a longer history before automated window selection is introduced.
 
+## Pipeline integration status
+
+The preferred modelling population is now produced through the verified Prefect ETL flow in `src/pipeline/prefect_etl.py`. The orchestration runs raw validation, cleaning, interim validation, model-ready transformation, and processed-data validation in sequence. Raw validation is diagnostic because known source defects are expected before cleaning, while interim and processed validations remain blocking controls. The end-to-end flow was tested locally on 15 September 2026 and completed successfully.
+
+This orchestration does not change any modelling conclusion recorded above. Its significance is reproducibility: the model-ready population on which the feature-selection and modelling work depends can now be regenerated through one controlled sequence with explicit validation gates.
+
 ## Narrative status
 
-This file is the running narrative for model-development decisions. It should be updated whenever a material modelling choice changes because of new evidence. Exact code changes remain traceable through Git history, while generated analytical outputs remain under `reports/`.
+This file is the running narrative for model-development decisions. It should be updated whenever a material modelling choice changes because of new evidence. Exact code changes remain traceable through Git history, while generated analytical outputs remain under `reports/`. Pipeline execution history and cleaning-stage behaviour are documented in `docs/governance/data_cleaning_narrative.md`.
