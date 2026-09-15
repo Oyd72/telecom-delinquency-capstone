@@ -7,3 +7,4 @@ shap
 jupyter
 matplotlib
 great_expectations==1.23.0
+prefect
