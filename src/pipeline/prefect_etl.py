@@ -1,18 +1,19 @@
 """Prefect orchestration flow for the Module 3 telecom delinquency ETL pipeline.
 
-The flow reuses the existing command-line scripts rather than duplicating business
+The flow reuses existing command-line scripts rather than duplicating business
 logic. It orchestrates the sequence:
 
-raw validation -> cleaning -> interim validation -> model-ready transformation -> processed validation
+raw validation -> cleaning -> interim validation -> model-ready transformation -> processed validation -> representation diagnostics
 
-The raw source is treated as immutable. Raw validation is diagnostic: known quality
-failures are expected before cleaning and therefore do not stop the flow when a
-validation report is successfully produced. Interim and processed validation are hard
-gates and do stop the flow on failure.
+Raw validation is diagnostic because known source defects are expected before
+cleaning. Interim and processed validation are hard gates. Representation checks
+are diagnostic: the dataset has no usable demographic protected characteristics,
+so the pipeline reports observable operational slices without making unsupported
+fairness claims.
 
-A privacy-safe JSONL audit log records pipeline access, transformations, validation
-outcomes, identifier minimisation, and overall run status without storing raw personal
-identifiers or row-level personal data.
+A privacy-safe JSONL audit log records pipeline access, transformations,
+validation outcomes, identifier minimisation, representation diagnostics, and run
+status without storing raw personal identifiers or row-level personal data.
 """
 
 from __future__ import annotations
@@ -111,10 +112,7 @@ def validate_raw(raw_path: str, run_id: str) -> str:
         event_type="validation",
         stage="raw_validation",
         status="passed" if success else "diagnostic_findings",
-        details={
-            "report": "reports/tables/gx_raw_validation.json",
-            "blocking": False,
-        },
+        details={"report": "reports/tables/gx_raw_validation.json", "blocking": False},
     )
     return raw_path
 
@@ -124,11 +122,7 @@ def clean_raw(raw_path: str, interim_path: str, run_id: str) -> str:
     logger = get_run_logger()
     logger.info("Creating cleaned interim dataset %s", interim_path)
     _run_python_script(
-        "src/data/clean_interim.py",
-        "--data",
-        raw_path,
-        "--output",
-        interim_path,
+        "src/data/clean_interim.py", "--data", raw_path, "--output", interim_path
     )
     append_privacy_event(
         run_id=run_id,
@@ -149,11 +143,7 @@ def clean_raw(raw_path: str, interim_path: str, run_id: str) -> str:
 def validate_interim(interim_path: str, run_id: str) -> str:
     logger = get_run_logger()
     logger.info("Running interim-data validation on %s", interim_path)
-    _run_python_script(
-        "src/data_quality/gx_interim_validation.py",
-        "--data",
-        interim_path,
-    )
+    _run_python_script("src/data_quality/gx_interim_validation.py", "--data", interim_path)
     append_privacy_event(
         run_id=run_id,
         event_type="validation",
@@ -201,11 +191,7 @@ def build_model_ready(interim_path: str, processed_path: str, run_id: str) -> st
 def validate_processed(processed_path: str, run_id: str) -> str:
     logger = get_run_logger()
     logger.info("Running processed-data validation on %s", processed_path)
-    _run_python_script(
-        "src/data_quality/gx_processed_validation.py",
-        "--data",
-        processed_path,
-    )
+    _run_python_script("src/data_quality/gx_processed_validation.py", "--data", processed_path)
     append_privacy_event(
         run_id=run_id,
         event_type="validation",
@@ -218,6 +204,33 @@ def validate_processed(processed_path: str, run_id: str) -> str:
         },
     )
     logger.info("Processed-data validation passed.")
+    return processed_path
+
+
+@task(name="run representation diagnostics", retries=0)
+def representation_diagnostics(processed_path: str, interim_path: str, run_id: str) -> str:
+    logger = get_run_logger()
+    logger.info("Running representation and bias diagnostics on %s", processed_path)
+    _run_python_script(
+        "src/monitoring/representation_bias_checks.py",
+        "--data",
+        processed_path,
+        "--interim",
+        interim_path,
+    )
+    append_privacy_event(
+        run_id=run_id,
+        event_type="representation_diagnostic",
+        stage="representation_bias_checks",
+        status="completed",
+        details={
+            "dataset_path": processed_path,
+            "report": "reports/tables/representation_bias_summary.json",
+            "protected_characteristics_available": False,
+            "blocking": False,
+        },
+    )
+    logger.info("Representation diagnostics completed.")
     return processed_path
 
 
@@ -243,14 +256,15 @@ def telecom_delinquency_etl(
         interim_checked = validate_interim(interim, run_id)
         processed = build_model_ready(interim_checked, processed_path, run_id)
         processed_checked = validate_processed(processed, run_id)
+        diagnosed = representation_diagnostics(processed_checked, interim_checked, run_id)
         append_privacy_event(
             run_id=run_id,
             event_type="pipeline_run",
             stage="pipeline",
             status="completed",
-            details={"processed_output": processed_checked},
+            details={"processed_output": diagnosed},
         )
-        return processed_checked
+        return diagnosed
     except Exception as exc:
         append_privacy_event(
             run_id=run_id,
