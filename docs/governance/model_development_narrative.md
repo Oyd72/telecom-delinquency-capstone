@@ -216,6 +216,14 @@ The preferred modelling population is now produced through the verified Prefect 
 
 This orchestration does not change any modelling conclusion recorded above. Its significance is reproducibility: the model-ready population on which the feature-selection and modelling work depends can now be regenerated through one controlled sequence with explicit validation gates.
 
+## Unit-test status
+
+The core transformation logic supporting the modelling population is now covered by Pytest unit tests. The first verified local run on 15 September 2026 executed five tests and all passed.
+
+The model-dataset tests verify the modelling cutoff, delinquency-target construction, removal of `msisdn` and the source `label`, strictly earlier-date logic for derived customer-history features, and rejection of invalid source labels. The cleaning tests separately verify the high-confidence treatment rules and audit behaviour on which the processed dataset depends.
+
+This does not change the model specification or the analytical conclusions above. It strengthens reproducibility by checking that critical data transformations behave consistently on controlled examples before the modelling population is regenerated.
+
 ## Narrative status
 
 This file is the running narrative for model-development decisions. It should be updated whenever a material modelling choice changes because of new evidence. Exact code changes remain traceable through Git history, while generated analytical outputs remain under `reports/`. Pipeline execution history and cleaning-stage behaviour are documented in `docs/governance/data_cleaning_narrative.md`.
