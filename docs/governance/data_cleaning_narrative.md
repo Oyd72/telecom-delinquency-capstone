@@ -118,15 +118,25 @@ The model-dataset tests confirm that the modelling cutoff is enforced, the delin
 
 These unit tests complement Great Expectations rather than replace it. Great Expectations validates datasets at stage boundaries; Pytest verifies that the transformation functions themselves behave as intended on controlled examples.
 
+## Containerization verification
+
+The pipeline is containerized with a root-level `Dockerfile`, a focused `requirements-pipeline.txt`, and `.dockerignore`. The image uses `python:3.13-slim`, installs only the dependencies needed for the ETL path, copies the pipeline code and report structure, and starts the Prefect flow automatically.
+
+The Docker image was built successfully on 15 September 2026 and tagged locally as `telecom-delinquency-pipeline:latest`.
+
+The image was then run with the local `data` and `reports` directories mounted into the container. The complete Prefect sequence executed inside Docker: raw validation produced the expected diagnostic warning, cleaning completed, interim validation passed, the model-ready dataset was regenerated, processed validation passed, and the flow finished in a `Completed` state.
+
+This verifies that the pipeline is reproducible outside the developer's local Python virtual environment. The container uses its own isolated Python runtime while reading the mounted raw data and writing outputs back to the project directories.
+
 ## What remains unresolved
 
-The current interim dataset has passed the agreed cleaning-stage validation, the full raw-to-processed ETL path has been orchestrated and verified, and the first unit-test suite has passed. Several modelling decisions remain intentionally cautious.
+The current interim dataset has passed the agreed cleaning-stage validation, the full raw-to-processed ETL path has been orchestrated and verified, the first unit-test suite has passed, and the same ETL path has now been built and executed successfully inside Docker. Several modelling decisions remain intentionally cautious.
 
 The `fr_*` fields remain excluded from the approved model feature set because their exact construction is unresolved. `medianamnt_loans30` and `medianamnt_loans90` are likewise retained only for provenance and analysis because their encoding cannot yet be reconciled confidently with the documented meaning.
 
 `payback30` and `payback90` remain excluded pending point-in-time leakage review, and the `maxamnt_loans30/90` fields are treated as consistency checks rather than independent predictors. Loan count and amount fields also remain outside the first approved predictor set until it can be established whether their historical-window construction excludes the current transaction.
 
-The next engineering steps focus on containerization, privacy controls, bias checks, and the remaining Module 3 reproducibility requirements rather than additional arbitrary cleaning.
+The remaining Module 3 engineering work therefore focuses on privacy controls, bias checks, governance documentation, and presentation artefacts rather than further basic pipeline reproducibility work.
 
 ## Relationship to the other governance artefacts
 
