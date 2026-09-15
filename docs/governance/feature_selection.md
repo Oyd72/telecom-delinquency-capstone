@@ -1,8 +1,6 @@
 # Approved feature set for the first model-ready dataset
 
-This document defines the predictors, control fields, target, and exclusions used to create the first model-ready dataset for Module 3. It is deliberately conservative: a field is included only where its meaning is sufficiently supported and there is no unresolved identifier, redundancy, or obvious point-in-time concern.
-
-The current feature set should not be interpreted as the result of a single conventional statistical feature-selection algorithm. It represents **Stage 1: governance and point-in-time eligibility screening**. Formal statistical feature selection will follow as a separate analytical stage using established feature-selection methods.
+This document defines the predictors, control fields, target, and exclusions used to create the first model-ready dataset for Module 3. It is deliberately conservative: a field is included only where its meaning is sufficiently supported. The current feature set should not be interpreted as the result of a single conventional statistical feature-selection algorithm. It represents **Stage 1: governance and point-in-time eligibility screening**. Formal statistical feature selection will follow as a separate analytical stage using established feature-selection methods.
 
 ## Feature-selection methodology
 
@@ -37,7 +35,7 @@ These methods will be applied within the training data only so that validation a
 
 ### Stage 4: nonlinear and model-agnostic confirmation
 
-For nonlinear models, feature contribution will be compared using tree-based importance and model-agnostic methods such as permutation importance and SHAP.
+For nonlinear models, feature contribution will be compared using tree-based importance and model-agnostic methods (such as permutation importance and SHAP).
 
 No single importance method will be treated as authoritative. The objective is to compare whether important variables remain stable across model families and evaluation methods.
 
@@ -47,7 +45,7 @@ The final feature set will therefore be based on converging evidence rather than
 
 **semantic and governance eligibility → point-in-time eligibility → data-quality eligibility → filter methods → embedded/wrapper methods → nonlinear/model-agnostic confirmation → stability across validation splits**
 
-A feature may be statistically strong and still be rejected if its timing or meaning cannot be defended. Conversely, a semantically valid feature may remain available for modelling even if it is later removed because it adds little predictive value.
+A feature may be statistically strong and still be rejected if its timing or meaning cannot be defended. On the contrary, a semantically valid feature may remain available for modelling even if it is later removed because it adds little predictive value.
 
 ## Modelling population
 
