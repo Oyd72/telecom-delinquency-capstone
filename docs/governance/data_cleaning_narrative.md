@@ -84,15 +84,25 @@ The count fields were checked separately for mathematical integer semantics so t
 
 For example, `cnt_loans90` retained 208,545 non-missing valid values in the 209,592-row interim dataset, exactly reflecting the 1,047 fractional values removed from analytical use together with the single duplicate-row removal.
 
+## Transition to the modelling population
+
+After cleaning, the dataset is not used for supervised modelling as one undifferentiated time period. Records dated after **23 July 2016** form a distinct block of 58,825 observations in which the target is **100% successful repayment**.
+
+This discontinuity is not treated as ordinary class imbalance. The available documentation does not establish why the later period contains no delinquent outcomes, so the project does not assume that its sampling or label-generation process is comparable with the earlier period. Possible explanations could include a change in data extraction, labelling maturity, business process, or sampling, but none of these is established by the source documentation.
+
+For that reason, the later observations are excluded from the ordinary labelled modelling population. Including them in supervised training would artificially increase the proportion of successful cases and could distort learned relationships between predictors and delinquency. They are retained for lineage and may later support separate diagnostic analysis, such as checking distributional shift or covariate drift, but they are not used as a conventional labelled validation set.
+
+The first model-ready dataset therefore uses records through 23 July 2016 only. After removal of the single exact duplicate, this produces 150,767 modelling rows, including 26,162 delinquent cases.
+
 ## What remains unresolved
 
-The current interim dataset has passed the agreed cleaning-stage validation, but it is not yet the final modelling dataset.
+The current interim dataset has passed the agreed cleaning-stage validation, but several modelling decisions remain intentionally cautious.
 
 The `fr_*` fields remain excluded from the approved model feature set because their exact construction is unresolved. `medianamnt_loans30` and `medianamnt_loans90` are likewise retained only for provenance and analysis because their encoding cannot yet be reconciled confidently with the documented meaning.
 
-`payback30` and `payback90` remain excluded pending point-in-time leakage review, and the `maxamnt_loans30/90` fields are treated as consistency checks rather than independent predictors.
+`payback30` and `payback90` remain excluded pending point-in-time leakage review, and the `maxamnt_loans30/90` fields are treated as consistency checks rather than independent predictors. Loan count and amount fields also remain outside the first approved predictor set until it can be established whether their historical-window construction excludes the current transaction.
 
-Further steps will therefore focus on approved feature selection, privacy treatment, derived customer-history features, and preparation of the model-ready dataset rather than additional arbitrary cleaning.
+Further steps therefore focus on the approved model-ready feature set, statistical feature-selection experiments, privacy treatment, and end-to-end pipeline orchestration rather than additional arbitrary cleaning.
 
 ## Relationship to the other governance artefacts
 
@@ -100,6 +110,6 @@ This narrative explains the observed sequence of work on this specific dataset.
 
 `docs/governance/data_cleaning_policy.md` defines the standing rules and treatment principles that the pipeline is expected to follow. It answers questions such as what counts as a hard-invalid value, when values may be converted to missing, and how audit logging should work.
 
-This narrative answers a different question: what did those rules reveal when applied to the telecom delinquency data, what changed during cleaning, how the result was validated, and what remains unresolved.
+This narrative answers a different question: what did those rules reveal when applied to the telecom delinquency data, what changed during cleaning, how the result was validated, and how the cleaned population was transitioned into a defensible modelling population.
 
 `docs/data_dictionary.md` provides the current operational meaning and modelling status of each field, while `docs/data_dictionary_changelog.md` explains how those interpretations changed over time. Git history remains the authoritative technical record of the exact code and document changes.
