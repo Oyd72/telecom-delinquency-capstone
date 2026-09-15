@@ -172,7 +172,27 @@ The current preferred modelling specification is the **12-feature core-plus-seco
 
 This choice is an interpretation based on parsimony and converging evidence rather than a statistically proven optimum. The 12-feature set sacrifices very little discrimination or top-risk capture relative to the full 18-feature model while reducing complexity and avoiding six weaker predictors. The 18-feature model remains a useful benchmark/challenger rather than being discarded.
 
-The next modelling step should focus on calibration under the temporal validation design. Any calibrator must be fitted only on past data relative to the period being evaluated; calibration should not be estimated on the same future fold used for final performance reporting.
+## Temporal calibration experiment
+
+The preferred 12-feature specification was then tested with a leakage-safe post-hoc calibration design. For each evaluation period, the base XGBoost model was trained on earlier data, the calibrator was fitted on the immediately preceding seven-day window, and performance was measured only on the subsequent evaluation period. This preserved chronology and prevented the evaluation fold from influencing either model fitting or calibration fitting.
+
+Three probability outputs were compared: the uncalibrated model, Platt scaling, and isotonic calibration.
+
+On average, both calibration methods improved probability calibration relative to the uncalibrated model. Mean expected calibration error fell from about 0.114 for the uncalibrated model to about 0.067 with Platt scaling and about 0.068 with isotonic calibration. Mean absolute calibration-in-the-large error similarly fell from about 0.107 to about 0.059 with Platt and about 0.062 with isotonic calibration. Brier score also improved from about 0.128 uncalibrated to about 0.118 with either calibration method.
+
+Platt scaling preserved ROC-AUC, average precision, and top-20% capture exactly because it applies a monotonic logistic transformation to the model score. Isotonic calibration produced very similar calibration performance but slightly reduced average ROC-AUC and average precision, reflecting the fact that its stepwise mapping can introduce tied scores and modestly alter ranking metrics.
+
+The aggregate averages, however, conceal an important period-specific result. In late July, both calibration methods corrected the large overprediction problem very effectively. The uncalibrated mean predicted risk was about 36.8% against an observed delinquency rate of 20.8%, with ECE about 0.160. Platt scaling reduced mean predicted risk to about 18.2% and ECE to about 0.029; isotonic produced a very similar result.
+
+In early July, the direction was different. The uncalibrated model already underpredicted risk, with mean predicted risk about 8.8% against an observed delinquency rate of 17.8%. Fitting the calibrator on the final seven days of June pushed predicted risk lower still: about 7.0% under Platt and 6.3% under isotonic. Both methods therefore worsened calibration for that period.
+
+This means that post-hoc calibration is **temporally regime-sensitive** in this dataset. A calibrator estimated from the immediately preceding week can be highly beneficial when the recent window resembles the next period, but can move probabilities in the wrong direction when the delinquency regime changes. The result is consistent with the earlier evidence of changing target prevalence and calendar-related structure.
+
+### Calibration decision
+
+No universal calibrator is frozen at this stage. Platt scaling is the leading candidate because it has the best aggregate calibration metrics while leaving ranking performance unchanged, but the early-July deterioration prevents treating it as a generally reliable solution without further testing.
+
+The next calibration question is therefore not simply “Platt or isotonic?” but whether calibration should adapt to recent prevalence and temporal regime, and how stable that adaptation is under rolling evaluation. The project should test rolling calibration windows and recent-period prevalence before a final calibrated production specification is declared.
 
 ## Narrative status
 
