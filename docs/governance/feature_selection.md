@@ -49,7 +49,11 @@ A feature may be statistically strong and still be rejected if its timing or mea
 
 ## Modelling population
 
-The ordinary labelled modelling population is restricted to records dated through **23 July 2016**. All later records remain outside this population because the 58,825 later observations in the source data are labelled successful, which would make them unsuitable for ordinary supervised model development without further explanation.
+The ordinary labelled modelling population is restricted to records dated through **23 July 2016**. All later records remain outside this population because the 58,825 later observations in the source data are labelled successful.
+
+The reason is methodological rather than simply numerical. After 23 July 2016, the target distribution changes discontinuously to **100% successful repayment**. The available documentation does not explain whether this reflects a change in sampling, labelling, business process, extract construction, or another data-generation mechanism. Those later records are therefore not assumed to be comparable with the earlier mixed-outcome population.
+
+Including them in ordinary supervised training would artificially increase the share of successful cases and could distort both class balance and estimated predictor relationships. They are retained outside the modelling population for lineage and may later be used as a separate diagnostic population, for example to assess distributional shift or covariate drift. They are not treated as a conventional labelled validation set.
 
 The model-ready dataset is built from the validated interim-cleaned dataset, not directly from the raw source.
 
