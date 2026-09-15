@@ -2,9 +2,9 @@
 
 ## Purpose
 
-This document defines the privacy treatment for the telecom delinquency pipeline and the events that must be recorded in the privacy audit log. It builds on the Module 1–2 privacy approach and the controls already implemented during cleaning and model-dataset preparation.
+This document defines the privacy treatment for the telecom delinquency pipeline and the events recorded in the privacy audit log. It builds on the Module 1–2 privacy approach and the controls implemented during cleaning and model-dataset preparation.
 
-The aim is data minimisation rather than synthetic replacement of every value. The pipeline should retain only the information needed for the analytical purpose and remove direct identifier-like data before the model-ready dataset is created.
+The aim is data minimisation rather than synthetic replacement of every value. The pipeline retains only the information needed for the analytical purpose and removes direct identifier-like data before the model-ready dataset is created.
 
 ## Identifier treatment
 
@@ -22,7 +22,7 @@ The privacy rule is therefore:
 4. validate that `msisdn` is absent from the processed output;
 5. do not expose a reversible identifier mapping as part of the analytical repository.
 
-The current `build_model_dataset.py` implementation already removes `msisdn` after the strictly prior customer-history features are derived. This plan formalises that behaviour as a privacy control rather than treating it as an incidental modelling choice.
+The current `build_model_dataset.py` implementation removes `msisdn` after the strictly prior customer-history features are derived. This behaviour is treated as a privacy control rather than an incidental modelling choice.
 
 ## Other fields
 
@@ -42,50 +42,48 @@ If a future monitoring requirement genuinely needs longitudinal customer linkage
 
 ## Privacy-safe transformation audit
 
-The existing cleaning audit log already follows an important privacy rule: it records source row number, field, original value, triggered rule, treatment and run metadata, but it does not copy `msisdn` into the log.
+The existing cleaning audit log already follows an important privacy rule: it records source row number, field, original value, triggered rule and treatment, but it does not copy `msisdn` into the log.
 
-The Module 3 privacy audit log extends this from cell-level cleaning evidence to pipeline-level processing evidence. It should record processing events without reproducing raw personal data.
+The Module 3 privacy audit log extends this from cell-level cleaning evidence to pipeline-level processing evidence. It records processing events without reproducing raw personal data.
 
-Each event should contain:
+Each event contains the information needed for traceability, including:
 
 - UTC timestamp;
 - pipeline run identifier;
 - pipeline stage;
-- action or event type;
-- input asset path or logical name;
-- output asset path or logical name where relevant;
-- row count where relevant;
-- fields added, removed or transformed where relevant;
+- event type;
+- status;
+- logical input/output asset paths where relevant;
 - validation outcome where relevant;
-- status (`started`, `completed`, `failed`);
-- a short privacy-safe message.
+- identifier-removal confirmation where relevant.
 
-The privacy audit log must not contain:
+The privacy audit log must not contain raw `msisdn` values, raw records, identifiable feature values, secrets, credentials, or other unnecessary personal data.
 
-- `msisdn` values;
-- raw records;
-- model feature values for identifiable individuals;
-- secrets, credentials or local user paths that are not needed for traceability.
+The logger also rejects forbidden personal-data keys such as `msisdn`, `raw_identifier`, and `original_value` if a caller attempts to add them directly to an audit event.
 
-## Events to capture
+## Events captured
 
-At minimum, the end-to-end flow should record:
+The verified end-to-end flow records:
 
+- pipeline run start;
 - raw dataset access for validation;
-- raw validation completion and whether quality exceptions were found;
-- cleaning start and completion;
-- cleaning output row count and number of changed cells / removed rows;
+- raw validation result, including whether findings are diagnostic or blocking;
+- cleaning transformation completion;
 - interim validation result;
-- model-ready transformation start and completion;
-- explicit identifier-removal event confirming removal of `msisdn` and source `label` from the processed output;
+- model-ready transformation and explicit identifier minimisation;
+- confirmation that `msisdn` and the source `label` are not retained in processed output;
 - processed-data validation result;
 - pipeline completion or failure.
 
-The cell-level cleaning audit and pipeline-level privacy audit serve different purposes and should remain separate. The cleaning audit explains what data values were altered. The privacy audit explains when and why datasets were accessed or transformed and confirms that identifier minimisation occurred.
+The cell-level cleaning audit and pipeline-level privacy audit serve different purposes and remain separate. The cleaning audit explains what data values were altered. The privacy audit explains when and why datasets were accessed or transformed and confirms that identifier minimisation occurred.
 
 ## Output and retention
 
-The pipeline-level privacy audit should be written as an append-only JSON Lines file under `reports/audit/` so each processing event is independently parseable and later runs can be distinguished by run identifier.
+The pipeline-level privacy audit is written as append-only JSON Lines to:
+
+`reports/privacy/privacy_audit_log.jsonl`
+
+Each event is independently parseable and each pipeline run is distinguished by a run identifier.
 
 For the academic project, the log is retained with the project evidence needed to demonstrate reproducibility and privacy controls. In a production implementation, retention should be set by the organisation's formal records-retention policy rather than inferred from this project.
 
@@ -96,10 +94,18 @@ The privacy treatment is considered successful when all of the following are tru
 - customer-level chronology can be derived correctly before identifier removal;
 - `msisdn` is absent from the model-ready dataset;
 - the original source `label` is absent from the model-ready dataset;
-- cleaning and pipeline audit logs do not contain `msisdn`;
+- cleaning and pipeline audit logs do not contain `msisdn` values;
 - privacy audit events provide enough information to reconstruct the processing sequence without reproducing identifiable records;
-- automated tests verify the identifier-removal and privacy-safe logging behaviour.
+- automated tests verify identifier-removal and privacy-safe logging behaviour.
 
-## Current status
+## Verification result
 
-Identifier removal from the processed dataset and privacy-safe cleaning audit behaviour are already implemented. The next implementation step is to add the pipeline-level JSONL privacy audit logger and connect it to the Prefect flow, followed by focused Pytest coverage for those controls.
+The privacy controls were verified on 15 September 2026.
+
+The unit-test suite ran seven tests and all seven passed, including tests confirming that structured JSONL events are written without identifier values and that forbidden personal-data keys are rejected.
+
+The Prefect ETL was then run end to end with privacy audit logging enabled. The flow completed successfully, with interim and processed validation passing.
+
+The resulting JSONL audit trail contained the expected sequence of events: pipeline start, raw data access, diagnostic raw validation findings, cleaning completion, interim validation, identifier minimisation, processed validation, and pipeline completion. The identifier-minimisation event records only the field name `msisdn` as control metadata and confirms `identifier_retained_in_output: false`; it does not contain any raw identifier value.
+
+The implemented controls therefore satisfy the Module 3 privacy-treatment and pipeline-audit-logging requirement for the current project scope.
