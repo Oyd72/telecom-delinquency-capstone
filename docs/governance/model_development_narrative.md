@@ -141,7 +141,38 @@ Several **secondary candidates** remain reasonable and should be tested in model
 
 `prior_tx_count` and `is_repeat_customer` should remain outside the primary production-oriented feature set unless a future dataset provides reliable pre-observation customer history. Their exclusion is supported both by governance reasoning and by the Stage 4 sensitivity result showing essentially unchanged predictive performance without them.
 
-This consolidated position is still a candidate-set recommendation rather than an irreversible deletion decision. The next modelling step should compare predictive performance, calibration, and stability for a full approved model versus reduced core/secondary feature variants before declaring the final model specification.
+## Feature-set model comparison
+
+Three non-history feature variants were compared under identical forward-chaining XGBoost settings: the full 18-feature non-history set, a 12-feature core-plus-secondary set, and a compact six-feature core. The comparison considered discrimination, calibration, and top-20% delinquent capture rather than ROC-AUC alone.
+
+The **full 18-feature set** had the strongest average results overall: mean ROC-AUC about 0.851, mean average precision about 0.596, mean Brier score about 0.117, mean expected calibration error about 0.075, and mean top-20% capture about 60.7%.
+
+The **12-feature core-plus-secondary set** performed almost identically on discrimination and business ranking: mean ROC-AUC about 0.850, mean average precision about 0.594, and mean top-20% capture about 60.1%. Its calibration was only slightly weaker, with mean Brier score about 0.118 and mean expected calibration error about 0.078. In practical terms, reducing the feature set from 18 to 12 removed one third of the predictors at a very small cost in discrimination and capture.
+
+The **six-feature compact core** retained useful ranking performance but showed a clearer loss in calibration and some discrimination. Mean ROC-AUC fell to about 0.844, mean average precision to about 0.587, and mean expected calibration error increased to about 0.124. Its mean top-20% capture remained close to the 12-feature set at about 60.0%, but calibration deteriorated sharply in the early-July evaluation. The compact model is therefore considered too aggressive a reduction for the primary specification at this stage.
+
+A separate issue emerged across all three variants in late July. Mean predicted risk substantially exceeded the observed delinquency rate, producing calibration gaps of about 0.16–0.17. Because this appears across the full and reduced feature sets, it is interpreted primarily as a temporal-calibration problem rather than a feature-count problem. The model therefore still requires explicit calibration assessment and likely post-hoc calibration fitted without using future data.
+
+### Preferred specification after feature-set comparison
+
+The current preferred modelling specification is the **12-feature core-plus-secondary set**:
+
+- `cnt_ma_rech90`
+- `daily_decr30`
+- `last_rech_date_ma`
+- `sumamnt_ma_rech90`
+- `aon`
+- `last_rech_amt_ma`
+- `daily_decr90`
+- `sumamnt_ma_rech30`
+- `medianamnt_ma_rech30`
+- `medianmarechprebal90`
+- `rental30`
+- `cnt_ma_rech30`
+
+This choice is an interpretation based on parsimony and converging evidence rather than a statistically proven optimum. The 12-feature set sacrifices very little discrimination or top-risk capture relative to the full 18-feature model while reducing complexity and avoiding six weaker predictors. The 18-feature model remains a useful benchmark/challenger rather than being discarded.
+
+The next modelling step should focus on calibration under the temporal validation design. Any calibrator must be fitted only on past data relative to the period being evaluated; calibration should not be estimated on the same future fold used for final performance reporting.
 
 ## Narrative status
 
