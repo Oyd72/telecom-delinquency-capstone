@@ -1,6 +1,6 @@
 # Approved feature set for the first model-ready dataset
 
-This document defines the predictors, control fields, target, and exclusions used to create the first model-ready dataset for Module 3. It is deliberately conservative: a field is included only where its meaning is sufficiently supported. The current feature set should not be interpreted as the result of a single conventional statistical feature-selection algorithm. It represents **Stage 1: governance and point-in-time eligibility screening**. Formal statistical feature selection will follow as a separate analytical stage using established feature-selection methods.
+This document defines the predictors, control fields, target, and exclusions used to create the first model-ready dataset for Module 3. It is deliberately conservative: a field is included only where its meaning is sufficiently supported. The current feature set should not be interpreted as the result of a single conventional statistical feature-selection algorithm. It represents **Stage 1: governance and point-in-time eligibility screening**. Formal statistical feature selection follows as a separate analytical stage using established feature-selection methods.
 
 ## Feature-selection methodology
 
@@ -18,34 +18,50 @@ A field is eligible for the first model-ready dataset only where all of the foll
 
 This stage is a precondition for statistical feature selection rather than a substitute for it. A statistically predictive variable will not be retained if its meaning, timing, or governance position cannot be defended.
 
-### Stage 2: statistical relevance and redundancy screening
+### Temporal diagnostics before Stage 2 interpretation
 
-The eligible predictors will later be assessed with established **filter methods**, including appropriate measures such as correlation structure, low-variance checks, mutual information, and univariate predictive screening where suitable for the variable type and target.
+Before interpreting filter-method results, the project tested whether a simple earlier-development / later-holdout split could be treated as approximately comparable over time. The initial 80/20 chronological split placed records through 13 July 2016 in development and 14–23 July 2016 in the later subset.
 
-The purpose of this stage is to identify weak, redundant, or highly overlapping predictors before more computationally intensive selection methods are used.
+The comparison showed material temporal differences. Delinquency increased from about 16.55% in the earlier period to 20.78% in the later period. Several account-behaviour variables also shifted strongly, especially `daily_decr30`, `daily_decr90`, `rental30`, and `rental90`.
+
+Further diagnostics then compared matching days of the month across June and July. The day-of-month pattern was highly stable for several account-behaviour variables: Spearman correlations were approximately 0.94 for `daily_decr30/90` and about 0.98 for `rental30/90`. Delinquency itself showed only a more moderate June–July day-of-month correlation of about 0.34.
+
+This pattern means that at least part of the apparent temporal drift may reflect **calendar-position or pay-cycle-related composition effects**, rather than a simple change in the underlying population. Salary timing or other recurring income cycles are plausible explanations, but the dataset contains no salary-payment dates, so no causal explanation is asserted.
+
+The derived repeat-customer variables also show a separate observation-window problem. Customer history before 1 June 2016 is unobserved. The share of apparently new customers falls almost monotonically as the dataset progresses (Spearman correlation about -0.99 with days since the observation start), while mean observed history length rises almost perfectly over time (about 0.998). This is strong evidence of **left-censoring / observation-window bias**. `prior_tx_count` and `is_repeat_customer` therefore remain useful for exploratory analysis but will be subjected to explicit sensitivity analysis rather than treated automatically as stable production predictors.
+
+### Stage 2: statistical relevance, redundancy, and temporal stability screening
+
+The eligible predictors are assessed using established **filter methods**, including correlation structure, low-variance checks, mutual information, and suitable univariate predictive screening.
+
+Stage 2 is no longer interpreted from one arbitrary 80% chronological block alone. Filter evidence will be examined across **multiple chronological development folds**, with calendar-position diagnostics considered alongside the statistical rankings. The aim is to identify predictors whose relevance is reasonably stable across time rather than strong only in one particular segment of June or July.
+
+The analysis will also compare results **with and without `prior_tx_count` and `is_repeat_customer`** because of the documented left-censoring risk.
+
+No feature is removed automatically on the basis of one correlation, PSI value, mutual-information score, or single fold. Stage 2 produces evidence for later model-based selection.
 
 ### Stage 3: embedded and wrapper methods
 
-The project will then compare established model-based selection approaches. These may include:
+The project will compare established model-based selection approaches. These may include:
 
 - L1-regularised logistic regression as an embedded feature-selection method;
 - recursive feature elimination (RFE), likely using logistic regression or another suitable baseline estimator.
 
-These methods will be applied within the training data only so that validation and test information do not influence feature selection.
+These methods will be applied within the training data only so that validation and test information do not influence feature selection. The same temporal and repeat-customer sensitivity considerations used in Stage 2 will be carried forward.
 
 ### Stage 4: nonlinear and model-agnostic confirmation
 
-For nonlinear models, feature contribution will be compared using tree-based importance and model-agnostic methods (such as permutation importance and SHAP).
+For nonlinear models, feature contribution will be compared using tree-based importance and model-agnostic methods such as permutation importance and SHAP.
 
-No single importance method will be treated as authoritative. The objective is to compare whether important variables remain stable across model families and evaluation methods.
+No single importance method will be treated as authoritative. The objective is to compare whether important variables remain stable across model families, temporal folds, and evaluation methods.
 
 ### Selection principle
 
 The final feature set will therefore be based on converging evidence rather than on one algorithm. The intended sequence is:
 
-**semantic and governance eligibility → point-in-time eligibility → data-quality eligibility → filter methods → embedded/wrapper methods → nonlinear/model-agnostic confirmation → stability across validation splits**
+**semantic and governance eligibility → point-in-time eligibility → data-quality eligibility → temporal/calendar diagnostics → filter methods across chronological folds → embedded/wrapper methods → nonlinear/model-agnostic confirmation → stability and sensitivity checks**
 
-A feature may be statistically strong and still be rejected if its timing or meaning cannot be defended. On the contrary, a semantically valid feature may remain available for modelling even if it is later removed because it adds little predictive value.
+A feature may be statistically strong and still be rejected if its timing or meaning cannot be defended. Conversely, a semantically valid feature may remain available for modelling even if it is later removed because it adds little predictive value.
 
 ## Modelling population
 
@@ -109,6 +125,8 @@ The first model-ready dataset contains the following predictors after Stage 1 el
 
 The derived customer-history fields are calculated while `msisdn` is still available in controlled processing. Transactions on the same date do not count as prior transactions for one another. `msisdn` is then removed from the processed output.
 
+Because customer history before 1 June 2016 is not observed, these two derived fields are **provisional analytical predictors**. Their usefulness will be compared with models that exclude them.
+
 ## Control field retained outside the predictor set
 
 - `pdate` is retained in the processed dataset for temporal splitting, reproducibility, and lineage. It is **not an approved predictor**.
@@ -133,6 +151,8 @@ Values converted to missing during cleaning remain missing in the model-ready da
 
 `prior_tx_count` and `is_repeat_customer` describe observed prior participation, not inherent creditworthiness. Returning borrowers may be a selected population because the full credit-approval procedure is unknown and repeat approvals may follow different eligibility or underwriting rules. Any association with repayment therefore remains observational rather than causal.
 
+The observation-window analysis adds a second limitation: customers with activity before 1 June may be misclassified as first-time customers early in the dataset simply because earlier history is unavailable. This is why repeat-customer features require sensitivity analysis rather than unconditional inclusion.
+
 ## Status
 
-This is the approved feature set for the **first Module 3 model-ready dataset** after Stage 1 governance and point-in-time eligibility screening. It is not yet the final statistically selected feature set. Later stages will compare established filter, embedded, wrapper, and model-agnostic methods, with material revisions reflected in the data dictionary/change log and Git history.
+This is the approved feature set for the **first Module 3 model-ready dataset** after Stage 1 governance and point-in-time eligibility screening. It is not yet the final statistically selected feature set. Later stages compare filter, embedded, wrapper, and model-agnostic methods while explicitly accounting for temporal/calendar effects and observation-window bias. Material revisions are reflected in the data dictionary/change log, narrative documentation, and Git history.
