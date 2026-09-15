@@ -44,6 +44,20 @@ The suite does not automatically declare the dataset biased or unbiased. Differe
 
 A structural failure, such as a missing target or grouping field, should cause the diagnostic script to fail. Substantive differences between groups should not automatically fail the ETL pipeline because there is no defensible universal disparity threshold for this operational slice.
 
+## Verified results
+
+The full local run on 15 September 2026 analysed all 150,767 model-ready records and completed successfully inside the Prefect pipeline. The expanded unit-test suite also passed nine of nine tests.
+
+The operational slice is highly imbalanced: 138,709 records (92.00%) are classified as first-time borrowers and 12,058 records (8.00%) as returning borrowers. The observed five-day delinquency rate is 18.44% for the first-time group and 4.83% for the returning group, a returning-minus-first-time difference of approximately -13.61 percentage points.
+
+This difference is material as a descriptive pattern, but it is not treated as evidence of protected-group discrimination. The grouping is operational rather than demographic, and the returning-borrower classification is left-censored because customer history before the dataset start is unavailable.
+
+The temporal diagnostics reinforce that limitation. Returning borrowers represent about 5.03% of June records but 11.65% of July records. At the same time, observed delinquency rates differ substantially between first-time and returning groups in both months. The rising returning-borrower share is therefore interpreted partly as a consequence of accumulating observable history rather than a stable population characteristic.
+
+`pcircle` contains only one non-missing value and is therefore unusable for group comparison.
+
+No automatic bias conclusion is generated from these results. The appropriate conclusion is narrower: the dataset contains a strong borrower-history composition effect that should remain visible in model development and monitoring, but the available data do not support a conventional protected-group fairness assessment.
+
 ## Pipeline integration
 
 The diagnostic runs after the processed model-ready dataset has passed its blocking Great Expectations validation. In the Prefect flow it is a non-blocking analytical control: successful execution and report generation are required, but the magnitude of observed group differences is not converted automatically into a pipeline rejection decision.
@@ -57,4 +71,6 @@ The privacy audit log also records that the diagnostic was executed, without sto
 
 ## Current status
 
-The representation and bias suite is implemented in `src/monitoring/representation_bias_checks.py`, integrated into the Prefect flow, and covered by unit tests. Local execution still needs to be verified against the full project dataset before the Module 3 bias-detection requirement is marked complete.
+The representation and bias suite is implemented in `src/monitoring/representation_bias_checks.py`, integrated into the Prefect flow, covered by unit tests, and verified against the full model-ready dataset. The Module 3 bias-detection requirement is therefore complete for the information actually available in this dataset.
+
+The main limitation remains substantive rather than technical: protected demographic characteristics are not present, so this work cannot support claims about demographic fairness, Equalized Odds, or demographic parity.
