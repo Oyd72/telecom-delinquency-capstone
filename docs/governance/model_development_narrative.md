@@ -90,6 +90,24 @@ The sensitivity analysis that excluded `prior_tx_count` and `is_repeat_customer`
 
 No feature is removed automatically after Stage 2. The filter results are treated as evidence for Stage 3, where embedded and wrapper methods can test which variables retain value when predictors are considered jointly.
 
+## Stage 3: embedded and wrapper selection
+
+Stage 3 compared two established model-based approaches across the same four calendar-aware folds: L1-regularised logistic regression as an embedded method and recursive feature elimination (RFE) with logistic regression as a wrapper method. Preprocessing was fitted separately within each fold so that imputation and scaling did not borrow information across periods.
+
+The L1 result was only partly selective. In the first three folds, cross-validation chose a weak regularisation setting (`C = 10`) and retained all 20 candidate predictors. In the late-July fold, stronger regularisation (`C ≈ 0.0139`) retained 15 predictors. This means that simple L1 selection frequency should not be interpreted as strong evidence on its own: in most folds the fitted penalty was too weak to generate much sparsity.
+
+RFE was more discriminating because it was explicitly asked to retain 10 predictors per fold. Only three features were selected by RFE in all four folds: `daily_decr30`, `cnt_ma_rech90`, and `sumamnt_ma_rech30`. Of these, `daily_decr30` and `cnt_ma_rech90` were also selected by L1 in every fold and therefore showed the strongest agreement between the embedded and wrapper approaches.
+
+`daily_decr30` had the strongest joint stability: it was selected by both methods in all folds, had a mean absolute L1 coefficient of about 5.84, consistent coefficient sign, and an average RFE rank of 1.0. `cnt_ma_rech90` showed the same all-fold selection pattern, with a mean absolute L1 coefficient of about 1.59 and consistent sign.
+
+Several other variables remained credible but less stable across methods. `daily_decr90`, `sumamnt_ma_rech90`, `last_rech_amt_ma`, `aon`, and `medianamnt_ma_rech30` were retained by L1 in every fold and by RFE in three of four folds. `daily_decr90` showed some coefficient-sign instability, while `sumamnt_ma_rech90` had only 50% sign consistency, suggesting that multicollinearity or changing relationships with correlated recharge variables may be affecting coefficient interpretation.
+
+`cnt_ma_rech30` and `rental90` were retained by L1 in all folds but by RFE in only half. They therefore remain candidates rather than confirmed selections.
+
+The left-censored history variable `is_repeat_customer` illustrates why sensitivity analysis remains necessary. L1 retained it in every fold, but RFE selected it in only one of four folds and its coefficient sign was not fully stable. This result is not treated as evidence that repeat-customer status is a reliable production predictor, particularly because the observation-window analysis already showed that its apparent prevalence changes mechanically over time.
+
+No final feature set is declared after Stage 3. The principal evidence so far favours `daily_decr30` and `cnt_ma_rech90` as the most stable candidates across filter, embedded, and wrapper methods, while several additional recharge and account-behaviour variables remain plausible. The next stage should test nonlinear and model-agnostic importance before any irreversible feature removal is made.
+
 ## Narrative status
 
 This file is the running narrative for model-development decisions. It should be updated whenever a material modelling choice changes because of new evidence. Exact code changes remain traceable through Git history, while generated analytical outputs remain under `reports/`.
