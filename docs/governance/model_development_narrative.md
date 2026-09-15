@@ -67,6 +67,29 @@ The revised approach is to:
 
 The purpose is to separate genuine predictive relevance from artefacts caused by observation-window position or short-term calendar composition.
 
+## Stage 2 fold-stability results
+
+The revised filter screening used four calendar-aware chronological folds rather than a single 80/20 block:
+
+- 1–13 June: 33,647 records, delinquency 15.85%;
+- 14–30 June: 49,507 records, delinquency 16.02%;
+- 1–13 July: 38,965 records, delinquency 17.83%;
+- 14–23 July: 28,648 records, delinquency 20.78%.
+
+The repeat-customer share increased from about 2.13% in early June to 12.94% in late July. In light of the left-censoring diagnostics, this increase is treated as partly mechanical and is not interpreted as proof of a true change in borrower composition.
+
+Across the four folds, the strongest and most consistently relevant feature families were account spending/decrement and main-account recharge behaviour. The highest average mutual-information rankings included `sumamnt_ma_rech90`, `daily_decr90`, `daily_decr30`, `sumamnt_ma_rech30`, `cnt_ma_rech90`, and `cnt_ma_rech30`.
+
+`daily_decr30` and `daily_decr90` had the highest mean mutual information of about 0.151, with mean absolute Spearman relationships to delinquency of about 0.437. Their mutual-information values varied more across folds than several recharge variables, which is consistent with the previously identified calendar-position effects. They therefore remain strong candidates, but their temporal stability needs to be considered in later model-based stages rather than being accepted on filter strength alone.
+
+Recharge totals and counts were somewhat more stable across folds. `cnt_ma_rech90`, for example, had a mean mutual information of about 0.099 and a relatively low standard deviation of the mutual-information rank (about 1.26). `sumamnt_ma_rech90` also ranked strongly, although its rank varied somewhat more.
+
+Several mid-ranked predictors, including `last_rech_date_ma`, `medianmarechprebal30`, `medianmarechprebal90`, and `last_rech_amt_ma`, showed lower average mutual information but comparatively stable values across folds. They are not removed at this stage because filter evidence alone is not sufficient to judge their incremental value once correlated predictors are modelled jointly.
+
+The sensitivity analysis that excluded `prior_tx_count` and `is_repeat_customer` produced the same top ten ranked non-history features. This confirms that the principal Stage 2 ranking is not being driven by the left-censored customer-history variables.
+
+No feature is removed automatically after Stage 2. The filter results are treated as evidence for Stage 3, where embedded and wrapper methods can test which variables retain value when predictors are considered jointly.
+
 ## Narrative status
 
 This file is the running narrative for model-development decisions. It should be updated whenever a material modelling choice changes because of new evidence. Exact code changes remain traceable through Git history, while generated analytical outputs remain under `reports/`.
