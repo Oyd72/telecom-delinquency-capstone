@@ -4,9 +4,7 @@ This dictionary covers the public **Delinquency Telecom Dataset** used in the ca
 
 ## How field meanings are assessed
 
-The supplied Kaggle description is the starting point for field meaning. I then check whether the observed values and structure are consistent with that description. Cross-field and within-customer checks provide further evidence where they are useful. Statistical anomaly methods are treated as diagnostics, not as proof that a value is wrong. Where the documentation and the observed encoding do not line up, the uncertainty is left visible rather than resolved by guesswork.
-
-Blocking rules are therefore limited to cases where the field meaning supports them. An unusual value is not automatically an invalid value.
+The supplied Kaggle description is the starting point for field meaning. I then check whether the observed values and structure are consistent with that description. Cross-field and within-customer checks provide further evidence where they are useful. Statistical anomaly methods are treated as diagnostics, not as proof that a value is wrong. Blocking rules are limited to cases where the field meaning supports them. An unusual value is not treated automatically an invalid value.
 
 ## Field assessment
 
@@ -80,7 +78,7 @@ Subject to cleaning and point-in-time checks, the candidate families are network
 1. An unusual value is not automatically an invalid value.
 2. Blocking rules are used only where the field meaning supports them.
 3. Statistical outliers remain diagnostic unless semantic, cross-field, or longitudinal evidence justifies stronger treatment.
-4. Count fields must be non-negative and integer-valued; rare large counts are monitored rather than rejected simply because they are large.
+4. Count fields must be non-negative and integer-valued; rare large counts are monitored rather than rejected.
 5. Related 30-day and 90-day measures are checked for consistency where the nested windows make that comparison meaningful.
 6. `data/raw/` is left unchanged. Cleaning is carried out in `data/interim/`.
 7. Changes made during pipeline execution are logged with the rule and treatment applied. Git history separately records changes to code and governance decisions.
