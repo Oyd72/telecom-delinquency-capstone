@@ -2,269 +2,158 @@
 
 ## Purpose and scope
 
-This framework defines how data used in the telecom delinquency capstone should be accessed, used, transformed, retained, and evidenced throughout the analytical lifecycle. It is a project-level governance framework for the academic pipeline rather than a statement of legal obligations for a production lender.
+This framework sets the working rules for how data are handled in the telecom delinquency capstone: who should have access, what the data may be used for, how long different artefacts should be kept, and what evidence is needed to show that the pipeline was run properly.
 
-The framework applies to:
+It applies to the original source extract, cleaned interim data, the model-ready dataset, validation and modelling outputs, audit logs, lineage records, model artefacts, and the project documentation.
 
-- the original telecom microcredit source dataset;
-- interim cleaned data;
-- the processed model-ready dataset;
-- validation, privacy, bias, and modelling reports;
-- audit logs and lineage records;
-- model artefacts and documentation produced by the project.
+This is an academic project framework, not a substitute for the policies, legal analysis, or operational controls a production lender would need.
 
-It builds on the data cleaning policy, anonymization and privacy logging plan, representation/bias assessment, data dictionary, and model decision records already maintained in the repository.
+## Core principles
 
-## Governance principles
+The project follows a small set of practical rules:
 
-The project follows these operating principles:
+- **Use the data only for the stated purpose.** The purpose here is analysis and prediction of five-day repayment delinquency in telecom-enabled microcredit.
+- **Keep only what is needed.** A field should have a clear reason to exist in the pipeline.
+- **Respect chronology.** A predictor must be defensibly available at the intended scoring point.
+- **Keep the processing traceable.** Important transformations, validation results, privacy controls, and modelling decisions should be reproducible from code and records.
+- **Leave the source intact.** Raw data are not overwritten; cleaning and modelling use derived copies.
+- **Do not invent missing group attributes.** The project does not infer protected characteristics simply to make a fairness analysis possible.
+- **Keep human accountability.** Model output is a risk signal, not an autonomous lending decision.
 
-- **Purpose limitation:** data are used only for the stated academic objective of analysing and predicting five-day repayment delinquency in telecom-enabled microcredit.
-- **Data minimisation:** fields are retained only where they are needed for cleaning, chronology, modelling, validation, or governance evidence.
-- **Chronology and leakage control:** only information defensibly available at the intended scoring point may be used as a predictor.
-- **Traceability:** material transformations, validation outcomes, privacy controls, and modelling decisions must be reproducible from code, reports, and governance records.
-- **Separation of raw and derived data:** the source dataset remains unchanged; cleaning and modelling occur on separate outputs.
-- **No unsupported inference:** the project does not invent demographic protected characteristics or infer them merely to enable fairness analysis.
-- **Human accountability:** model outputs are analytical risk signals, not autonomous final lending decisions.
+## Roles
 
-## Roles and responsibilities
+One person currently performs most project tasks, but it is still useful to separate the responsibilities conceptually.
 
-The project is currently maintained by one analyst, so several roles may be held by the same person. The roles are nevertheless kept conceptually separate so the framework can scale to collaborative use.
-
-| Role | Main responsibilities |
+| Role | Responsibility |
 | --- | --- |
-| Project owner / accountable analyst | Defines analytical purpose, approves material methodological decisions, and ensures assignment requirements are met. |
-| Data custodian | Controls access to raw and interim customer-level data, protects local copies, and enforces retention/deletion rules. |
-| Pipeline / model developer | Implements transformations, validation, feature engineering, model code, and tests. |
-| Governance reviewer | Reviews privacy, data quality, representation/bias, lineage, and documented limitations before outputs are relied on. |
-| Report consumer | Uses only approved reports, model outputs, and documentation for the stated academic purpose. |
+| Project owner / accountable analyst | Defines the analytical purpose, approves material methodological choices, and keeps the work aligned with the assignment. |
+| Data custodian | Controls access to raw and interim customer-level data and applies retention/deletion rules. |
+| Pipeline / model developer | Maintains transformations, validation, feature engineering, model code, and tests. |
+| Governance reviewer | Reviews privacy, data quality, representation, lineage, and documented limitations. |
+| Report consumer | Uses approved outputs and documentation only for the stated project purpose. |
 
-In a production setting these responsibilities should not automatically be concentrated in one individual.
+In a production setting, these responsibilities should not automatically sit with one person.
 
 ## Data classification
 
-For this project, artefacts are classified according to the level of customer-level information they contain.
-
 ### Restricted customer-level data
 
-Includes:
+This includes the raw source file, interim data containing `msisdn`, and any temporary file that still allows direct customer-level linkage.
 
-- `data/raw/sample_data_intw.csv`;
-- interim data containing `msisdn`;
-- any other temporary file from which individual customer activity can be linked directly.
-
-These data require the strongest access restriction because they contain the identifier-like `msisdn` field and row-level behavioural data.
+These files receive the strictest treatment because they combine row-level behavioural data with an identifier-like field.
 
 ### Restricted analytical data
 
-Includes:
+This includes the processed model-ready dataset and other row-level modelling tables after `msisdn` has been removed.
 
-- `data/processed/telecom_delinquency_model_ready.csv`;
-- row-level modelling datasets from which `msisdn` has been removed.
-
-Removal of `msisdn` reduces identification risk but does not make the dataset inherently anonymous. Row-level behavioural data remain restricted analytical material.
+Removing the identifier lowers risk but does not make the behavioural data automatically anonymous. These files remain restricted analytical material.
 
 ### Controlled project evidence
 
-Includes:
+Cleaning audits, privacy audits, Great Expectations results, representation summaries, model-evaluation tables, and generated figures fall into this category.
 
-- cleaning audit logs;
-- privacy audit logs;
-- Great Expectations results;
-- representation/bias summaries;
-- model evaluation tables and generated figures.
+They should not contain raw customer identifiers. They can be used as assignment evidence when they do not expose row-level personal data.
 
-These artefacts should not contain raw customer identifiers. They may be shared within the project or included in assignment evidence where they do not expose row-level personal data.
+### Repository-safe material
 
-### Repository-safe artefacts
+Source code, tests, non-secret configuration, governance documents, and aggregate reports or figures can be stored in GitHub when they contain no restricted row-level data.
 
-Includes:
+## Access rules
 
-- source code;
-- tests;
-- configuration without secrets;
-- governance documents;
-- aggregate reports and figures that do not disclose individual records.
+Raw and interim customer-level data stay local and are not committed to GitHub. Access is limited to the project owner or an explicitly authorised collaborator who genuinely needs the data for preprocessing, validation, or analysis.
 
-These are suitable for the GitHub repository.
+Raw data should not be copied into email, public cloud folders, presentations, or other unnecessary locations. `msisdn` is used only for the short part of preprocessing that requires customer-level chronology. Secrets and credentials do not belong in scripts, notebooks, logs, or repository files.
 
-## Access control policy
+The model-ready dataset remains restricted even after `msisdn` has been removed. It can be used for modelling, validation, representation checks, and reproducibility, but it should not be republished through the repository as an open dataset.
 
-Access follows least-privilege and need-to-know principles.
+Aggregate reports and documentation may be shared more broadly after checking that they do not expose row-level values or identifiers.
 
-### Raw and interim data
+## Permitted and out-of-scope uses
 
-- Raw and interim customer-level datasets are stored locally and are not committed to GitHub.
-- Access is limited to the project owner or another specifically authorised collaborator who needs the data for preprocessing, validation, or controlled analysis.
-- Raw data must not be sent by email, placed in public cloud folders, or copied into presentation material.
-- `msisdn` may be used only during the limited preprocessing steps that require customer-level chronology.
-- Credentials, API keys, or secrets must not be stored in notebooks, scripts, audit logs, or repository files.
+The data may be used to clean and validate the historical extract, derive leakage-conscious features, compare delinquency models, assess calibration and temporal stability, run representation checks, and produce the academic deliverables and reproducibility evidence.
 
-The repository `.gitignore` excludes the contents of `data/raw/`, `data/interim/`, and `data/processed/` from version control while keeping only placeholder files.
+The project does not use the data or model to make autonomous lending decisions, attempt re-identification, infer missing protected characteristics, use `msisdn` as a predictor, or present the academic model as production-ready. The post-23-July all-success block also remains outside ordinary supervised training unless its data-generation anomaly can be explained.
 
-### Processed data
+## Data quality controls
 
-- The model-ready dataset remains restricted to analytical use even after `msisdn` is removed.
-- It may be used for approved modelling, validation, representation diagnostics, and reproducibility checks.
-- It must not be republished as an open dataset through this repository.
+Different stages have different validation roles.
 
-### Reports and documentation
+Raw Great Expectations checks are diagnostic. Their job is to show what is wrong with the untouched source.
 
-- Aggregate metrics, figures, methodology documents, and privacy-safe audit evidence may be stored in the repository.
-- Any report intended for broader sharing must be checked for row-level values, identifiers, or unnecessarily detailed customer information.
+Cleaning follows `docs/governance/data_cleaning_policy.md`, which deliberately avoids changing values simply because they are statistically unusual.
 
-## Permitted and prohibited use
-
-### Permitted use
-
-The data may be used to:
-
-- validate and clean the historical source extract;
-- derive leakage-conscious analytical features;
-- develop and compare delinquency models;
-- assess calibration, temporal stability, representation, and data quality;
-- produce academic reports, dashboards, and reproducibility evidence;
-- demonstrate governance controls required by the course.
-
-### Prohibited or out-of-scope use
-
-The project data and outputs must not be used to:
-
-- make autonomous final lending or adverse customer decisions;
-- attempt to re-identify individuals after identifier removal;
-- infer demographic or protected characteristics that are absent from the dataset;
-- use `msisdn` as a predictive model feature;
-- treat the post-23-July all-success block as ordinary labelled training data without resolving its data-generation anomaly;
-- use unresolved or potentially leakage-prone fields as production predictors without documented review;
-- claim demographic fairness where suitable protected attributes are not available;
-- represent the academic model as production-ready without further validation, governance, monitoring, and legal review.
-
-## Data quality and validation controls
-
-Data are promoted through the pipeline only when the control appropriate to that stage has been satisfied.
-
-- Raw-data Great Expectations validation is diagnostic. Its purpose is to expose known source defects before cleaning.
-- Cleaning is governed by `docs/governance/data_cleaning_policy.md`; unusual values are not changed solely because they are statistically extreme.
-- Interim validation is a blocking gate. The cleaned data cannot progress if the agreed semantic and structural checks fail.
-- Processed-data validation is also a blocking gate and confirms, among other controls, that forbidden identifier fields are absent.
-- Pytest verifies reusable transformation and privacy-control logic on controlled examples.
-- The Prefect flow preserves the execution order and fails if a blocking downstream control fails.
+Interim validation is blocking. Processed validation is also blocking and includes checks that forbidden identifier fields are absent. Pytest checks reusable transformation and control logic. Prefect preserves the order of these steps and stops the flow if a blocking control fails.
 
 ## Privacy and identifier minimisation
 
-The detailed privacy design is maintained in `docs/governance/data_anonymization_plan.md`.
+The detailed privacy design is in `docs/governance/data_anonymization_plan.md`.
 
-The principal rules are:
+In summary, `msisdn` is retained only while grouping and chronology require it, then removed. No persistent hash or token is kept when the model does not need customer linkage. The source `label` is removed after `delinquent_5d` is derived. Privacy-audit events record processing metadata rather than identifier values. Identifier removal alone is not treated as proof that the remaining row-level behavioural data are anonymous.
 
-- `msisdn` is retained only while customer-level grouping and chronology require it;
-- it is not written to the model-ready dataset;
-- no persistent hashed or tokenised substitute is retained where the analytical purpose does not require customer linkage;
-- the source `label` is removed after `delinquent_5d` is derived;
-- privacy audit events record processing metadata but not raw identifier values;
-- the project does not treat identifier removal alone as proof that row-level behavioural data are anonymous.
+## Lineage and change control
 
-## Data lineage and change control
-
-Lineage is maintained through the fixed pipeline sequence:
+The main lineage is:
 
 `raw source → raw validation → cleaned interim data → interim validation → model-ready transformation → processed validation → representation diagnostics → modelling and reporting`
 
-Supporting evidence includes:
+Evidence for that path comes from the source file, cleaning audit, cleaning summary, Great Expectations outputs, privacy audit, data dictionary and change log, modelling documentation, model decision log, and Git history.
 
-- the immutable source file;
-- `data/interim/cleaning_audit_log.csv`;
-- `reports/tables/cleaning_summary.json`;
-- Great Expectations validation outputs;
-- `reports/privacy/privacy_audit_log.jsonl`;
-- data dictionary and changelog;
-- feature-selection and modelling narratives;
-- the model decision log;
-- Git commit history.
+A material change to cleaning rules, feature eligibility, model specification, or governance controls should be documented before it becomes the new project baseline.
 
-Material changes to cleaning rules, feature eligibility, model specification, or governance controls should be documented before being treated as the new project baseline.
+## Retention and deletion
 
-## Retention and deletion policy
-
-Retention is based on the academic purpose and reproducibility needs rather than indefinite storage.
+Retention is tied to the academic purpose, not to indefinite storage.
 
 ### Raw customer-level data
 
-Retain only while needed to complete the course project, verify submitted work, and cover any applicable grading or appeal period. After that purpose has ended, the local raw dataset should be deleted unless there is a separate legitimate reason and permission to retain it.
+Keep the raw source only while it is needed to complete the project, verify the submission, and cover any relevant grading or appeal period. After that, delete the local copy unless there is a separate authorised reason to retain it.
 
 ### Interim customer-level data
 
-Interim datasets are reproducible from the raw source and pipeline code. They should be deleted when no longer needed for active development and, at the latest, when the raw dataset is deleted.
+Interim data can be regenerated from the source and pipeline code. Delete them when they are no longer needed for active work and no later than the raw data.
 
 ### Processed model-ready data
 
-The processed dataset should be retained only for active modelling, reproducibility, and assessment evidence. Because it is reproducible and still contains row-level behavioural data, it should also be deleted when the academic project and any review period are complete unless a separate approved purpose exists.
+Keep the processed row-level dataset only for active modelling, reproducibility, and assessment evidence. It is still restricted analytical data and should also be deleted once the academic purpose and review period end, unless another approved purpose exists.
 
-### Audit logs and aggregate validation evidence
+### Audit logs and aggregate evidence
 
-Privacy-safe audit logs, aggregate validation outputs, governance documents, code, and non-identifying figures may be retained with the academic project record because they provide traceability without intentionally retaining direct customer identifiers.
+Privacy-safe logs, aggregate validation outputs, governance documents, code, and non-identifying figures may remain with the academic project record because they provide useful traceability without intentionally retaining direct customer identifiers.
 
 ### Repository material
 
-Source code, tests, methodology, governance documents, and aggregate outputs may remain in GitHub after the course, provided they contain no restricted row-level data, secrets, or direct identifiers.
+Code, tests, methodology, governance documentation, and aggregate outputs may remain in GitHub after the course as long as they contain no restricted row-level data, secrets, or direct identifiers.
 
-Deletion of local data should include unnecessary duplicate copies and exported working files, not only the primary project folders.
+Deletion should cover unnecessary duplicate copies and exported working files as well as the main project folders.
 
-## Audit logging and accountability
+## Audit logging
 
-The pipeline-level privacy audit log records:
+The pipeline-level privacy audit records pipeline start and completion or failure, raw-data access for validation, validation outcomes, transformations, identifier removal, and execution of representation diagnostics.
 
-- pipeline start and completion/failure;
-- raw dataset access for validation;
-- validation outcomes;
-- cleaning and transformation events;
-- identifier minimisation;
-- representation-diagnostic execution.
-
-The log is intentionally privacy-safe and does not store raw `msisdn` values or identifiable feature values. It complements, rather than replaces, the cell-level cleaning audit and Git history.
+It is intentionally separate from the cleaning audit. The cleaning audit records changes to values. The privacy audit records the processing sequence and privacy-relevant controls.
 
 ## Representation and bias governance
 
-The dataset does not contain usable demographic protected attributes. The project therefore limits automated bias assessment to defensible operational slices and clearly separates those from demographic fairness claims.
+The source data do not contain usable demographic protected attributes. The project therefore limits bias assessment to operational slices that are actually present in the data.
 
-The current representation suite compares first-time and returning borrowers as an operational diagnostic and records the left-censoring limitation. `pcircle` is constant and cannot support meaningful group comparison.
-
-Observed differences trigger interpretation and documentation, not an automatic declaration that the dataset or model is fair or unfair.
+The current check compares first-time and returning borrowers and keeps the left-censoring limitation explicit. `pcircle` is constant and cannot support a regional comparison. Differences are reported for interpretation; they are not converted into an automatic declaration that the data are fair or unfair.
 
 ## Model and output governance
 
-The model is intended to produce a delinquency probability or risk ranking for analytical use. Governance controls include:
+The model is intended to produce a delinquency probability or risk ranking for analytical use.
 
-- exclusion of direct identifiers and unresolved high-risk features;
-- chronology-aware feature construction and forward-chaining evaluation;
-- documented calibration limitations;
-- explainability through coefficients, permutation importance, and SHAP where appropriate;
-- retention of a simpler preferred specification with a broader challenger model;
-- explicit acknowledgement that short observation history limits production conclusions.
+The main controls are exclusion of direct identifiers and unresolved fields, chronology-aware feature construction, forward-chaining evaluation, documented calibration limitations, explainability through several methods, and a preference for the simpler 12-feature specification where performance is effectively retained.
 
-Any future production deployment would require fresh validation on representative current data, formal access controls, operational monitoring, incident handling, documented model ownership, and applicable legal/compliance review.
+The short observation history remains a significant limitation. Any real production use would require fresh validation on representative current data, formal access controls, monitoring, incident handling, named model ownership, and relevant legal/compliance review.
 
 ## Incident and exception handling
 
-A governance exception includes any event such as:
+Examples of governance exceptions include restricted data being committed to GitHub, a direct identifier appearing in processed output or privacy logs, bypass of a blocking validation failure, use of an excluded leakage-prone field without review, unexplained changes in target prevalence or feature distributions, or loss of lineage evidence.
 
-- restricted data being committed to GitHub or otherwise exposed;
-- a direct identifier appearing in processed model output or privacy audit logs;
-- a blocking validation failure being bypassed;
-- use of an excluded or leakage-prone predictor without review;
-- unexplained material changes in target prevalence or feature distributions;
-- corruption or loss of lineage evidence.
+If that happens, processing should stop where practical. The affected output should not be relied on until the event is documented and the underlying control or data problem has been corrected.
 
-If an exception occurs, processing should stop where feasible, the affected output should not be relied on, the event should be documented, and the control or dataset should be corrected before the pipeline resumes.
+## Review
 
-## Review and maintenance
+Review this framework when the source data change, new collaborators receive access, the model purpose or feature definitions change materially, new personal or protected attributes appear, retention needs change, or the work moves beyond an academic demonstration.
 
-This framework should be reviewed when:
-
-- the dataset or source changes;
-- new collaborators obtain access;
-- feature definitions or model purpose change materially;
-- new personal or protected attributes are introduced;
-- retention needs change;
-- the project moves from academic demonstration toward operational use.
-
-The governance framework does not replace the more detailed documents in `docs/governance/`. It provides the umbrella rules that connect access control, permitted use, privacy, validation, retention, auditability, representation checks, and model governance into one lifecycle view.
+The framework is the umbrella document. The more detailed cleaning, privacy, representation, and modelling files remain the working evidence underneath it.

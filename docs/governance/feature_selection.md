@@ -1,92 +1,71 @@
 # Approved feature set for the first model-ready dataset
 
-This document defines the predictors, control fields, target, and exclusions used to create the first model-ready dataset for Module 3. It is deliberately conservative: a field is included only where its meaning is sufficiently supported. The current feature set should not be interpreted as the result of a single conventional statistical feature-selection algorithm. It represents **Stage 1: governance and point-in-time eligibility screening**. Formal statistical feature selection follows as a separate analytical stage using established feature-selection methods.
+This document explains how the first Module 3 predictor set was assembled. The starting point is deliberately conservative: a field enters the first model-ready table only if its meaning, timing, and treatment can be defended. This is **Stage 1: governance and point-in-time eligibility screening**, not the final statistical feature-selection result.
 
-## Feature-selection methodology
+## How features are selected
 
-The project uses a staged approach so that predictive usefulness is assessed only after a feature has passed basic semantic, temporal, data-quality, and governance checks.
+The project uses several stages. Statistical importance is considered only after a field has passed the basic semantic, timing, data-quality, and governance checks.
 
-### Stage 1: governance and point-in-time eligibility screening
+### Stage 1: eligibility screening
 
-A field is eligible for the first model-ready dataset only where all of the following can be defended:
+A field can enter the first candidate set when:
 
-- its source-supported meaning is sufficiently clear;
-- it can plausibly be available at the time of the current credit decision;
-- any known data-quality problems have a documented and reproducible treatment;
-- it does not function primarily as an identifier, constant field, redundant derived measure, or unresolved encoding;
-- its use does not create an obvious target- or point-in-time leakage risk.
+- its meaning is sufficiently clear from the source material;
+- it could plausibly be available at the time of the credit decision;
+- known data-quality problems have a documented treatment;
+- it is not primarily an identifier, constant, redundant derived measure, or unresolved encoding;
+- there is no obvious target or point-in-time leakage problem.
 
-This stage is a precondition for statistical feature selection rather than a substitute for it. A statistically predictive variable will not be retained if its meaning, timing, or governance position cannot be defended.
+A predictive variable is not automatically acceptable if its meaning or timing cannot be defended.
 
-### Temporal diagnostics before Stage 2 interpretation
+### Temporal checks before statistical screening
 
-Before interpreting filter-method results, the project tested whether a simple earlier-development / later-holdout split could be treated as approximately comparable over time. The initial 80/20 chronological split placed records through 13 July 2016 in development and 14–23 July 2016 in the later subset.
+The first chronological 80/20 split used records through 13 July 2016 for development and 14–23 July for the later subset. The two periods were not as similar as initially hoped. Delinquency rose from about 16.55% to 20.78%, and several account-behaviour variables shifted sharply.
 
-The comparison showed material temporal differences. Delinquency increased from about 16.55% in the earlier period to 20.78% in the later period. Several account-behaviour variables also shifted strongly, especially `daily_decr30`, `daily_decr90`, `rental30`, and `rental90`.
+The next check compared matching days of the month across June and July. `daily_decr30`, `daily_decr90`, `rental30`, and `rental90` showed strong day-of-month similarity across the two months, while delinquency itself was only moderately correlated. This makes a recurring calendar or pay-cycle effect plausible, although the dataset does not contain salary dates and cannot prove that explanation.
 
-Further diagnostics then compared matching days of the month across June and July. The day-of-month pattern was highly stable for several account-behaviour variables: Spearman correlations were approximately 0.94 for `daily_decr30/90` and about 0.98 for `rental30/90`. Delinquency itself showed only a more moderate June–July day-of-month correlation of about 0.34.
+A separate problem affects the derived customer-history fields. History before 1 June 2016 is missing. As the observation window progresses, the apparent share of new customers falls almost monotonically while observed customer-history length rises. `prior_tx_count` and `is_repeat_customer` are therefore affected by left-censoring and are treated as sensitivity variables rather than automatically stable predictors.
 
-This pattern means that at least part of the apparent temporal drift may reflect **calendar-position or pay-cycle-related composition effects**, rather than a simple change in the underlying population. Salary timing or other recurring income cycles are plausible explanations, but the dataset contains no salary-payment dates, so no causal explanation is asserted.
+### Stage 2: filter methods across time
 
-The derived repeat-customer variables also show a separate observation-window problem. Customer history before 1 June 2016 is unobserved. The share of apparently new customers falls almost monotonically as the dataset progresses (Spearman correlation about -0.99 with days since the observation start), while mean observed history length rises almost perfectly over time (about 0.998). This is strong evidence of **left-censoring / observation-window bias**. `prior_tx_count` and `is_repeat_customer` therefore remain useful for exploratory analysis but will be subjected to explicit sensitivity analysis rather than treated automatically as stable production predictors.
+The eligible fields are screened using correlation, low-variance checks, mutual information, and other univariate evidence. These statistics are compared across calendar-aware chronological folds rather than taken from one arbitrary development block.
 
-### Stage 2: statistical relevance, redundancy, and temporal stability screening
-
-The eligible predictors are assessed using established **filter methods**, including correlation structure, low-variance checks, mutual information, and suitable univariate predictive screening.
-
-Stage 2 is no longer interpreted from one arbitrary 80% chronological block alone. Filter evidence will be examined across **multiple chronological development folds**, with calendar-position diagnostics considered alongside the statistical rankings. The aim is to identify predictors whose relevance is reasonably stable across time rather than strong only in one particular segment of June or July.
-
-The analysis will also compare results **with and without `prior_tx_count` and `is_repeat_customer`** because of the documented left-censoring risk.
-
-No feature is removed automatically on the basis of one correlation, PSI value, mutual-information score, or single fold. Stage 2 produces evidence for later model-based selection.
+The analysis is also repeated without `prior_tx_count` and `is_repeat_customer`. No feature is removed from a single score or single fold. Stage 2 provides evidence for later model-based selection.
 
 ### Stage 3: embedded and wrapper methods
 
-The project will compare established model-based selection approaches. These may include:
+L1-regularised logistic regression is used as an embedded method and recursive feature elimination (RFE) as a wrapper method. Preprocessing and selection are fitted inside the relevant training data only. Temporal sensitivity and the history-variable caveat remain in place.
 
-- L1-regularised logistic regression as an embedded feature-selection method;
-- recursive feature elimination (RFE), likely using logistic regression or another suitable baseline estimator.
+### Stage 4: nonlinear confirmation
 
-These methods will be applied within the training data only so that validation and test information do not influence feature selection. The same temporal and repeat-customer sensitivity considerations used in Stage 2 will be carried forward.
+Tree-based models are then used to check whether the same signals persist under nonlinear modelling. Permutation importance and SHAP provide complementary views of feature contribution. No single importance measure is treated as decisive.
 
-### Stage 4: nonlinear and model-agnostic confirmation
+### Overall selection rule
 
-For nonlinear models, feature contribution will be compared using tree-based importance and model-agnostic methods such as permutation importance and SHAP.
+The final feature position is based on agreement across several kinds of evidence:
 
-No single importance method will be treated as authoritative. The objective is to compare whether important variables remain stable across model families, temporal folds, and evaluation methods.
+**semantic eligibility → point-in-time eligibility → data-quality treatment → temporal checks → filter methods → embedded/wrapper methods → nonlinear importance → stability and sensitivity analysis**
 
-### Selection principle
-
-The final feature set will therefore be based on converging evidence rather than on one algorithm. The intended sequence is:
-
-**semantic and governance eligibility → point-in-time eligibility → data-quality eligibility → temporal/calendar diagnostics → filter methods across chronological folds → embedded/wrapper methods → nonlinear/model-agnostic confirmation → stability and sensitivity checks**
-
-A feature may be statistically strong and still be rejected if its timing or meaning cannot be defended. Conversely, a semantically valid feature may remain available for modelling even if it is later removed because it adds little predictive value.
+A field may be statistically strong and still be excluded for timing or governance reasons. A valid field may also be dropped later if it adds little predictive value.
 
 ## Modelling population
 
-The ordinary labelled modelling population is restricted to records dated through **23 July 2016**. All later records remain outside this population because the 58,825 later observations in the source data are labelled successful.
+Ordinary supervised modelling is limited to records dated through **23 July 2016**. The 58,825 later records are all labelled as successful repayment. The source material does not explain whether that break comes from sampling, labelling, extraction, or a business-process change, so the later block is not assumed to be comparable with the earlier mixed-outcome population.
 
-The reason is methodological rather than simply numerical. After 23 July 2016, the target distribution changes discontinuously to **100% successful repayment**. The available documentation does not explain whether this reflects a change in sampling, labelling, business process, extract construction, or another data-generation mechanism. Those later records are therefore not assumed to be comparable with the earlier mixed-outcome population.
-
-Including them in ordinary supervised training would artificially increase the share of successful cases and could distort both class balance and estimated predictor relationships. They are retained outside the modelling population for lineage and may later be used as a separate diagnostic population, for example to assess distributional shift or covariate drift. They are not treated as a conventional labelled validation set.
-
-The model-ready dataset is built from the validated interim-cleaned dataset, not directly from the raw source.
+The model-ready table is built from the validated interim data, not directly from the raw CSV.
 
 ## Target
 
-The source field `label` is defined as `1 = repaid within five days` and `0 = failure to repay within five days`.
+The source uses `label = 1` for repayment within five days and `label = 0` for failure to repay within five days.
 
-For modelling clarity, the processed dataset converts this into:
+For modelling, this becomes:
 
 - `delinquent_5d = 1` when `label = 0`;
 - `delinquent_5d = 0` when `label = 1`.
 
-The original `label` field is not carried into the processed modelling table because it is an exact inverse of the target and would create target leakage if accidentally used as a predictor.
+The original `label` is then removed. Keeping both would add no information and could create accidental target leakage.
 
-## Approved predictors
-
-The first model-ready dataset contains the following predictors after Stage 1 eligibility screening:
+## Stage 1 approved predictors
 
 ### Network tenure
 
@@ -118,41 +97,41 @@ The first model-ready dataset contains the following predictors after Stage 1 el
 - `cnt_da_rech30`
 - `cnt_da_rech90`
 
-### Derived prior-participation features
+### Derived customer-history fields
 
-- `prior_tx_count` — number of transactions for the same `msisdn` on **strictly earlier dates**;
+- `prior_tx_count` — number of transactions for the same `msisdn` on strictly earlier dates;
 - `is_repeat_customer` — `1` when at least one strictly earlier transaction exists, otherwise `0`.
 
-The derived customer-history fields are calculated while `msisdn` is still available in controlled processing. Transactions on the same date do not count as prior transactions for one another. `msisdn` is then removed from the processed output.
+These two fields are created while `msisdn` is still available. Same-day transactions do not count as prior transactions for each other. `msisdn` is removed afterwards.
 
-Because customer history before 1 June 2016 is not observed, these two derived fields are **provisional analytical predictors**. Their usefulness will be compared with models that exclude them.
+Because customer history before 1 June is not visible, the two history variables are provisional analytical predictors. Later modelling compares results with and without them.
 
-## Control field retained outside the predictor set
+## Temporal control
 
-- `pdate` is retained in the processed dataset for temporal splitting, reproducibility, and lineage. It is **not an approved predictor**.
+`pdate` stays in the processed dataset for splitting, lineage, and reproducibility. It is not an approved predictor.
 
-## Fields excluded from the first model-ready predictor set
+## Fields excluded at Stage 1
 
-- `msisdn` — identifier-like; required only for controlled grouping and chronology, then removed;
+- `msisdn` — identifier-like and used only for controlled grouping/chronology;
 - `pcircle` — constant in the current dataset;
 - all `fr_*` fields — exact construction unresolved;
-- `maxamnt_loans30`, `maxamnt_loans90` — redundant/derived consistency checks;
+- `maxamnt_loans30`, `maxamnt_loans90` — derived/redundant consistency checks;
 - `medianamnt_loans30`, `medianamnt_loans90` — encoding unresolved;
-- `payback30`, `payback90` — excluded pending confirmation that only information available before the current outcome is used;
-- `cnt_loans30`, `amnt_loans30`, `cnt_loans90`, `amnt_loans90` — **not included in the first model-ready dataset until point-in-time construction is verified**. The source describes them as historical-window variables, but does not establish whether the current credit transaction is included. They remain analytically useful and may be reconsidered later if leakage can be ruled out;
-- source `label` — replaced by `delinquent_5d` and removed from the predictor table;
-- `pdate` — retained only as a temporal control, not as a predictor.
+- `payback30`, `payback90` — held back until point-in-time availability can be confirmed;
+- `cnt_loans30`, `amnt_loans30`, `cnt_loans90`, `amnt_loans90` — not used in the first model-ready table until it is clear whether the current transaction is included in their historical windows;
+- source `label` — replaced by `delinquent_5d`;
+- `pdate` — retained as a control, not a predictor.
 
 ## Missing values
 
-Values converted to missing during cleaning remain missing in the model-ready dataset. They are **not imputed before train/test splitting**. Any imputation used for modelling will be fitted inside the training pipeline/folds so that information from validation or test data cannot influence training-time preprocessing.
+Values set to missing during cleaning remain missing in the model-ready table. They are not imputed before train/test splitting. Any imputation used by a model is fitted inside the training pipeline or fold so that validation and test data do not influence preprocessing.
 
-## Interpretation of repeat-customer features
+## Repeat-customer interpretation
 
-`prior_tx_count` and `is_repeat_customer` describe observed prior participation, not inherent creditworthiness. Returning borrowers may be a selected population because the full credit-approval procedure is unknown and repeat approvals may follow different eligibility or underwriting rules. Any association with repayment therefore remains observational rather than causal.
+`prior_tx_count` and `is_repeat_customer` describe observed prior participation, not inherent creditworthiness. The approval process is unknown, so returning borrowers may represent a selected group. The missing pre-June history also means that some early records may be wrongly classified as first-time simply because earlier activity is outside the extract.
 
-The observation-window analysis adds a second limitation: customers with activity before 1 June may be misclassified as first-time customers early in the dataset simply because earlier history is unavailable. This is why repeat-customer features require sensitivity analysis rather than unconditional inclusion.
+For both reasons, the relationship between repeat participation and repayment is treated as observational and tested through sensitivity analysis.
 
-## Status
+## Current status
 
-This is the approved feature set for the **first Module 3 model-ready dataset** after Stage 1 governance and point-in-time eligibility screening. It is not yet the final statistically selected feature set. Later stages compare filter, embedded, wrapper, and model-agnostic methods while explicitly accounting for temporal/calendar effects and observation-window bias. Material revisions are reflected in the data dictionary/change log, narrative documentation, and Git history.
+This document records the **Stage 1** predictor set and the methodology used to move beyond it. It is not the final model specification. Later stages compare statistical and model-based evidence across time, and material changes are recorded in the modelling narrative, model decision log, data dictionary, and Git history.

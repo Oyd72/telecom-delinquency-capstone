@@ -1,19 +1,12 @@
 # Data dictionary
 
-This dictionary is based on the public **Delinquency Telecom Dataset** used for the capstone project and on the source field descriptions supplied with the dataset. The current CSV contains **209,593 transaction-level observations and 36 columns**. The labelled modelling population is restricted to records dated through **23 July 2016**; all 58,825 later observations are labelled successful and are kept outside the ordinary labelled modelling population.
+This dictionary covers the public **Delinquency Telecom Dataset** used in the capstone. The field meanings come from the descriptions supplied with the dataset and are checked against the CSV itself. The current file has **209,593 transaction-level records and 36 columns**. For labelled modelling, the project uses records through **23 July 2016**. The 58,825 later records are all labelled as successful repayment and are kept outside the ordinary modelling population.
 
-## Evidence hierarchy
+## How field meanings are assessed
 
-Field treatment follows this order:
+The supplied Kaggle description is the starting point for field meaning. I then check whether the observed values and structure are consistent with that description. Cross-field and within-customer checks provide further evidence where they are useful. Statistical anomaly methods are treated as diagnostics, not as proof that a value is wrong. Where the documentation and the observed encoding do not line up, the uncertainty is left visible rather than resolved by guesswork.
 
-1. the supplied Kaggle data description is the primary semantic source;
-2. the actual CSV structure and observed distributions are used to test whether those semantics are consistent with the data;
-3. cross-field and within-customer consistency checks provide additional evidence;
-4. statistical anomaly methods are diagnostic and do not, by themselves, prove that a value is invalid;
-5. where documentation and observed encoding conflict, the ambiguity is documented rather than silently resolved;
-6. external material may support generic telecom terminology, but is not used to invent undocumented business rules.
-
-Structural validity is not the same as dataset-specific normality. Blocking validation rules are used only where the field semantics support them. Distributional anomalies are otherwise retained as diagnostic flags until stronger evidence exists.
+Blocking rules are therefore limited to cases where the field meaning supports them. An unusual value is not automatically an invalid value.
 
 ## Field assessment
 
@@ -56,54 +49,48 @@ Structural validity is not the same as dataset-specific normality. Blocking vali
 | `pdate` | Date | Date | Temporal filtering / lineage | Must parse as a valid date and be non-null. Use for chronology, modelling-period restriction and split logic; exclude as default predictor. | Essential for point-in-time controls and derivation of prior participation. |
 | `label` | Whether the loan was repaid within 5 days: 1 = success, 0 = failure | Binary | Target | Blocking rule: non-null and values restricted to `{0,1}`. Invalid/missing targets are quarantined from supervised modelling and logged. | Does not distinguish late repayment from permanent non-payment. |
 
-## Derived fields proposed for the pipeline
+## Derived fields used in the pipeline
 
 | Derived field | Meaning | Use | Limitation |
 |---|---|---|---|
 | `prior_tx_count` | Number of transactions for the same `msisdn` on strictly earlier dates | Candidate behavioural feature and analysis variable | Must be calculated chronologically to avoid future leakage. |
 | `is_repeat_customer` | Whether the customer has at least one strictly earlier transaction | Candidate behavioural feature and evaluation slice | Returning borrowers may be a selected population because the underlying credit approval procedure is unknown. |
 
-The observed association between repeat participation and five-day repayment must therefore not be interpreted causally. First-time and returning borrowers may have been approved under different eligibility or underwriting rules, meaning they may not come from the same underlying applicant population.
+The difference between first-time and returning borrowers is observational. The two groups may have been approved under different rules, so the association with five-day repayment should not be read as causal.
 
-## Modelling and validation position
+## Modelling position
 
-### Candidate predictors
+### Candidate families
 
-Subject to cleaning, point-in-time checks and leakage review, candidate families include:
+Subject to cleaning and point-in-time checks, the candidate families are network tenure, recharge behaviour, selected borrowing-history fields, and derived prior-participation measures built only from earlier transactions.
 
-- network tenure: `aon` after treatment of invalid/contaminated values;
-- recharge behaviour: count fields, totals, last recharge amount and selected median measures whose meaning is supported;
-- borrowing history: loan counts and totals;
-- derived prior-participation features calculated only from strictly earlier transactions.
+### Fields kept out of the approved predictor set
 
-### Excluded or restricted fields
-
-- `msisdn` — identifier-like field, never a predictive feature;
-- `pcircle` — constant in the current dataset;
-- `pdate` — temporal control rather than a default predictor;
-- all `fr_*` fields — exact construction unresolved, therefore excluded from the approved model feature set unless clarified;
-- `maxamnt_loans30` and `maxamnt_loans90` — treated as derived/redundant consistency checks rather than independent predictors;
+- `msisdn` — identifier-like and never a predictor;
+- `pcircle` — constant in this dataset;
+- `pdate` — used for chronology, not as a default predictor;
+- all `fr_*` fields — exact construction unresolved;
+- `maxamnt_loans30` and `maxamnt_loans90` — treated as derived consistency checks;
 - `medianamnt_loans30` and `medianamnt_loans90` — unresolved encoding;
-- `payback30` and `payback90` — excluded pending point-in-time/leakage verification;
-- any field whose meaning or encoding remains unresolved;
-- any value identified as a hard semantic violation or high-confidence contamination, with the original raw value preserved for auditability.
+- `payback30` and `payback90` — held back until point-in-time availability is verified;
+- any other field whose meaning or encoding remains unresolved.
 
-## Data-quality and governance principles
+## Data-quality and governance rules
 
-1. Structural validity is not the same as dataset-specific normality.
-2. Hard blocking rules are used only where source semantics support them.
-3. Statistical outliers are not automatically deleted; unusual values remain diagnostic unless stronger semantic, cross-field, or longitudinal evidence supports invalidation.
-4. Genuine count fields must be non-negative and integer-valued; extreme positive counts are monitored rather than rejected solely for being large.
-5. 30-day and 90-day totals/counts are checked for internal consistency where the nested-window logic supports it.
-6. `data/raw/` is immutable. Cleaning occurs in `data/interim/`; raw values are preserved when cleaning flags or replaces questionable observations.
-7. Any record or value removed or altered during pipeline execution must be recorded automatically in the pipeline audit log, including the applicable rule and treatment. Git history separately records changes to code, configuration, and governance decisions.
-8. `msisdn` is retained only where necessary for controlled grouping, chronology and split checks, then removed or pseudonymised before model-ready output.
-9. Records after 23 July 2016 remain outside the ordinary labelled modelling population because all later records are labelled successful.
-10. Returning-customer effects are evaluated separately because the underlying approval process is unknown and selection effects are plausible.
-11. Final Great Expectations rules will be derived from this dictionary and the cleaning policy rather than from arbitrary thresholds.
+1. An unusual value is not automatically an invalid value.
+2. Blocking rules are used only where the field meaning supports them.
+3. Statistical outliers remain diagnostic unless semantic, cross-field, or longitudinal evidence justifies stronger treatment.
+4. Count fields must be non-negative and integer-valued; rare large counts are monitored rather than rejected simply because they are large.
+5. Related 30-day and 90-day measures are checked for consistency where the nested windows make that comparison meaningful.
+6. `data/raw/` is left unchanged. Cleaning is carried out in `data/interim/`.
+7. Changes made during pipeline execution are logged with the rule and treatment applied. Git history separately records changes to code and governance decisions.
+8. `msisdn` is kept only as long as grouping and chronology require it, then removed before model-ready output.
+9. Records after 23 July 2016 remain outside the ordinary labelled modelling population because all later outcomes are successful.
+10. Returning-customer effects are reviewed separately because the underlying approval process is unknown.
+11. Great Expectations checks are derived from this dictionary and the cleaning policy, not from arbitrary thresholds.
 
 ## Source and status
 
-Source: Sivakrishna3311, *Delinquency Telecom Dataset*, Kaggle, plus the accompanying field-description image supplied with the dataset.
+Source: Sivakrishna3311, *Delinquency Telecom Dataset*, Kaggle, together with the field-description image supplied with the dataset.
 
-Status: **Domain-informed working data dictionary for Module 3**. It is aligned with `docs/governance/data_cleaning_policy.md` and supersedes the preliminary Module 2 version. Future material changes must be supported by additional source evidence or reproducible analysis and recorded in `docs/data_dictionary_changelog.md` and Git history.
+Status: **working Module 3 data dictionary**. It is aligned with `docs/governance/data_cleaning_policy.md` and replaces the preliminary Module 2 version. Material changes should be supported by source evidence or reproducible analysis and recorded in `docs/data_dictionary_changelog.md` and Git history.

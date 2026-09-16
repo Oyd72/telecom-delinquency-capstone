@@ -1,161 +1,129 @@
 # Model development narrative
 
-This document records the analytical decisions made after the cleaned modelling population was created. It complements the cleaning narrative by explaining how feature selection and validation strategy evolve as new evidence is produced.
+This file records how the modelling approach developed after the cleaned modelling population was created. It is meant to explain the sequence of decisions: what we tested, what we found, and why the next step changed.
 
 ## Starting modelling population
 
-The model-ready population contains 150,767 records dated from 1 June through 23 July 2016, with 26,162 delinquent cases. Records after 23 July remain outside ordinary supervised modelling because the later block contains only successful repayments and may follow a different data-generation or labelling process.
+The model-ready population has 150,767 records dated from 1 June through 23 July 2016, including 26,162 delinquent cases. Records after 23 July are not used in ordinary supervised modelling because every later outcome is successful repayment and the source does not explain why that regime changes.
 
-The first processed dataset contains the Stage 1-approved candidate predictors plus `pdate` as a temporal control. `msisdn` and the original source `label` are removed before modelling.
+The first processed table contains the Stage 1-approved predictors plus `pdate` as a temporal control. `msisdn` and the source `label` are removed before modelling.
 
-## Stage 1: governance and point-in-time eligibility
+## Stage 1: eligibility before statistics
 
-Feature selection begins with a non-statistical eligibility screen. Variables are admitted only where their meaning, timing, data-quality treatment, and governance position can be defended. Identifier-like fields, unresolved encodings, redundant derived fields, and variables with unresolved point-in-time leakage risk are excluded before statistical selection begins.
+Feature selection starts with a non-statistical screen. A field has to make sense semantically, be available at the intended scoring point, have a defensible data-quality treatment, and avoid obvious leakage or identifier problems. Unresolved encodings and redundant derived fields are held back even if they might look predictive.
 
-This stage produced the first candidate predictor set documented in `docs/governance/feature_selection.md`.
+The resulting Stage 1 set is documented in `docs/governance/feature_selection.md`.
 
-## Initial temporal split and representativeness check
+## Initial chronological split
 
-An initial 80/20 chronological split was tested rather than assumed to be representative. Records through 13 July 2016 formed the earlier development subset; 14–23 July formed the later subset.
+The first test used an 80/20 chronological split: records through 13 July for development and 14–23 July as the later subset.
 
-The comparison showed material differences:
+The two periods differed more than expected:
 
-- delinquency increased from about 16.55% to 20.78%;
-- repeat-customer share increased from about 6.84% to 12.94%;
-- `daily_decr30` and `daily_decr90` showed very large PSI values of about 2.9;
-- `rental30` and `rental90` also showed substantial temporal distribution shifts.
+- delinquency rose from about 16.55% to 20.78%;
+- repeat-customer share rose from about 6.84% to 12.94%;
+- `daily_decr30` and `daily_decr90` had PSI values around 2.9;
+- `rental30` and `rental90` also shifted substantially.
 
-This meant that the later subset could not simply be described as distributionally representative of the earlier subset.
+That made it inappropriate to describe the later block as simply representative of the earlier one.
 
-## Calendar-position and possible pay-cycle effects
+## Calendar-position effects
 
-The apparent temporal drift was investigated further instead of being accepted at face value. Matching day-of-month patterns were compared across June and July.
+Before treating the differences as straightforward temporal drift, matching days of the month were compared across June and July.
 
-Several account-behaviour variables were strikingly stable by day of month across the two months:
+The day-of-month patterns were very similar for several variables:
 
 - `daily_decr30` and `daily_decr90`: Spearman correlation about 0.94;
 - `rental30`: about 0.98;
 - `rental90`: about 0.98.
 
-Delinquency itself showed only a moderate paired day-of-month correlation of about 0.34.
+Delinquency itself was much less stable by day of month, with a correlation of about 0.34.
 
-This suggests that part of the measured temporal drift may arise from calendar-position effects. A salary or recurring-income cycle is a plausible explanation, but the dataset does not contain salary-payment dates or another variable that could establish this causally. The project therefore records this as a hypothesis, not as a fact.
+A recurring income or pay-cycle effect is therefore plausible, but it cannot be established from this dataset because salary dates are not available. The practical consequence is more important than the explanation: one chronological split is not enough to judge feature stability.
 
-The validation strategy is adjusted accordingly: a simple 80/20 chronological split is not treated as the sole basis for feature selection or final validation. Feature stability will instead be checked across multiple chronological folds while calendar-position effects are considered explicitly.
+## Observation-window bias in customer history
 
-## Observation-window bias in repeat-customer features
+`prior_tx_count` and `is_repeat_customer` use only strictly earlier records, so they do not look forward in time. Even so, they have a different problem: customer history before 1 June 2016 is invisible.
 
-The derived fields `prior_tx_count` and `is_repeat_customer` were designed to use only strictly earlier transactions. This protects against future leakage, but a separate limitation emerged: customer history before 1 June 2016 is unavailable.
+As the dataset progresses, the apparent new-customer share falls almost monotonically (Spearman about -0.99 with days since the start) while observed history length rises almost perfectly (about 0.998). A customer seen early in June can therefore look “new” simply because earlier activity is outside the extract.
 
-The diagnostics show a nearly monotonic decline in the share of apparently new customers as the dataset progresses (Spearman correlation about -0.99 with days since the dataset start), while mean observed history length rises almost perfectly over time (about 0.998).
+For that reason, the two history variables are kept for exploration and sensitivity testing rather than treated as automatically reliable production predictors.
 
-This is strong evidence of left-censoring / observation-window bias. Someone appearing early in June may be a long-standing borrower whose earlier activity is simply outside the extract, while a customer appearing in July has had much more opportunity to accumulate visible history.
+## Stage 2: filter screening across folds
 
-For that reason, `prior_tx_count` and `is_repeat_customer` remain useful exploratory variables but are no longer treated as automatically stable production predictors. Later feature-selection and modelling stages will compare results with and without these variables.
-
-## Revised Stage 2 strategy
-
-Stage 2 uses established filter methods such as correlation analysis, low-variance checks, mutual information, and univariate relevance measures. However, rankings will not be interpreted from one arbitrary chronological block alone.
-
-The revised approach is to:
-
-- calculate filter evidence across multiple chronological development folds;
-- examine whether feature relevance is reasonably stable across those folds;
-- retain calendar-position diagnostics as context when account-behaviour variables appear to shift;
-- run sensitivity analysis with and without `prior_tx_count` and `is_repeat_customer`;
-- avoid automatic feature removal from any one filter statistic.
-
-The purpose is to separate genuine predictive relevance from artefacts caused by observation-window position or short-term calendar composition.
-
-## Stage 2 fold-stability results
-
-The revised filter screening used four calendar-aware chronological folds rather than a single 80/20 block:
+Stage 2 uses filter methods such as correlation, low-variance checks, mutual information, and univariate relevance. The analysis was revised so that those statistics are compared across four calendar-aware folds:
 
 - 1–13 June: 33,647 records, delinquency 15.85%;
 - 14–30 June: 49,507 records, delinquency 16.02%;
 - 1–13 July: 38,965 records, delinquency 17.83%;
 - 14–23 July: 28,648 records, delinquency 20.78%.
 
-The repeat-customer share increased from about 2.13% in early June to 12.94% in late July. In light of the left-censoring diagnostics, this increase is treated as partly mechanical and is not interpreted as proof of a true change in borrower composition.
+Repeat-customer share rose from about 2.13% in early June to 12.94% in late July, which is interpreted cautiously because of left-censoring.
 
-Across the four folds, the strongest and most consistently relevant feature families were account spending/decrement and main-account recharge behaviour. The highest average mutual-information rankings included `sumamnt_ma_rech90`, `daily_decr90`, `daily_decr30`, `sumamnt_ma_rech30`, `cnt_ma_rech90`, and `cnt_ma_rech30`.
+The most persistent filter signals came from account decrement/spending and main-account recharge behaviour. `daily_decr30` and `daily_decr90` had mean mutual information around 0.151 and mean absolute Spearman relationships to delinquency around 0.437. `sumamnt_ma_rech90`, `sumamnt_ma_rech30`, `cnt_ma_rech90`, and `cnt_ma_rech30` also ranked strongly.
 
-`daily_decr30` and `daily_decr90` had the highest mean mutual information of about 0.151, with mean absolute Spearman relationships to delinquency of about 0.437. Their mutual-information values varied more across folds than several recharge variables, which is consistent with the previously identified calendar-position effects. They therefore remain strong candidates, but their temporal stability needs to be considered in later model-based stages rather than being accepted on filter strength alone.
+The decrement variables varied more across folds than some recharge variables, which fits the earlier calendar-position finding. `cnt_ma_rech90`, for example, had a mean mutual information around 0.099 with comparatively stable ranking.
 
-Recharge totals and counts were somewhat more stable across folds. `cnt_ma_rech90`, for example, had a mean mutual information of about 0.099 and a relatively low standard deviation of the mutual-information rank (about 1.26). `sumamnt_ma_rech90` also ranked strongly, although its rank varied somewhat more.
+Removing the two history variables did not change the top ten non-history features. No feature was dropped automatically after Stage 2.
 
-Several mid-ranked predictors, including `last_rech_date_ma`, `medianmarechprebal30`, `medianmarechprebal90`, and `last_rech_amt_ma`, showed lower average mutual information but comparatively stable values across folds. They are not removed at this stage because filter evidence alone is not sufficient to judge their incremental value once correlated predictors are modelled jointly.
+## Stage 3: L1 and RFE
 
-The sensitivity analysis that excluded `prior_tx_count` and `is_repeat_customer` produced the same top ten ranked non-history features. This confirms that the principal Stage 2 ranking is not being driven by the left-censored customer-history variables.
+Stage 3 compared L1-regularised logistic regression with recursive feature elimination (RFE), using the same four chronological folds and fitting preprocessing inside each fold.
 
-No feature is removed automatically after Stage 2. The filter results are treated as evidence for Stage 3, where embedded and wrapper methods can test which variables retain value when predictors are considered jointly.
+L1 was not very selective in the first three folds: cross-validation chose `C = 10`, and all 20 candidate features remained. In late July, stronger regularisation (`C ≈ 0.0139`) retained 15. This is why L1 selection frequency alone is not treated as strong evidence.
 
-## Stage 3: embedded and wrapper selection
+RFE was more selective because it was asked to keep 10 predictors per fold. Three fields were selected by RFE in every fold: `daily_decr30`, `cnt_ma_rech90`, and `sumamnt_ma_rech30`. Of these, `daily_decr30` and `cnt_ma_rech90` were also selected by L1 in every fold.
 
-Stage 3 compared two established model-based approaches across the same four calendar-aware folds: L1-regularised logistic regression as an embedded method and recursive feature elimination (RFE) with logistic regression as a wrapper method. Preprocessing was fitted separately within each fold so that imputation and scaling did not borrow information across periods.
+`daily_decr30` had the strongest joint stability, with consistent coefficient sign and an average RFE rank of 1.0. `cnt_ma_rech90` showed the same all-fold selection pattern. Several other fields remained plausible but were less stable, including `daily_decr90`, `sumamnt_ma_rech90`, `last_rech_amt_ma`, `aon`, and `medianamnt_ma_rech30`.
 
-The L1 result was only partly selective. In the first three folds, cross-validation chose a weak regularisation setting (`C = 10`) and retained all 20 candidate predictors. In the late-July fold, stronger regularisation (`C ≈ 0.0139`) retained 15 predictors. This means that simple L1 selection frequency should not be interpreted as strong evidence on its own: in most folds the fitted penalty was too weak to generate much sparsity.
+`is_repeat_customer` is a useful example of why sensitivity testing matters. L1 retained it in every fold, but RFE selected it in only one and its coefficient sign was not fully stable. Given the known left-censoring issue, that is not enough to justify relying on it.
 
-RFE was more discriminating because it was explicitly asked to retain 10 predictors per fold. Only three features were selected by RFE in all four folds: `daily_decr30`, `cnt_ma_rech90`, and `sumamnt_ma_rech30`. Of these, `daily_decr30` and `cnt_ma_rech90` were also selected by L1 in every fold and therefore showed the strongest agreement between the embedded and wrapper approaches.
+No final feature set was declared after Stage 3.
 
-`daily_decr30` had the strongest joint stability: it was selected by both methods in all folds, had a mean absolute L1 coefficient of about 5.84, consistent coefficient sign, and an average RFE rank of 1.0. `cnt_ma_rech90` showed the same all-fold selection pattern, with a mean absolute L1 coefficient of about 1.59 and consistent sign.
+## Stage 4: nonlinear confirmation
 
-Several other variables remained credible but less stable across methods. `daily_decr90`, `sumamnt_ma_rech90`, `last_rech_amt_ma`, `aon`, and `medianamnt_ma_rech30` were retained by L1 in every fold and by RFE in three of four folds. `daily_decr90` showed some coefficient-sign instability, while `sumamnt_ma_rech90` had only 50% sign consistency, suggesting that multicollinearity or changing relationships with correlated recharge variables may be affecting coefficient interpretation.
+Stage 4 used forward-chaining XGBoost. Each evaluation period was predicted only from earlier data. Feature contribution was assessed with both permutation importance and SHAP, once with all 20 features and again with the two history variables removed.
 
-`cnt_ma_rech30` and `rental90` were retained by L1 in all folds but by RFE in only half. They therefore remain candidates rather than confirmed selections.
+With all features, ROC-AUC was about 0.896 in late June, 0.823 in early July, and 0.832 in late July. Average precision was about 0.704, 0.502, and 0.580.
 
-The left-censored history variable `is_repeat_customer` illustrates why sensitivity analysis remains necessary. L1 retained it in every fold, but RFE selected it in only one of four folds and its coefficient sign was not fully stable. This result is not treated as evidence that repeat-customer status is a reliable production predictor, particularly because the observation-window analysis already showed that its apparent prevalence changes mechanically over time.
+Removing `prior_tx_count` and `is_repeat_customer` made almost no difference. ROC-AUC was roughly 0.896, 0.825, and 0.832 without them, with average precision also effectively unchanged. That gave a practical reason to exclude the history variables from the primary specification: their governance problem is real, while their incremental value is negligible.
 
-No final feature set is declared after Stage 3. The principal evidence so far favours `daily_decr30` and `cnt_ma_rech90` as the most stable candidates across filter, embedded, and wrapper methods, while several additional recharge and account-behaviour variables remain plausible. The next stage should test nonlinear and model-agnostic importance before any irreversible feature removal is made.
+`cnt_ma_rech90` was the most consistently strong nonlinear predictor across permutation importance and SHAP. `last_rech_date_ma` was also strong. `daily_decr30` remained important, especially under SHAP, although its permutation rank moved more, which is consistent with shared information and calendar structure.
 
-## Stage 4: nonlinear and model-agnostic confirmation
+`aon`, `sumamnt_ma_rech90`, `rental30`, `last_rech_amt_ma`, and `medianmarechprebal90` showed continuing value. `daily_decr90` had weaker permutation importance but stronger SHAP importance, again suggesting overlap with `daily_decr30` rather than no signal.
 
-Stage 4 used forward-chaining XGBoost models so that each evaluation period was predicted only from earlier data. Feature importance was measured on the next chronological period with both permutation importance and SHAP. The process was repeated with all 20 features and with the two left-censored customer-history features removed.
+## Candidate feature position after Stages 2–4
 
-Predictive performance remained materially useful across all three forward evaluations. With all features, ROC-AUC was about 0.896 for late June, 0.823 for early July, and 0.832 for late July. Average precision was about 0.704, 0.502, and 0.580 respectively. Performance therefore declined after the earliest evaluation period but remained substantially above random ranking in the later periods.
+No single selection method is treated as authoritative. The strongest combined support was for:
 
-Removing `prior_tx_count` and `is_repeat_customer` did not reduce performance in a meaningful way. ROC-AUC changed from approximately 0.896 to 0.896 in late June, 0.823 to 0.825 in early July, and 0.832 to 0.832 in late July. Average precision was likewise effectively unchanged or slightly better without the history variables. This supports excluding those fields from the primary production-oriented candidate set: their left-censoring risk is real, while their incremental predictive contribution appears negligible.
+- `cnt_ma_rech90`;
+- `daily_decr30`;
+- `last_rech_date_ma`;
+- `sumamnt_ma_rech90`;
+- `aon`;
+- `last_rech_amt_ma`.
 
-Across permutation importance and SHAP, `cnt_ma_rech90` was the most consistently strong nonlinear predictor. It ranked first or near first under both approaches and remained the top feature after the history variables were removed. `last_rech_date_ma` also showed strong and comparatively stable importance, ranking second by mean permutation importance and remaining near the top by SHAP.
+A second group remained worth testing rather than dropping immediately: `daily_decr90`, `sumamnt_ma_rech30`, `medianamnt_ma_rech30`, `medianmarechprebal90`, `rental30`, and `cnt_ma_rech30`.
 
-`daily_decr30` remained a major predictor, particularly under SHAP, where its average absolute contribution was the largest of the candidate variables. Its permutation rank was less stable, which is consistent with the earlier finding that this feature has strong calendar-position structure and is correlated with related account-behaviour variables. This divergence is interpreted as evidence that the variable is important but shares predictive information with other features rather than as a reason to remove it.
+The history variables stayed outside the primary production-oriented set because more reliable pre-observation history would be needed to use them confidently.
 
-`aon` and `sumamnt_ma_rech90` remained credible across the nonlinear methods and also had support from earlier stages. `rental30`, `last_rech_amt_ma`, and `medianmarechprebal90` showed secondary but persistent nonlinear importance. `daily_decr90` had relatively weak permutation importance but stronger SHAP importance, again suggesting shared or interacting information with `daily_decr30` rather than a clean independent effect.
+## Comparing feature-set variants
 
-The forward-chaining sensitivity path without history variables produced a very similar top-importance structure. This is important because it shows that the principal model signal is not dependent on the potentially biased repeat-customer fields.
+Three non-history XGBoost variants were compared under the same forward-chaining setup:
 
-## Consolidated candidate feature position after Stages 2–4
+- full non-history set: 18 features;
+- core-plus-secondary set: 12 features;
+- compact core: 6 features.
 
-The project does not treat any single feature-selection method as authoritative. The current recommendation is based on convergence across filter methods, linear embedded/wrapper methods, nonlinear importance, temporal stability, and governance constraints.
+The 18-feature model had mean ROC-AUC about 0.851, mean average precision about 0.596, mean Brier score about 0.117, mean ECE about 0.075, and mean top-20% capture about 60.7%.
 
-A **core candidate set** is supported most consistently by the combined evidence:
+The 12-feature model was almost the same on discrimination and ranking: mean ROC-AUC about 0.850, average precision about 0.594, and top-20% capture about 60.1%. Calibration was only slightly weaker, with mean Brier around 0.118 and ECE around 0.078.
 
-- `cnt_ma_rech90` — strong and stable across filter, RFE, permutation importance, and SHAP;
-- `daily_decr30` — strong across all stages, but requiring explicit monitoring for calendar-position sensitivity;
-- `last_rech_date_ma` — moderate filter evidence but strong nonlinear importance and stable practical interpretation;
-- `sumamnt_ma_rech90` — strong filter evidence and persistent nonlinear importance;
-- `aon` — consistent model-based contribution across linear and nonlinear methods;
-- `last_rech_amt_ma` — stable secondary contribution across methods.
+The six-feature model remained useful for ranking but gave up more calibration quality. Mean ROC-AUC fell to about 0.844, average precision to about 0.587, and mean ECE rose to about 0.124.
 
-Several **secondary candidates** remain reasonable and should be tested in model-comparison runs rather than removed immediately: `daily_decr90`, `sumamnt_ma_rech30`, `medianamnt_ma_rech30`, `medianmarechprebal90`, `rental30`, and `cnt_ma_rech30`. Their evidence is less uniform, often because of correlation with stronger variables or calendar-position effects.
+The 12-feature specification was therefore preferred as the working model: it removes one third of the predictors from the full set for very little loss in useful performance. The 18-feature version remains a challenger.
 
-`prior_tx_count` and `is_repeat_customer` should remain outside the primary production-oriented feature set unless a future dataset provides reliable pre-observation customer history. Their exclusion is supported both by governance reasoning and by the Stage 4 sensitivity result showing essentially unchanged predictive performance without them.
-
-## Feature-set model comparison
-
-Three non-history feature variants were compared under identical forward-chaining XGBoost settings: the full 18-feature non-history set, a 12-feature core-plus-secondary set, and a compact six-feature core. The comparison considered discrimination, calibration, and top-20% delinquent capture rather than ROC-AUC alone.
-
-The **full 18-feature set** had the strongest average results overall: mean ROC-AUC about 0.851, mean average precision about 0.596, mean Brier score about 0.117, mean expected calibration error about 0.075, and mean top-20% capture about 60.7%.
-
-The **12-feature core-plus-secondary set** performed almost identically on discrimination and business ranking: mean ROC-AUC about 0.850, mean average precision about 0.594, and mean top-20% capture about 60.1%. Its calibration was only slightly weaker, with mean Brier score about 0.118 and mean expected calibration error about 0.078. In practical terms, reducing the feature set from 18 to 12 removed one third of the predictors at a very small cost in discrimination and capture.
-
-The **six-feature compact core** retained useful ranking performance but showed a clearer loss in calibration and some discrimination. Mean ROC-AUC fell to about 0.844, mean average precision to about 0.587, and mean expected calibration error increased to about 0.124. Its mean top-20% capture remained close to the 12-feature set at about 60.0%, but calibration deteriorated sharply in the early-July evaluation. The compact model is therefore considered too aggressive a reduction for the primary specification at this stage.
-
-A separate issue emerged across all three variants in late July. Mean predicted risk substantially exceeded the observed delinquency rate, producing calibration gaps of about 0.16–0.17. Because this appears across the full and reduced feature sets, it is interpreted primarily as a temporal-calibration problem rather than a feature-count problem. The model therefore still requires explicit calibration assessment and likely post-hoc calibration fitted without using future data.
-
-### Preferred specification after feature-set comparison
-
-The current preferred modelling specification is the **12-feature core-plus-secondary set**:
+The preferred 12 features are:
 
 - `cnt_ma_rech90`
 - `daily_decr30`
@@ -170,60 +138,42 @@ The current preferred modelling specification is the **12-feature core-plus-seco
 - `rental30`
 - `cnt_ma_rech30`
 
-This choice is an interpretation based on parsimony and converging evidence rather than a statistically proven optimum. The 12-feature set sacrifices very little discrimination or top-risk capture relative to the full 18-feature model while reducing complexity and avoiding six weaker predictors. The 18-feature model remains a useful benchmark/challenger rather than being discarded.
+This is a reasoned choice based on parsimony and converging evidence, not a claim that a mathematical optimum has been proven.
 
-## Temporal calibration experiment
+## Calibration
 
-The preferred 12-feature specification was then tested with a leakage-safe post-hoc calibration design. For each evaluation period, the base XGBoost model was trained on earlier data, the calibrator was fitted on the immediately preceding seven-day window, and performance was measured only on the subsequent evaluation period. This preserved chronology and prevented the evaluation fold from influencing either model fitting or calibration fitting.
+All three feature-set variants overpredicted risk badly in late July, which pointed to a temporal calibration problem rather than a feature-count problem.
 
-Three probability outputs were compared: the uncalibrated model, Platt scaling, and isotonic calibration.
+The 12-feature model was therefore tested with leakage-safe post-hoc calibration. For each evaluation period, the base model was trained on earlier data, the calibrator was fitted on the immediately preceding seven-day window, and performance was measured on the next period.
 
-On average, both calibration methods improved probability calibration relative to the uncalibrated model. Mean expected calibration error fell from about 0.114 for the uncalibrated model to about 0.067 with Platt scaling and about 0.068 with isotonic calibration. Mean absolute calibration-in-the-large error similarly fell from about 0.107 to about 0.059 with Platt and about 0.062 with isotonic calibration. Brier score also improved from about 0.128 uncalibrated to about 0.118 with either calibration method.
+Three outputs were compared: uncalibrated probabilities, Platt scaling, and isotonic calibration.
 
-Platt scaling preserved ROC-AUC, average precision, and top-20% capture exactly because it applies a monotonic logistic transformation to the model score. Isotonic calibration produced very similar calibration performance but slightly reduced average ROC-AUC and average precision, reflecting the fact that its stepwise mapping can introduce tied scores and modestly alter ranking metrics.
+On average, both calibration methods improved the probability estimates. Mean ECE fell from about 0.114 uncalibrated to about 0.067 with Platt and 0.068 with isotonic. Mean absolute calibration-in-the-large error fell from about 0.107 to about 0.059 with Platt and 0.062 with isotonic. Mean Brier score improved from about 0.128 to about 0.118.
 
-The aggregate averages, however, conceal an important period-specific result. In late July, both calibration methods corrected the large overprediction problem very effectively. The uncalibrated mean predicted risk was about 36.8% against an observed delinquency rate of 20.8%, with ECE about 0.160. Platt scaling reduced mean predicted risk to about 18.2% and ECE to about 0.029; isotonic produced a very similar result.
+Platt preserved ROC-AUC, average precision, and top-20% capture because it is monotonic. Isotonic slightly reduced ranking metrics because its stepwise mapping can create ties.
 
-In early July, the direction was different. The uncalibrated model already underpredicted risk, with mean predicted risk about 8.8% against an observed delinquency rate of 17.8%. Fitting the calibrator on the final seven days of June pushed predicted risk lower still: about 7.0% under Platt and 6.3% under isotonic. Both methods therefore worsened calibration for that period.
+The period-level results mattered more than the averages. In late July, the uncalibrated model predicted about 36.8% risk against an observed delinquency rate of 20.8%, with ECE around 0.160. Platt reduced mean predicted risk to about 18.2% and ECE to about 0.029; isotonic was similar.
 
-This means that post-hoc calibration is **temporally regime-sensitive** in this dataset. A calibrator estimated from the immediately preceding week can be highly beneficial when the recent window resembles the next period, but can move probabilities in the wrong direction when the delinquency regime changes. The result is consistent with the earlier evidence of changing target prevalence and calendar-related structure.
+Early July moved in the opposite direction. The uncalibrated model already underpredicted risk: about 8.8% predicted against 17.8% observed. Platt and isotonic pushed the probabilities lower still. So a calibrator fitted on the most recent week can help a great deal in one regime and hurt in another.
 
-### Calibration decision
+Platt remains the leading calibration candidate, but no universal calibrator was frozen from this result.
 
-No universal calibrator is frozen at this stage. Platt scaling is the leading candidate because it has the best aggregate calibration metrics while leaving ranking performance unchanged, but the early-July deterioration prevents treating it as a generally reliable solution without further testing.
+## Rolling calibration windows
 
-The next calibration question is therefore not simply “Platt or isotonic?” but whether calibration should adapt to recent prevalence and temporal regime, and how stable that adaptation is under rolling evaluation. The project should test rolling calibration windows and recent-period prevalence before a final calibrated production specification is declared.
+Platt scaling was then tested with 3-, 5-, 7-, and 10-day recent windows while holding the underlying XGBoost model fixed within each evaluation fold.
 
-## Rolling calibration stability
+Across 12 fold/window comparisons, Platt improved ECE in 11 and reduced the absolute calibration gap in 10. Brier score improved in two of the three evaluation folds for every window length.
 
-To investigate whether the previous result was driven by the arbitrary seven-day calibration window, Platt scaling was retested using nested recent calibration windows of 3, 5, 7, and 10 days. Within each evaluation fold, the underlying XGBoost model was held fixed: it was trained once using only data before the longest calibration window. The different recent windows then recalibrated the same base-model probabilities. This isolates the effect of calibration-window length from changes in the underlying training sample.
+There was no single best window. Three days worked best in both July folds, while ten days worked better in late June. The relationship between recent prevalence mismatch and calibration benefit was only weak to moderate (Spearman around -0.30 for Brier change and -0.36 for ECE). The stronger descriptive relationship was between the signed prevalence gap and the direction of the probability shift (about -0.71).
 
-Across the twelve fold/window comparisons, Platt scaling improved expected calibration error in 11 of 12 cases and reduced the absolute calibration-in-the-large gap in 10 of 12 cases. Brier score improved in two of the three evaluation folds for every window length. The average calibration benefit was therefore reasonably robust, but not universal.
+With only three evaluation folds, that is not enough to justify an automatic prevalence-triggered rule. The current position is to keep Platt as the preferred method, treat the recent calibration window as something to monitor, and require a longer history before fixing an adaptive production policy.
 
-Window length did not produce one globally optimal setting. In both July evaluation periods, the best Brier/ECE combination came from a three-day calibration window. In late June, the ten-day window was preferable. The recent calibration-window delinquency rate was also closer to the subsequent evaluation rate as the window length increased on average, but this did not translate into a simple monotonic improvement in calibration performance.
+## Pipeline and test status
 
-The prevalence diagnostics do not justify an automatic regime rule. The Spearman relationship between absolute prevalence mismatch and the Platt-minus-raw Brier change was only about -0.30, and about -0.36 for ECE. The stronger relationship was between the signed prevalence gap and the direction of the Platt probability shift (about -0.71), which is consistent with the idea that the calibrator reacts to recent outcome prevalence. With only three evaluation folds, however, these correlations are descriptive and cannot establish a stable operating rule.
+The modelling population can now be regenerated through the verified Prefect ETL in `src/pipeline/prefect_etl.py`. Raw validation is diagnostic; interim and processed validation are blocking. The flow has run successfully both locally and inside Docker.
 
-### Rolling calibration decision
+The repository test suite now contains 12 passing tests across `tests/unit/` and `tests/validation/`. These checks do not change the modelling conclusions, but they make the transformations and pipeline contract easier to reproduce and harder to break accidentally.
 
-Platt scaling remains the preferred post-hoc calibration method because it improves calibration substantially in most tested windows while preserving ranking. However, the project does not adopt a fixed universal calibration-window length, nor a prevalence-triggered adaptive rule, from this dataset alone.
+## Status of this narrative
 
-The evidence suggests that shorter recent windows may respond more effectively to changing July conditions, while a longer window can be preferable in a more stable period such as late June. This is treated as an operating and monitoring issue rather than as a solved hyperparameter choice. In a production setting, calibration quality and recent outcome prevalence should be monitored over time, with the calibration policy revalidated on a longer history before automated window selection is introduced.
-
-## Pipeline integration status
-
-The preferred modelling population is now produced through the verified Prefect ETL flow in `src/pipeline/prefect_etl.py`. The orchestration runs raw validation, cleaning, interim validation, model-ready transformation, and processed-data validation in sequence. Raw validation is diagnostic because known source defects are expected before cleaning, while interim and processed validations remain blocking controls. The end-to-end flow was tested locally on 15 September 2026 and completed successfully.
-
-This orchestration does not change any modelling conclusion recorded above. Its significance is reproducibility: the model-ready population on which the feature-selection and modelling work depends can now be regenerated through one controlled sequence with explicit validation gates.
-
-## Unit-test status
-
-The core transformation logic supporting the modelling population is now covered by Pytest unit tests. The first verified local run on 15 September 2026 executed five tests and all passed.
-
-The model-dataset tests verify the modelling cutoff, delinquency-target construction, removal of `msisdn` and the source `label`, strictly earlier-date logic for derived customer-history features, and rejection of invalid source labels. The cleaning tests separately verify the high-confidence treatment rules and audit behaviour on which the processed dataset depends.
-
-This does not change the model specification or the analytical conclusions above. It strengthens reproducibility by checking that critical data transformations behave consistently on controlled examples before the modelling population is regenerated.
-
-## Narrative status
-
-This file is the running narrative for model-development decisions. It should be updated whenever a material modelling choice changes because of new evidence. Exact code changes remain traceable through Git history, while generated analytical outputs remain under `reports/`. Pipeline execution history and cleaning-stage behaviour are documented in `docs/governance/data_cleaning_narrative.md`.
+This is the running account of material modelling decisions. New evidence that changes the model position should be reflected here and in `model_decision_log.md`. Exact code changes remain in Git history, while generated evidence stays under `reports/`.

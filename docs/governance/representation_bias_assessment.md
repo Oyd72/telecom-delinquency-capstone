@@ -1,76 +1,75 @@
 # Representation and bias assessment
 
-## Purpose
+## Scope
 
-This document explains how representation and bias are assessed for the telecom delinquency project using only attributes that genuinely exist in the source data.
+The dataset does not contain usable demographic protected characteristics such as sex, age group, ethnicity, or disability. I therefore do not infer or manufacture them simply to make a conventional fairness analysis possible.
 
-The dataset does not provide usable demographic protected characteristics such as sex, age group, ethnicity, disability, or another legally protected group attribute. The project therefore does not infer, manufacture, or proxy such characteristics merely to make a conventional fairness analysis possible.
+What can be assessed is narrower: whether the observed data are unevenly distributed across operational groups that actually exist in the dataset, and whether those differences matter for modelling.
 
-## What can be assessed
+## Operational slice used
 
-The automated suite focuses on representation diagnostics rather than claiming demographic fairness certification.
+The main comparison is **first-time versus returning borrower**, derived from the point-in-time customer-history logic already used elsewhere in the project.
 
-The primary operational slice is **first-time versus returning borrower**, derived from the point-in-time customer-history logic already used in the project. This slice is useful because borrower-history composition changes materially over the observation window and may affect model development or monitoring.
+This is useful because the borrower-history mix changes substantially over the observation window. It is not treated as a protected characteristic.
 
-It is not treated as a protected characteristic.
+The automated check reports:
 
-The suite reports:
-
-- number and share of records in each operational group;
-- observed five-day delinquency rate by group;
+- record count and share by group;
+- five-day delinquency rate by group;
 - the difference in delinquency rate between returning and first-time borrowers;
-- temporal group composition by month position;
-- whether `pcircle` could support any meaningful group comparison.
+- group composition over time;
+- whether `pcircle` contains enough variation for any group comparison.
 
-## Left-censoring limitation
+## Important limitation: left-censoring
 
-The first-time/returning distinction is affected by left-censoring because customer history before the dataset start is unavailable. A borrower appearing early in the extract may be classified as first-time even if earlier activity exists outside the observation window.
+Customer history before the start of the dataset is missing. A borrower who appears early in June may therefore be labelled as first-time even if earlier transactions exist outside the extract.
 
-For that reason, representation changes in this slice are diagnostic rather than evidence of population bias. The project already observed that apparent repeat-customer share rises strongly with time as more prior history becomes visible.
+This matters because the apparent share of returning borrowers rises as the observation window gets longer. A change in group composition is therefore partly mechanical and should not be read as proof that the underlying borrower population changed in the same way.
 
 ## `pcircle`
 
-`pcircle` is checked only to determine whether it contains enough variation to define groups. In the current dataset it is constant, so it cannot support comparative representation or fairness analysis.
+`pcircle` is constant in the current dataset. Since it has only one non-missing value, it cannot support any meaningful regional or group comparison.
 
 ## Use of Fairlearn
 
-Fairlearn `MetricFrame` is used to calculate grouped metrics transparently and reproducibly. It is not used to produce Equalized Odds, demographic parity, or another protected-group fairness conclusion because the necessary protected characteristics are unavailable and this Module 3 check is applied to the data rather than a final production prediction stream.
+Fairlearn `MetricFrame` is used to calculate grouped metrics in a reproducible way. It is not used to claim demographic parity, Equalized Odds, or another protected-group fairness result because the data needed for those claims are not available.
 
-This distinction matters: using a fairness library does not make an operational grouping a protected group, and the project does not present it as one.
+Using a fairness library does not turn an operational grouping into a protected class. The distinction is kept explicit throughout the project.
 
-## Automated interpretation rule
+## How the automated check behaves
 
-The suite does not automatically declare the dataset biased or unbiased. Differences in representation or delinquency prevalence are reported for review, together with the observation-window caveat.
-
-A structural failure, such as a missing target or grouping field, should cause the diagnostic script to fail. Substantive differences between groups should not automatically fail the ETL pipeline because there is no defensible universal disparity threshold for this operational slice.
+The script fails if the structure needed for the diagnostic is missing, for example if the target or grouping field is absent. It does not fail the ETL merely because the two operational groups differ. There is no defensible universal threshold that would allow this difference to be labelled automatically as “biased” or “unbiased.”
 
 ## Verified results
 
-The full local run on 15 September 2026 analysed all 150,767 model-ready records and completed successfully inside the Prefect pipeline. The expanded unit-test suite also passed nine of nine tests.
+The full run on 15 September 2026 analysed all 150,767 model-ready records. The diagnostic also ran successfully inside the Prefect flow.
 
-The operational slice is highly imbalanced: 138,709 records (92.00%) are classified as first-time borrowers and 12,058 records (8.00%) as returning borrowers. The observed five-day delinquency rate is 18.44% for the first-time group and 4.83% for the returning group, a returning-minus-first-time difference of approximately -13.61 percentage points.
+The groups are very uneven in size:
 
-This difference is material as a descriptive pattern, but it is not treated as evidence of protected-group discrimination. The grouping is operational rather than demographic, and the returning-borrower classification is left-censored because customer history before the dataset start is unavailable.
+- first-time borrowers: 138,709 records, or about 92.00%;
+- returning borrowers: 12,058 records, or about 8.00%.
 
-The temporal diagnostics reinforce that limitation. Returning borrowers represent about 5.03% of June records but 11.65% of July records. At the same time, observed delinquency rates differ substantially between first-time and returning groups in both months. The rising returning-borrower share is therefore interpreted partly as a consequence of accumulating observable history rather than a stable population characteristic.
+Observed five-day delinquency was 18.44% for first-time borrowers and 4.83% for returning borrowers. The returning-minus-first-time difference is therefore about -13.61 percentage points.
 
-`pcircle` contains only one non-missing value and is therefore unusable for group comparison.
+That is a large descriptive difference, but it is not evidence of protected-group discrimination. The grouping is operational, and it is affected by the missing pre-June history.
 
-No automatic bias conclusion is generated from these results. The appropriate conclusion is narrower: the dataset contains a strong borrower-history composition effect that should remain visible in model development and monitoring, but the available data do not support a conventional protected-group fairness assessment.
+The monthly breakdown reinforces the same caution. Returning borrowers account for about 5.03% of June records and 11.65% of July records. Their observed delinquency rate also differs from the first-time group in both months. At least part of the rise in returning-borrower share is expected simply because more customer history becomes visible as time passes.
+
+The appropriate conclusion is therefore limited: borrower-history composition is an important modelling characteristic in this dataset, but the available data do not support a demographic fairness assessment.
 
 ## Pipeline integration
 
-The diagnostic runs after the processed model-ready dataset has passed its blocking Great Expectations validation. In the Prefect flow it is a non-blocking analytical control: successful execution and report generation are required, but the magnitude of observed group differences is not converted automatically into a pipeline rejection decision.
+The representation diagnostic runs after the processed model-ready dataset has passed blocking validation. It is a non-blocking analytical control: the check itself must run successfully and produce its reports, but the size of the group difference does not automatically reject the pipeline.
 
 Outputs are written to:
 
 - `reports/tables/representation_bias_by_group.csv`
 - `reports/tables/representation_bias_summary.json`
 
-The privacy audit log also records that the diagnostic was executed, without storing row-level values or direct identifiers.
+The privacy audit records that the diagnostic ran, without storing row-level values or direct identifiers.
 
-## Current status
+## Status
 
-The representation and bias suite is implemented in `src/monitoring/representation_bias_checks.py`, integrated into the Prefect flow, covered by unit tests, and verified against the full model-ready dataset. The Module 3 bias-detection requirement is therefore complete for the information actually available in this dataset.
+The representation/bias suite is implemented in `src/monitoring/representation_bias_checks.py`, integrated into Prefect, covered by tests, and verified on the full model-ready dataset. For the information actually available in this dataset, the Module 3 bias-detection requirement is complete.
 
-The main limitation remains substantive rather than technical: protected demographic characteristics are not present, so this work cannot support claims about demographic fairness, Equalized Odds, or demographic parity.
+The main limitation is the data itself: protected demographic characteristics are not present, so the project cannot make claims about demographic fairness, Equalized Odds, or demographic parity.

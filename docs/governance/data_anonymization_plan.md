@@ -2,80 +2,72 @@
 
 ## Purpose
 
-This document defines the privacy treatment for the telecom delinquency pipeline and the events recorded in the privacy audit log. It builds on the Module 1–2 privacy approach and the controls implemented during cleaning and model-dataset preparation.
+This document describes how the telecom delinquency pipeline handles identifier-like data and what is written to the privacy audit log. It builds on the earlier privacy planning and on the controls already implemented in the cleaning and model-dataset steps.
 
-The aim is data minimisation rather than synthetic replacement of every value. The pipeline retains only the information needed for the analytical purpose and removes direct identifier-like data before the model-ready dataset is created.
+The approach is based on minimisation. The pipeline keeps only what is needed for the analytical task and removes direct identifier-like data before the model-ready dataset is written.
 
-## Identifier treatment
+## Treatment of `msisdn`
 
-### `msisdn`
+`msisdn` is not an approved modelling feature. It is kept temporarily because repeated records for the same customer have to be linked when chronology-sensitive features are created.
 
-`msisdn` is treated as a direct identifier-like field and is not an approved modelling feature.
+The rule is simple:
 
-It is required temporarily during controlled preprocessing because repeated records for the same customer must be linked to derive chronology-sensitive features such as strictly prior transaction counts. For that limited purpose, `msisdn` may exist in the raw and interim processing stages.
+1. keep `msisdn` only while customer grouping and chronological derivation need it;
+2. do not copy it into transformation audit records;
+3. remove it before writing the model-ready dataset;
+4. check that it is absent from the processed output;
+5. do not create a reversible identifier mapping in the analytical repository.
 
-The privacy rule is therefore:
-
-1. retain `msisdn` only while customer-level grouping and chronological derivation require it;
-2. do not copy `msisdn` into transformation audit records;
-3. remove `msisdn` before writing the model-ready dataset;
-4. validate that `msisdn` is absent from the processed output;
-5. do not expose a reversible identifier mapping as part of the analytical repository.
-
-The current `build_model_dataset.py` implementation removes `msisdn` after the strictly prior customer-history features are derived. This behaviour is treated as a privacy control rather than an incidental modelling choice.
+`build_model_dataset.py` removes `msisdn` after the strictly prior customer-history features have been derived. This is treated as a privacy control, not just as a modelling choice.
 
 ## Other fields
 
-The source `label` is also removed from the model-ready dataset after the analytical target `delinquent_5d` is derived. This prevents the original outcome representation from being retained redundantly.
+The source `label` is removed after `delinquent_5d` has been created. Keeping both would add no analytical value and could create accidental target leakage.
 
-No demographic protected characteristics are available in the source dataset. The pipeline must not infer or manufacture such attributes for anonymisation or fairness analysis.
+The source data do not contain usable demographic protected characteristics. The project does not try to manufacture or infer them for privacy or fairness work.
 
-Fields whose meanings remain unresolved are governed through feature eligibility rather than altered merely for privacy reasons. Data minimisation is achieved by excluding fields that are not required for the approved analytical purpose.
+Fields with unresolved meaning are controlled through feature eligibility rather than altered for privacy reasons. The main privacy measure is to avoid retaining data that the model does not need.
 
-## Pseudonymisation position
+## Why no persistent pseudonym is kept
 
-The project does not create a persistent hashed or tokenised substitute for `msisdn` in the model-ready dataset. A pseudonym would still permit customer-level linkage and would therefore retain information that the current modelling specification does not need.
+The processed dataset does not contain a hashed or tokenised replacement for `msisdn`. A persistent pseudonym would still allow customer-level linkage, and the current model does not need that capability.
 
-Where temporary customer linkage is necessary during preprocessing, the original identifier is confined to that stage and then removed. This is stronger minimisation for the stated modelling purpose than carrying a pseudonymous identifier forward unnecessarily.
+Where linkage is required during preprocessing, the original identifier is used only for that step and then removed. If future monitoring genuinely requires longitudinal linkage after scoring, that should be designed separately, with a keyed pseudonymisation scheme and the key held outside the analytical repository.
 
-If a future monitoring requirement genuinely needs longitudinal customer linkage after model scoring, a separate keyed pseudonymisation design should be introduced with the key stored outside the analytical repository. That is outside the present Module 3 scope.
+## Cleaning audit and privacy audit
 
-## Privacy-safe transformation audit
+The cleaning audit and the privacy audit serve different purposes.
 
-The existing cleaning audit log already follows an important privacy rule: it records source row number, field, original value, triggered rule and treatment, but it does not copy `msisdn` into the log.
+The cleaning audit records which values were changed and which rule was applied. It does not add `msisdn` to those records.
 
-The Module 3 privacy audit log extends this from cell-level cleaning evidence to pipeline-level processing evidence. It records processing events without reproducing raw personal data.
+The privacy audit records the processing sequence itself: when a dataset was accessed, transformed, validated, or stripped of identifiers. It does not reproduce row-level personal data.
 
-Each event contains the information needed for traceability, including:
+Each privacy-audit event can include:
 
 - UTC timestamp;
-- pipeline run identifier;
+- pipeline run ID;
 - pipeline stage;
 - event type;
 - status;
-- logical input/output asset paths where relevant;
-- validation outcome where relevant;
-- identifier-removal confirmation where relevant.
+- logical input/output paths where relevant;
+- validation result where relevant;
+- confirmation of identifier removal where relevant.
 
-The privacy audit log must not contain raw `msisdn` values, raw records, identifiable feature values, secrets, credentials, or other unnecessary personal data.
+The privacy audit must not contain raw `msisdn` values, raw records, identifiable feature values, secrets, credentials, or other unnecessary personal data. The logger also rejects keys such as `msisdn`, `raw_identifier`, and `original_value` if a caller tries to add them directly.
 
-The logger also rejects forbidden personal-data keys such as `msisdn`, `raw_identifier`, and `original_value` if a caller attempts to add them directly to an audit event.
+## Events recorded
 
-## Events captured
+The verified flow records:
 
-The verified end-to-end flow records:
-
-- pipeline run start;
-- raw dataset access for validation;
-- raw validation result, including whether findings are diagnostic or blocking;
-- cleaning transformation completion;
-- interim validation result;
-- model-ready transformation and explicit identifier minimisation;
+- pipeline start;
+- raw-data access for validation;
+- raw-validation outcome and whether it is diagnostic or blocking;
+- cleaning completion;
+- interim validation;
+- model-ready transformation and identifier removal;
 - confirmation that `msisdn` and the source `label` are not retained in processed output;
-- processed-data validation result;
+- processed validation;
 - pipeline completion or failure.
-
-The cell-level cleaning audit and pipeline-level privacy audit serve different purposes and remain separate. The cleaning audit explains what data values were altered. The privacy audit explains when and why datasets were accessed or transformed and confirms that identifier minimisation occurred.
 
 ## Output and retention
 
@@ -83,29 +75,27 @@ The pipeline-level privacy audit is written as append-only JSON Lines to:
 
 `reports/privacy/privacy_audit_log.jsonl`
 
-Each event is independently parseable and each pipeline run is distinguished by a run identifier.
+Each line is independently parseable and every run has its own run ID.
 
-For the academic project, the log is retained with the project evidence needed to demonstrate reproducibility and privacy controls. In a production implementation, retention should be set by the organisation's formal records-retention policy rather than inferred from this project.
+For this academic project, the log is kept with the evidence needed to show reproducibility and privacy controls. A production system would need a formal retention period set by the organisation rather than by this project.
 
-## Validation criteria
+## What counts as successful privacy treatment
 
-The privacy treatment is considered successful when all of the following are true:
+The control is working as intended when:
 
-- customer-level chronology can be derived correctly before identifier removal;
+- customer chronology can be derived before identifier removal;
 - `msisdn` is absent from the model-ready dataset;
 - the original source `label` is absent from the model-ready dataset;
-- cleaning and pipeline audit logs do not contain `msisdn` values;
-- privacy audit events provide enough information to reconstruct the processing sequence without reproducing identifiable records;
-- automated tests verify identifier-removal and privacy-safe logging behaviour.
+- cleaning and privacy audit logs do not contain `msisdn` values;
+- the audit trail is detailed enough to reconstruct the processing sequence without reproducing identifiable records;
+- automated tests confirm identifier removal and safe audit logging.
 
-## Verification result
+## Verification
 
 The privacy controls were verified on 15 September 2026.
 
-The unit-test suite ran seven tests and all seven passed, including tests confirming that structured JSONL events are written without identifier values and that forbidden personal-data keys are rejected.
+At that point the unit-test suite ran seven tests and all passed, including the privacy-specific checks for JSONL logging and rejection of forbidden personal-data keys. The Prefect ETL also completed end to end with privacy logging enabled.
 
-The Prefect ETL was then run end to end with privacy audit logging enabled. The flow completed successfully, with interim and processed validation passing.
+The resulting audit trail contained the expected sequence from pipeline start through raw access, validation, cleaning, identifier minimisation, processed validation, and completion. In the identifier-removal event, `msisdn` appears only as the name of the field being controlled. No identifier value is recorded, and the event confirms `identifier_retained_in_output: false`.
 
-The resulting JSONL audit trail contained the expected sequence of events: pipeline start, raw data access, diagnostic raw validation findings, cleaning completion, interim validation, identifier minimisation, processed validation, and pipeline completion. The identifier-minimisation event records only the field name `msisdn` as control metadata and confirms `identifier_retained_in_output: false`; it does not contain any raw identifier value.
-
-The implemented controls therefore satisfy the Module 3 privacy-treatment and pipeline-audit-logging requirement for the current project scope.
+For the present Module 3 scope, these controls cover the privacy-treatment and pipeline-audit-logging requirement.

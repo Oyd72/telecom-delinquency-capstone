@@ -1,46 +1,42 @@
 # Data cleaning narrative
 
-This document explains how the raw telecom delinquency data have been assessed, cleaned, and validated so far. It complements the formal cleaning policy by describing what actually happened in this dataset and why each treatment was applied.
+This file tells the story of what happened to the telecom delinquency data as the project moved from the raw extract to the model-ready table. The cleaning policy sets the standing rules; this narrative records what those rules found in this particular dataset and what was done about it.
 
 ## Starting point
 
-The project works from the original Kaggle telecom delinquency dataset with 209,593 records and 36 columns. The raw file is treated as immutable. All cleaning is performed on a separate copy written to `data/interim/`, so the source data remain available for comparison and reproducibility.
+The source file contains 209,593 records and 36 columns. It is kept unchanged in `data/raw/`. All cleaning is done on a separate copy in `data/interim/`, which makes it possible to compare every treatment with the original data.
 
-Field interpretation is based on the supplied Kaggle data description first, then tested against the observed CSV structure and distributions. Where the documentation and the data do not align cleanly, the ambiguity is documented rather than resolved by assumption.
+Field meanings come first from the description supplied with the Kaggle dataset. Those meanings are then checked against the CSV itself. Where the documentation and the observed values do not line up cleanly, the uncertainty is left visible rather than filled in by assumption.
 
-## What the raw-data validation found
+## What the raw validation found
 
-The first Great Expectations validation was deliberately run against the untouched raw dataset. Its purpose was not to produce a green result, but to identify hard structural and semantic violations that the cleaning stage would need to address.
+The first Great Expectations run was deliberately executed on the untouched source. A fully green result was not the objective. The point was to show which defects were already present before cleaning began.
 
-The raw dataset passed the structural checks for the expected 36-column schema, the minimum row count, completeness of `msisdn`, `pdate`, and `label`, the binary target rule `label ∈ {0,1}`, and the non-negative rules for the clearly defined monetary fields tested.
+The raw data passed the expected-schema check, minimum row count, completeness checks for `msisdn`, `pdate`, and `label`, the binary target rule, and the non-negative checks applied to clearly defined monetary fields.
 
-Five blocking issues remained:
+Five known problems remained:
 
-- `aon` contained 1,539 negative values, which conflict with its documented meaning as age on the cellular network in days;
-- `last_rech_date_ma` contained 1,315 negative elapsed-day values;
-- `last_rech_date_da` contained 14 negative elapsed-day values;
-- `cnt_da_rech30` was loaded as a floating-point column because it contains fractional values, which violates count semantics;
-- `cnt_loans90` showed the same issue.
+- 1,539 negative values in `aon`;
+- 1,315 negative values in `last_rech_date_ma`;
+- 14 negative values in `last_rech_date_da`;
+- fractional values in `cnt_da_rech30`;
+- fractional values in `cnt_loans90`.
 
-The raw Great Expectations suite therefore failed overall, as expected. That failure was evidence that the validation logic was detecting the known data-quality issues rather than an implementation failure.
+The raw validation therefore returned an overall failure. In this stage that is expected: the validator is showing the defects that the cleaning step is supposed to address.
 
-## Why only some unusual values were cleaned
+## What was cleaned, and what was not
 
-The project distinguishes between values that conflict with documented field semantics and values that are merely unusual.
+The project treats a semantic contradiction differently from an unusual observation.
 
-Negative values in `aon` and the two recharge-date fields were treated as invalid because elapsed days and network tenure cannot logically be negative under the documented meaning.
+Negative network tenure and negative elapsed days are invalid under the documented field meanings. Fractional values are also invalid in genuine count fields. Those cases can be treated with confidence.
 
-Fractional values in genuine count fields were also treated as invalid because a count must be integer-valued. In contrast, large positive counts were not removed simply because they were rare. A value such as 203 recharges in 30 days may be unusual, but it is not impossible on semantic grounds.
+A rare but possible value is different. Large positive counts are not removed simply because they sit in the tail. The same caution is used for negative balance-like values and negative daily-decrement values because the source material does not prove that adjustments, reversals, or debit states are impossible.
 
-The same caution applies to several balance-like and expenditure variables. Negative balances or daily-decrement values were not automatically deleted because the available documentation does not establish that such values are impossible. They may reflect adjustments, reversals, or an undocumented encoding.
+In other words, statistical extremeness is not enough on its own to justify changing a value.
 
-This distinction is deliberate: statistical extremeness alone is not treated as proof of invalidity.
+## First cleaning pass
 
-## Initial cleaning pass
-
-The first executable cleaning stage implemented only the high-confidence rules already supported by the data dictionary and cleaning policy.
-
-The pipeline converted the following invalid values to missing in the interim analytical copy while preserving the original values in the automated audit log:
+The first executable cleaning pass applied only the high-confidence rules already supported by the dictionary and policy. It set the following values to missing in the interim copy and wrote the original values to the audit log:
 
 - 1,539 negative `aon` values;
 - 1,315 negative `last_rech_date_ma` values;
@@ -48,116 +44,105 @@ The pipeline converted the following invalid values to missing in the interim an
 - 1,047 fractional `cnt_da_rech30` values;
 - 1,047 fractional `cnt_loans90` values.
 
-This produced 4,962 changed cells in total. No rows were removed, and the interim dataset retained all 209,593 records.
+That made 4,962 changed cells. No rows were removed, so the interim table still had 209,593 records.
 
-The cleaning run produced three outputs:
+The run produced:
 
-- `data/interim/sample_data_intw_cleaned.csv` – the interim cleaned dataset;
-- `data/interim/cleaning_audit_log.csv` – the automated record of altered cells and the rules applied;
-- `reports/tables/cleaning_summary.json` – an aggregate summary of the cleaning run.
+- `data/interim/sample_data_intw_cleaned.csv`
+- `data/interim/cleaning_audit_log.csv`
+- `reports/tables/cleaning_summary.json`
 
-The raw file was not overwritten.
+The raw file was not touched.
 
 ## Extended cleaning pass
 
-After the initial rules had been validated, the cleaning script was extended to implement the remaining high-confidence treatments already documented in the policy.
+The script was then extended to cover the other high-confidence treatments already documented in the policy.
 
-The separated contamination regimes identified in the upper tails of `aon`, `last_rech_date_ma`, `last_rech_date_da`, `fr_ma_rech30`, and `fr_da_rech30` were converted to missing in the interim copy. These treatments are based on clear discontinuities in this dataset, including large empty gaps and implausible jumps, and are not presented as universal business thresholds.
+The separated upper contamination regimes in `aon`, `last_rech_date_ma`, `last_rech_date_da`, `fr_ma_rech30`, and `fr_da_rech30` were set to missing in the interim copy. These cut-offs come from clear discontinuities in this dataset, including large empty gaps and implausible jumps. They are not presented as general telecom business limits.
 
-The script also removed the one exact duplicate row identified during profiling. Repeated customers and repeated transaction dates were not treated as duplicates unless the complete record was identical.
+The one exact duplicate row found during profiling was also removed. Repeated customers or repeated dates were not treated as duplicates unless every field in the row matched.
 
-The extended cleaning run produced:
+After the extended pass:
 
-- 11,239 changed cells;
-- 1 exact duplicate row removed;
-- 209,592 output rows.
+- 11,239 cells had been changed;
+- 1 exact duplicate row had been removed;
+- 209,592 rows remained.
 
-The audit log records every altered value and the duplicate-removal event, while the aggregate summary records the counts by rule. The immutable raw dataset remains unchanged.
+Every change is represented in the cleaning audit, and the aggregate counts are kept in the cleaning summary.
 
 ## Validation after cleaning
 
-A separate Great Expectations validation was run against the interim cleaned dataset. The cleaned-data validation is intentionally different from the raw validation because values converted to missing are expected at this stage.
+The interim Great Expectations suite is different from the raw suite because missing values introduced deliberately by cleaning are now expected.
 
-The interim validation confirmed that the dataset still has the expected structure, valid target values, and required structural fields. It also confirmed that retained values in the cleaned duration fields are non-negative.
+The interim validation confirmed the expected structure, valid target values, required structural fields, and non-negative retained values in the cleaned duration fields. Count columns were checked for mathematical integer semantics rather than relying on pandas dtype, since a count column with missing values may reload as floating point.
 
-The count fields were checked separately for mathematical integer semantics so that missing values introduced by cleaning would not create false failures simply because pandas reloads the column as floating point. No retained fractional values remained after the extended cleaning pass, and the overall cleaned-data validation passed.
+No fractional values remained in the cleaned count fields, and the interim validation passed overall. For example, `cnt_loans90` retained 208,545 non-missing valid values, which is consistent with the 1,047 fractional values removed from analytical use and the one duplicate row removed from the dataset.
 
-For example, `cnt_loans90` retained 208,545 non-missing valid values in the 209,592-row interim dataset, exactly reflecting the 1,047 fractional values removed from analytical use together with the single duplicate-row removal.
+## Defining the modelling period
 
-## Transition to the modelling population
+The cleaned data are not treated as one uniform labelled period. After 23 July 2016 there are 58,825 records and every one of them is labelled as successful repayment.
 
-After cleaning, the dataset is not used for supervised modelling as one undifferentiated time period. Records dated after **23 July 2016** form a distinct block of 58,825 observations in which the target is **100% successful repayment**.
+That break is too sharp to dismiss as ordinary class imbalance. The source documentation does not explain whether the change comes from sampling, labelling, extraction, or a business-process change. Because the cause is unknown, the later block is not mixed into ordinary supervised training.
 
-This discontinuity is not treated as ordinary class imbalance. The available documentation does not establish why the later period contains no delinquent outcomes, so the project does not assume that its sampling or label-generation process is comparable with the earlier period. Possible explanations could include a change in data extraction, labelling maturity, business process, or sampling, but none of these is established by the source documentation.
+The model-ready population therefore uses records through 23 July 2016. After duplicate removal, this gives 150,767 modelling rows, including 26,162 delinquent cases. The later records are kept for lineage and possible drift diagnostics, but not as a conventional labelled validation set.
 
-For that reason, the later observations are excluded from the ordinary labelled modelling population. Including them in supervised training would artificially increase the proportion of successful cases and could distort learned relationships between predictors and delinquency. They are retained for lineage and may later support separate diagnostic analysis, such as checking distributional shift or covariate drift, but they are not used as a conventional labelled validation set.
+## Prefect orchestration
 
-The first model-ready dataset therefore uses records through 23 July 2016 only. After removal of the single exact duplicate, this produces 150,767 modelling rows, including 26,162 delinquent cases.
+The raw-to-processed path is orchestrated in `src/pipeline/prefect_etl.py`:
 
-## End-to-end pipeline orchestration
+`raw validation → cleaning → interim validation → model-ready transformation → processed validation → representation diagnostics`
 
-The cleaning and validation stages are connected through a Prefect orchestration flow in `src/pipeline/prefect_etl.py`. The flow reuses the existing scripts rather than duplicating their business logic and runs them in a fixed sequence:
+The flow was tested locally on 15 September 2026 and completed successfully.
 
-`raw validation → cleaning → interim validation → model-ready transformation → processed validation`
+Raw validation remains diagnostic. The untouched source is expected to fail checks that identify defects later corrected by cleaning. Interim and processed validation are different: both are blocking gates. If either fails, the pipeline stops.
 
-The orchestration was tested locally end to end on 15 September 2026 and completed successfully.
+That distinction lets the project preserve evidence of source-data problems without allowing bad cleaned or processed data to pass quietly downstream.
 
-Raw validation is deliberately diagnostic rather than a hard stop. The untouched source is expected to fail some Great Expectations checks because those checks identify the known defects that the cleaning stage is designed to address. The Prefect task therefore records the failed raw expectations and confirms that the raw validation report was generated before allowing the flow to continue.
+## Tests
 
-This treatment does not weaken downstream controls. Interim validation and processed-data validation remain hard gates: if either fails, the pipeline stops. In the verified end-to-end run, the cleaning task completed, interim validation passed, the model-ready dataset was created, processed-data validation passed, and the Prefect flow finished in a `Completed` state.
+The project now has both unit tests and lightweight pipeline-contract tests. After the repository housekeeping pass, `python -m pytest tests -v` collected 12 tests and all 12 passed.
 
-This distinction between **diagnostic raw validation** and **blocking downstream validation** is intentional. It allows the pipeline to preserve evidence of source-data defects while preventing invalid cleaned or model-ready outputs from progressing silently.
+The tests cover, among other things:
 
-## Unit-test verification
+- integer-like versus fractional count values;
+- application of the agreed cleaning rules;
+- duplicate removal and cleaning audit behaviour;
+- the modelling cutoff and target construction;
+- removal of `msisdn` and the source `label` from processed data;
+- strictly earlier-date logic for customer-history features;
+- rejection of invalid source labels;
+- privacy-safe audit logging;
+- representation-diagnostic input requirements;
+- existence of the Prefect stage scripts and preservation of the raw/interim/processed path contract.
 
-The transformation logic is covered by a focused Pytest suite under `tests/unit/`. The initial verified run executed five tests successfully. After privacy audit logging was added, the suite expanded to seven tests and all seven passed on 15 September 2026.
+Pytest and Great Expectations serve different purposes. Great Expectations checks datasets at stage boundaries. Pytest checks that the code implementing transformations and controls behaves as intended on controlled examples.
 
-The cleaning tests confirm that integer-like values are distinguished correctly from fractional contamination, the agreed high-confidence cleaning rules are applied, exact duplicates are removed, and the cleaning audit output does not expose `msisdn`.
+## Docker verification
 
-The model-dataset tests confirm that the modelling cutoff is enforced, the delinquency target is derived correctly from the source label, `msisdn` and the source `label` are absent from the processed output, prior-transaction features use strictly earlier dates only, and invalid source labels are rejected.
+The ETL path is containerised with the root `Dockerfile`, `requirements-pipeline.txt`, and `.dockerignore`. The image uses `python:3.13-slim` and starts the Prefect flow automatically.
 
-The privacy-specific tests confirm that structured JSONL audit events are written without identifier values and that attempts to log forbidden personal-data keys are rejected.
+The image built successfully on 15 September 2026 as `telecom-delinquency-pipeline:latest`. It was then run with the local `data` and `reports` folders mounted into the container. The complete flow ran successfully inside Docker: raw validation reported the expected diagnostic findings, cleaning completed, interim validation passed, the model-ready data were rebuilt, processed validation passed, and the flow ended in `Completed` state.
 
-These unit tests complement Great Expectations rather than replace it. Great Expectations validates datasets at stage boundaries; Pytest verifies that transformation and privacy-control functions behave as intended on controlled examples.
+This shows that the ETL is not dependent on the developer's local virtual environment.
 
-## Containerization verification
+## Privacy audit verification
 
-The pipeline is containerized with a root-level `Dockerfile`, a focused `requirements-pipeline.txt`, and `.dockerignore`. The image uses `python:3.13-slim`, installs only the dependencies needed for the ETL path, copies the pipeline code and report structure, and starts the Prefect flow automatically.
+The Prefect flow also writes a pipeline-level privacy audit to `reports/privacy/privacy_audit_log.jsonl`.
 
-The Docker image was built successfully on 15 September 2026 and tagged locally as `telecom-delinquency-pipeline:latest`.
+The verified run recorded pipeline start, raw-data access, raw-validation findings, cleaning, interim validation, identifier minimisation, processed validation, and completion. `msisdn` appears only as the name of the controlled field; no identifier value is written to the log. The processed output also excludes the original source `label` once `delinquent_5d` has been derived.
 
-The image was then run with the local `data` and `reports` directories mounted into the container. The complete Prefect sequence executed inside Docker: raw validation produced the expected diagnostic warning, cleaning completed, interim validation passed, the model-ready dataset was regenerated, processed validation passed, and the flow finished in a `Completed` state.
+This audit is separate from the cell-level cleaning audit. The cleaning audit answers “what value changed and why?” The privacy audit answers “what processing step happened, on which asset, and did the privacy control succeed?”
 
-This verifies that the pipeline is reproducible outside the developer's local Python virtual environment. The container uses its own isolated Python runtime while reading the mounted raw data and writing outputs back to the project directories.
+## Remaining limitations
 
-## Privacy treatment and audit logging verification
+The basic pipeline is now reproducible and verified, but some analytical questions remain deliberately unresolved.
 
-A separate privacy audit layer is now integrated into the Prefect flow. It records pipeline-level processing events in append-only JSON Lines at `reports/privacy/privacy_audit_log.jsonl`.
+The `fr_*` variables are still excluded because their exact construction is unclear. `medianamnt_loans30` and `medianamnt_loans90` remain unresolved. `payback30` and `payback90` stay outside the approved predictor set until point-in-time leakage can be ruled out. The `maxamnt_loans30/90` fields are treated as consistency checks rather than independent predictors. Loan count and amount fields also remain outside the first approved set until their treatment of the current transaction can be verified.
 
-The verified run on 15 September 2026 recorded the expected sequence: pipeline start, raw-data access, diagnostic raw-validation findings, cleaning completion, interim validation, model-ready identifier minimisation, processed validation, and pipeline completion.
+The representation/bias checks and the broader data-governance framework have now been implemented as separate controls. Presentation and final reporting remain later delivery work.
 
-The log records the field name `msisdn` only as control metadata in the identifier-minimisation event. It contains no raw identifier value and confirms `identifier_retained_in_output: false`. The processed dataset also omits the source `label` after the analytical target has been derived.
+## How the governance files fit together
 
-The privacy audit is intentionally separate from the cell-level cleaning audit. The cleaning audit explains which values were changed under cleaning rules; the privacy audit explains when datasets were accessed or transformed and records whether privacy-relevant controls succeeded.
+`data_cleaning_policy.md` contains the standing treatment rules. `data_anonymization_plan.md` covers identifier minimisation and privacy logging. This file records what happened when those rules were applied to the telecom data.
 
-## What remains unresolved
-
-The current interim dataset has passed the agreed cleaning-stage validation, the full raw-to-processed ETL path has been orchestrated and verified, the unit-test suite has passed, the same ETL path has been built and executed successfully inside Docker, and privacy treatment/audit logging has been verified. Several modelling decisions remain intentionally cautious.
-
-The `fr_*` fields remain excluded from the approved model feature set because their exact construction is unresolved. `medianamnt_loans30` and `medianamnt_loans90` are likewise retained only for provenance and analysis because their encoding cannot yet be reconciled confidently with the documented meaning.
-
-`payback30` and `payback90` remain excluded pending point-in-time leakage review, and the `maxamnt_loans30/90` fields are treated as consistency checks rather than independent predictors. Loan count and amount fields also remain outside the first approved predictor set until it can be established whether their historical-window construction excludes the current transaction.
-
-The remaining Module 3 work therefore focuses on representation/bias checks, the broader governance framework, and presentation artefacts rather than further basic pipeline reproducibility work.
-
-## Relationship to the other governance artefacts
-
-This narrative explains the observed sequence of work on this specific dataset.
-
-`docs/governance/data_cleaning_policy.md` defines the standing rules and treatment principles that the pipeline is expected to follow. It answers questions such as what counts as a hard-invalid value, when values may be converted to missing, and how audit logging should work.
-
-`docs/governance/data_anonymization_plan.md` defines identifier minimisation and the privacy-audit design, including the distinction between temporary use of `msisdn` for chronology and its removal before model-ready output.
-
-This narrative answers a different question: what did those rules reveal when applied to the telecom delinquency data, what changed during cleaning, how the result was validated, and how the cleaned population was transitioned into a defensible modelling population.
-
-`docs/data_dictionary.md` provides the current operational meaning and modelling status of each field, while `docs/data_dictionary_changelog.md` explains how those interpretations changed over time. Git history remains the authoritative technical record of the exact code and document changes.
+The data dictionary gives the current interpretation and modelling status of each field. The dictionary change log explains how those interpretations evolved. Git history remains the exact record of code and document changes.
