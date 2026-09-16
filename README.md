@@ -6,44 +6,92 @@ Business analytics capstone project for predicting five-day repayment delinquenc
 
 The project uses historical telecom microcredit data for academic and demonstration purposes. It focuses on risk ranking at the time of a credit request and does not automate final customer decisions or predict long-term default.
 
+The current modelling population contains records through 23 July 2016. Later records are excluded from ordinary supervised modelling because that block contains only successful repayment outcomes and its data-generation regime cannot be established from the source documentation.
+
+## Current pipeline
+
+The implemented Prefect flow in `src/pipeline/prefect_etl.py` orchestrates the reproducible Module 3 path:
+
+`raw validation → cleaning → interim validation → model-ready transformation → processed validation → representation diagnostics`
+
+Raw validation is diagnostic because it is intended to expose known source-quality defects before cleaning. Interim and processed validation are blocking controls. Privacy-safe audit logging records pipeline access, transformation, validation, identifier minimisation, and completion/failure events.
+
 ## Repository structure
 
-- `data/raw/` – source data (not committed when customer-level)
-- `data/interim/` – cleaned, flagged, pseudonymised, or otherwise intermediate data products
-- `data/processed/` – final modelling-ready data produced by the pipeline
-- `notebooks/` – exploratory analysis and modelling notebooks; reusable logic is moved into `src/`
-- `src/` – reusable pipeline, data-quality, transformation, privacy, monitoring, and modelling code
-  - `src/data/` – ingestion and cleaning logic
-  - `src/data_quality/` – profiling, anomaly analysis, and data-quality checks
-  - `src/features/` – feature engineering and transformation logic
-  - `src/pipeline/` – pipeline orchestration, including Prefect flow code
-  - `src/privacy/` – identifier minimisation and pseudonymisation logic
-  - `src/monitoring/` – bias/slice checks and audit logging
-- `models/` – model artefacts and metadata
-- `dashboards/` – Power BI outputs
-- `tests/` – automated unit, pipeline, and validation tests
-  - `tests/unit/` – unit tests for reusable functions
-  - `tests/validation/` – tests for validation and pipeline behaviour
-- `config/` – project configuration, paths, thresholds, and pipeline parameters
-- `reports/` – reproducible analysis outputs
-  - `reports/figures/` – generated plots and presentation-ready visuals
-  - `reports/tables/` – generated analytical and validation tables
-- `docs/` – documentation, data dictionary, governance, and methodology material
-  - `docs/governance/` – governance, privacy, bias, and control documentation
-  - `docs/governance/data_cleaning_policy.md` – standing cleaning rules and treatment principles used by the pipeline
-  - `docs/governance/data_cleaning_narrative.md` – dataset-specific account of what the validation and cleaning steps found, changed, and left unresolved
-  - `docs/data_dictionary.md` – current operational data dictionary
-  - `docs/data_dictionary_changelog.md` – human-readable audit trail of material dictionary changes
-- `great_expectations/` – Great Expectations project/configuration and validation artefacts
-- `.github/workflows/` – workflow automation
-- `Dockerfile` – reproducible container build for the pipeline
+### Active project areas
 
-## Data cleaning documentation
+- `data/raw/` – local source data; customer-level contents are excluded from Git
+- `data/interim/` – local cleaned/intermediate data; may still contain `msisdn` where chronology requires it
+- `data/processed/` – local model-ready row-level analytical data; `msisdn` and the source label are removed
+- `src/data/` – cleaning logic
+- `src/data_quality/` – Great Expectations-based raw, interim, and processed validation scripts
+- `src/features/` – model-dataset construction, temporal diagnostics, and feature-selection experiments
+- `src/models/` – model comparison and calibration experiments
+- `src/pipeline/` – Prefect orchestration
+- `src/privacy/` – privacy-safe pipeline audit logging
+- `src/monitoring/` – representation and operational bias/slice diagnostics
+- `tests/unit/` – focused tests for transformations, privacy controls, and representation diagnostics
+- `tests/validation/` – lightweight pipeline/validation contract tests
+- `reports/` – reproducible aggregate analytical, validation, privacy, and presentation outputs
+- `docs/` – data dictionary, methodology, decision records, and governance documentation
+- `Dockerfile` – reproducible container build for the ETL pipeline
 
-The cleaning policy and the cleaning narrative serve different purposes. The policy defines the rules the pipeline is expected to follow, including how hard-invalid values, contamination, missing values, and audit logging are treated. The narrative describes what happened when those rules were applied to this dataset: the issues found in the raw data, the transformations made in the first cleaning pass, the validation outcome, and the questions that remain open.
+### Reserved / later-delivery areas
 
-Together with the data dictionary and its change log, these documents provide both the operational rules and the reasoning trail behind the evolving treatment of the data.
+- `notebooks/` – exploratory notebooks if needed; reusable logic belongs in `src/`
+- `models/` – persisted model artefacts and metadata when a final artefact is produced
+- `dashboards/` – Power BI deliverables
+- `config/` – shared configuration if project parameters are externalised later
+- `.github/workflows/` – CI automation if introduced
 
-## Planned delivery
+Empty reserved directories are retained with `.gitkeep` files so the intended project structure remains visible.
 
-The work is organised into four sprints using a Scrum-style two-week sprint approach: data understanding and setup; data preparation and EDA; modelling and evaluation; fairness, explainability and reporting.
+## Data and privacy position
+
+Customer-level source, interim, and processed datasets are not committed to GitHub. `.gitignore` excludes the contents of all three data directories.
+
+`msisdn` is retained only temporarily where customer-level chronology is required. It is removed before the model-ready dataset is written and is not an approved predictor. The processed behavioural dataset remains restricted analytical data; identifier removal is not treated as proof of full anonymisation.
+
+The main governance controls are documented in:
+
+- `docs/governance/data_governance_framework.md` – umbrella rules for access, use, retention, lineage, auditability, and exceptions
+- `docs/governance/data_anonymization_plan.md` – identifier minimisation and privacy audit logging
+- `docs/governance/data_cleaning_policy.md` – standing cleaning rules
+- `docs/governance/data_cleaning_narrative.md` – what the cleaning and validation work found and changed in this dataset
+- `docs/governance/representation_bias_assessment.md` – scope and limitations of representation/bias checks
+- `docs/governance/feature_selection.md` – feature eligibility and selection methodology
+- `docs/governance/model_development_narrative.md` – analytical modelling story
+- `docs/governance/model_decision_log.md` – compact decision trail and current modelling position
+
+`docs/data_dictionary.md` records current field interpretation and modelling status, while `docs/data_dictionary_changelog.md` records material changes to those interpretations.
+
+## Feature-selection history
+
+`src/features/filter_screening.py` is retained as the initial Stage 2 single-development-window diagnostic. It has been superseded for the current methodology by `src/features/fold_filter_screening.py`, which evaluates filter evidence across calendar-aware folds. The earlier script remains for methodological lineage and should not be mistaken for the current selection baseline.
+
+## Validation and testing
+
+Great Expectations is used through Python validation scripts rather than a standalone `great_expectations/` project directory:
+
+- `src/data_quality/gx_raw_validation.py`
+- `src/data_quality/gx_interim_validation.py`
+- `src/data_quality/gx_processed_validation.py`
+
+Pytest complements dataset validation by checking reusable transformation and control logic. The Prefect flow and Docker image have both been executed successfully end to end on the project data.
+
+## Dependencies
+
+Two dependency files are intentional:
+
+- `requirements.txt` – the wider analytical/development environment, including modelling, explainability, notebooks, validation, orchestration, testing, and Fairlearn
+- `requirements-pipeline.txt` – the smaller dependency set required by the containerised ETL and Module 3 control path
+
+Keeping the pipeline dependency set separate reduces the Docker image to what is needed for reproducible execution.
+
+## Report evidence
+
+Generated row-level data are not committed. `reports/README.md` explains which privacy-safe aggregate outputs are suitable for repository or assignment evidence and which outputs should remain local.
+
+## Delivery approach
+
+The work is organised into four Scrum-style two-week sprints: data understanding and setup; data preparation and EDA; modelling and evaluation; fairness, explainability, governance, and reporting. GitHub issue status records current completion state, while sprint labels record the iteration to which the work logically belongs.
