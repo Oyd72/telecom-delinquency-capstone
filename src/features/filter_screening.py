@@ -1,8 +1,16 @@
-"""Run Stage 2 filter-method feature screening on the model-ready dataset.
+"""Run the initial Stage 2 single-window filter screening diagnostic.
 
-This script keeps feature screening leakage-aware by fitting all screening statistics on
-an earlier temporal development subset only. The later subset is reserved and is not
-used to rank or remove features.
+Historical-methodology note
+---------------------------
+This script records the project's first leakage-aware Stage 2 approach: screening was
+fitted on an earlier temporal development subset while the later subset was reserved.
+After temporal/calendar diagnostics showed that one arbitrary 80/20 split was not a
+sufficient basis for feature-selection decisions, the current Stage 2 methodology moved
+to `src/features/fold_filter_screening.py`, which compares filter evidence across
+calendar-aware chronological folds.
+
+This file is intentionally retained for methodological lineage and reproducibility. It
+should not be interpreted as the current feature-selection baseline.
 
 Outputs include:
 - per-feature relevance and redundancy indicators;
@@ -10,8 +18,8 @@ Outputs include:
 - an aggregate JSON summary;
 - a correlation heatmap for presentation/reporting.
 
-The script does not automatically remove features. It produces evidence for the next
-feature-selection stage.
+The script does not automatically remove features. It produces historical diagnostic
+evidence for the later feature-selection stages.
 """
 
 from __future__ import annotations
