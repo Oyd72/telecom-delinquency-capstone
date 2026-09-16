@@ -1,0 +1,62 @@
+{
+  "input_rows": 150767,
+  "protected_characteristics_available": false,
+  "protected_characteristics_note": "The dataset does not provide usable demographic protected characteristics. The project therefore does not infer or manufacture them.",
+  "operational_slice": "first-time versus returning borrower",
+  "operational_slice_is_protected_attribute": false,
+  "left_censoring_caveat": "Repeat-customer status is derived only from history visible after the dataset start, so apparent first-time/returning representation changes over time are partly mechanical.",
+  "group_metrics": [
+    {
+      "borrower_history_group": "first_time",
+      "rows": 138709.0,
+      "delinquency_rate": 0.18440764478152102,
+      "share": 0.9200222860440282
+    },
+    {
+      "borrower_history_group": "returning",
+      "rows": 12058.0,
+      "delinquency_rate": 0.04834964339028031,
+      "share": 0.0799777139559718
+    }
+  ],
+  "returning_minus_first_time_delinquency_rate": -0.13605800139124072,
+  "pcircle_check": {
+    "available_for_check": true,
+    "unique_nonmissing_values": 1,
+    "usable_for_group_comparison": false,
+    "note": "pcircle is constant and therefore cannot support group-comparison fairness analysis."
+  },
+  "fairlearn_usage": "Fairlearn MetricFrame is used for transparent grouped measurement only. No Equalized Odds, demographic-parity, or other protected-group fairness claim is made because suitable protected attributes and final model predictions are not available in this dataset.",
+  "automatic_bias_conclusion": false,
+  "interpretation_note": "Observed group differences are diagnostic. They must not be interpreted as evidence of protected-group discrimination. The first-time/returning slice is operational and affected by left-censoring.",
+  "temporal_group_metrics": [
+    {
+      "month_position": "2016-06",
+      "borrower_history_group": "first_time",
+      "rows": 78975,
+      "delinquency_rate": 0.16603988603988604,
+      "share_within_period": 0.9497438487625369
+    },
+    {
+      "month_position": "2016-06",
+      "borrower_history_group": "returning",
+      "rows": 4179,
+      "delinquency_rate": 0.035415171093563055,
+      "share_within_period": 0.05025615123746302
+    },
+    {
+      "month_position": "2016-07",
+      "borrower_history_group": "first_time",
+      "rows": 59734,
+      "delinquency_rate": 0.208691867278267,
+      "share_within_period": 0.8834691553399494
+    },
+    {
+      "month_position": "2016-07",
+      "borrower_history_group": "returning",
+      "rows": 7879,
+      "delinquency_rate": 0.05521005203706054,
+      "share_within_period": 0.11653084466005058
+    }
+  ]
+}
