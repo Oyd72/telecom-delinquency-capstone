@@ -423,45 +423,70 @@ The selected model should therefore be described as the **preferred candidate fo
 
 **Script:** `src/models/analyze_post23_feature_quality.py`
 
-**Status:** **Pending local execution**
+**Status:** **Completed**
 
 ### Purpose
 
 Assess whether the 24 July-21 August records contain predictor information that remains usable for exploratory robustness and scenario analysis, without treating their all-success outcome labels as valid ground truth.
 
-The analysis compares the 12 selected predictors in the labelled modelling population with the post-23 July population using:
+The analysis compares the 12 selected predictors in the labelled modelling population with the post-23 July population using missingness, observed ranges, robust median shifts, Population Stability Index (PSI), and calibrated selected-model score distributions.
 
-- missingness rates;
-- observed min/max ranges and out-of-labelled-range rates;
-- robust median shifts relative to the labelled-period interquartile range;
-- Population Stability Index (PSI) as a descriptive distribution-shift measure;
-- calibrated selected-model score distributions.
+### Output
 
-### Model-score check
+Six features show high distribution shift by the descriptive PSI bands:
 
-The selected tuned Random Forest is trained through 6 July, isotonic calibration is fitted on 7-13 July, and both the 14-23 July holdout and the post-23 July period are scored. Post-23 July outcome labels are not used in this step.
+- `daily_decr30` — PSI **3.578**
+- `daily_decr90` — PSI **3.494**
+- `rental30` — PSI **0.687**
+- `sumamnt_ma_rech90` — PSI **0.504**
+- `cnt_ma_rech90` — PSI **0.470**
+- `last_rech_amt_ma` — PSI **0.337**
 
-This allows us to ask whether the later observations occupy a broadly similar risk-score space even though their outcome labels are unsuitable for supervised validation.
+Two additional features show moderate shift:
 
-### Interpretation rule
+- `medianamnt_ma_rech30` — PSI **0.249**
+- `sumamnt_ma_rech30` — PSI **0.124**
 
-PSI bands are used descriptively:
+The remaining four features fall in the low-shift band.
 
-- below 0.10: low shift;
-- 0.10-0.25: moderate shift;
-- 0.25 or above: high shift.
+Missingness is generally stable or lower in the later period. Only `aon` changes by at least one percentage point. No selected feature has an out-of-labelled-range rate of 1% or more, so the later values mostly remain within previously observed numerical ranges even though their distributions have moved substantially.
 
-These are not treated as universal accept/reject thresholds.
+### Selected-model score behaviour
 
-### Decision gate for synthetic outcomes
+| Population | Rows | Mean calibrated risk | Median | 75th percentile | 95th percentile |
+|---|---:|---:|---:|---:|---:|
+| Final holdout | 28,648 | 17.85% | 10.01% | 26.26% | 61.90% |
+| Post-23 July | 58,825 | 14.20% | 7.90% | 18.49% | 47.06% |
 
-Synthetic repayment outcomes will only be considered after this analysis. If the later predictor population is sufficiently interpretable for scenario analysis, any synthetic labels will be stored separately from observed outcomes and will not be used to inflate official training size or reported model performance.
+The post-23 July population receives materially lower risk scores overall than the final holdout.
 
-**Expected machine-readable outputs:**
+### Interpretation
+
+The later records are **not feature-invalid**, but they are also **not simply more of the same population**. Their values mostly remain inside previously observed ranges and missingness is not problematic, yet several important predictors have shifted strongly.
+
+This distinction matters. The post-23 July records remain useful for exploratory drift, robustness, and scenario analysis because their predictor data are structurally usable. However, generating synthetic repayment labels by merely copying the earlier delinquency rate would ignore the substantial change in the predictor distribution.
+
+The lower calibrated score distribution suggests that, under the selected model, the later population looks lower-risk than the final holdout. Because the actual outcomes are not trustworthy, this cannot be interpreted as evidence that real delinquency actually fell.
+
+### Decision on synthetic outcomes
+
+**Proceed only as an explicitly synthetic scenario exercise, not as a repaired extension of the labelled dataset.**
+
+Any synthetic outcomes should:
+
+- preserve the actual post-23 July predictor values;
+- derive synthetic delinquency probabilities conditionally from the observed features rather than applying a simple fixed overall delinquency rate;
+- support multiple scenarios rather than one supposedly “correct” synthetic future;
+- remain in a separate synthetic-data location;
+- never be used to increase the official training population, re-estimate official performance, or claim observed repayment behaviour after 23 July.
+
+Given the strong feature drift, scenario generation should explicitly acknowledge that it assumes some continuation of earlier feature-outcome relationships into a changed predictor population.
+
+**Machine-readable outputs:**
 - `reports/tables/module4_post23_feature_quality.csv`
 - `reports/tables/module4_post23_score_distribution.csv`
 - `reports/tables/module4_post23_feature_quality_summary.json`
 
-**Expected figures:**
+**Figures:**
 - `reports/figures/module4/post23_feature_psi.png`
 - `reports/figures/module4/post23_score_distribution.png`
