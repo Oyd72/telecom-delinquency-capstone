@@ -183,20 +183,35 @@ No further tuning is performed before the untouched holdout is opened.
 
 **Script:** `src/models/evaluate_module4_holdout.py`
 
-**Status:** **Pending local execution**
+**Status:** **Completed**
 
-The final holdout will be used for evaluation only. No model or parameter will be changed based on holdout performance before the results are recorded here.
+The final holdout was used for evaluation only. No tuning was performed on holdout results.
 
-Planned checks:
-- ROC-AUC
-- average precision
-- Brier score vs prevalence baseline
-- top-20% delinquency capture
-- calibration-in-the-large
-- ROC-AUC change relative to development performance
-- pass/fail against the agreed core acceptance criteria
+### Output
 
-**Expected machine-readable outputs:**
+| Model | ROC-AUC | Average precision | Brier | Prevalence-baseline Brier | Top-20% capture | Mean predicted risk | Observed delinquency rate | ROC-AUC drop vs development | Core acceptance |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| Logistic regression | 0.8016 | 0.4825 | 0.1808 | 0.1664 | 50.71% | 39.66% | 20.78% | 0.0002 | Fail |
+| Random forest | 0.8308 | 0.5807 | **0.1490** | 0.1664 | 54.19% | 36.57% | 20.78% | 0.0403 | Fail |
+| XGBoost | **0.8316** | **0.5822** | 0.1548 | 0.1664 | **55.05%** | 37.17% | 20.78% | 0.0371 | Fail |
+
+### Interpretation
+
+All three models retain useful ranking ability on the later holdout. The nonlinear models remain clearly stronger than logistic regression on ROC-AUC, average precision, and top-20% capture.
+
+Neither tuned nonlinear model meets the pre-agreed temporal-stability threshold of a maximum 0.03 ROC-AUC drop from development performance. Random forest falls by about 0.040 and XGBoost by about 0.037. This indicates a modest but material reduction in discrimination on the later period.
+
+Calibration is the more visible weakness. Both nonlinear models improve on the prevalence-only Brier baseline, but their mean predicted risks (about 36.6%-37.2%) substantially exceed the observed delinquency rate of 20.78%. Logistic regression is worse on this criterion: its Brier score is poorer than the prevalence-only baseline and its mean predicted risk is about 39.7%.
+
+The holdout therefore does not support declaring any candidate fully accepted under the criteria set before evaluation. At the same time, the results do not show model failure in the broader sense: random forest and XGBoost still exceed the minimum discrimination and operational-capture thresholds. The main unresolved issues are temporal stability and probability calibration.
+
+### Decision
+
+**Do not select a final production candidate yet.**
+
+The next modelling step is to assess a leakage-safe calibration strategy using development data only, freeze that calibration approach independently of the holdout results, and then evaluate the calibrated probabilities without additional parameter tuning. Model ranking remains secondary until calibration and stability are considered together.
+
+**Machine-readable outputs:**
 - `reports/tables/module4_final_holdout_metrics.csv`
 - `reports/tables/module4_final_holdout_summary.json`
 
@@ -213,7 +228,8 @@ Planned figures:
 - initial candidate-model ROC-AUC comparison;
 - initial candidate-model top-20% capture comparison;
 - tuned nonlinear-model comparison;
-- final holdout comparison once results are available.
+- final holdout ROC-AUC comparison;
+- final holdout top-20% capture comparison.
 
 ---
 
@@ -229,4 +245,4 @@ Planned figures:
 | Baseline | Retain logistic regression for interpretability/reference |
 | Challengers | Random forest and XGBoost |
 | Development-period leader | Tuned random forest |
-| Final holdout | Pending evaluation; no tuning after opening |
+| Final holdout | Completed: nonlinear models retain useful ranking but fail the pre-agreed stability threshold; calibration remains unresolved |
