@@ -588,7 +588,7 @@ The three-scenario design is preferable to generating a single synthetic continu
 
 **Script:** `src/models/explain_module4_random_forest.py`
 
-**Status:** **Pending local execution**
+**Status:** **Completed**
 
 ### Purpose
 
@@ -596,7 +596,7 @@ Explain how the selected tuned Random Forest uses the 12 approved predictors, bo
 
 ### What SHAP explains
 
-SHAP is applied to the **base Random Forest**. Isotonic calibration is a separate monotonic post-processing step, so the SHAP values explain the feature logic of the tree model itself. For local examples, the record will show both the raw Random Forest probability and the calibrated probability.
+SHAP is applied to the **base Random Forest**. Isotonic calibration is a separate monotonic post-processing step, so the SHAP values explain the feature logic of the tree model itself. For local examples, both the raw Random Forest probability and the calibrated probability are reported.
 
 ```mermaid
 flowchart LR
@@ -608,39 +608,98 @@ flowchart LR
     D --> G[Global + local interpretation]
 ```
 
-### Planned global outputs
+### Global SHAP result
 
-- mean absolute SHAP importance table;
-- global SHAP bar chart;
-- SHAP beeswarm plot on a reproducible sample of the final holdout.
+| Rank | Feature | Mean absolute SHAP | Mean SHAP |
+|---:|---|---:|---:|
+| 1 | `cnt_ma_rech90` | **0.0758** | -0.0547 |
+| 2 | `sumamnt_ma_rech90` | **0.0603** | -0.0429 |
+| 3 | `sumamnt_ma_rech30` | **0.0422** | -0.0201 |
+| 4 | `cnt_ma_rech30` | **0.0376** | -0.0147 |
+| 5 | `daily_decr30` | **0.0305** | -0.0195 |
+| 6 | `rental30` | 0.0268 | 0.0193 |
+| 7 | `last_rech_date_ma` | 0.0251 | 0.0034 |
+| 8 | `daily_decr90` | 0.0214 | -0.0047 |
+| 9 | `aon` | 0.0165 | -0.0033 |
+| 10 | `medianmarechprebal90` | 0.0159 | -0.0082 |
 
-These will answer:
+The dominant global signal is **recharge behaviour**. Recharge frequency and recharge amount over 30- and 90-day windows occupy four of the top five positions. This is consistent with the broader modelling result that account/recharge behaviour carries more useful predictive information than customer-history status.
 
-> Which features influence the model most across many observations, and in what direction do high or low values tend to push predictions?
+A negative mean SHAP value does **not** mean the feature is always protective. It means that, across the sampled holdout observations, the feature tended on average to push predictions downward relative to the model baseline. Direction for individual observations depends on the actual feature value and interactions.
 
-### Planned local outputs
-
-Three representative holdout observations will be selected around the:
-
-- 10th percentile of calibrated risk;
-- 50th percentile;
-- 90th percentile.
-
-Each local explanation will show the strongest feature contributions that push the prediction above or below the model's baseline expectation.
-
-### Interpretation caution
-
-SHAP explains **model behaviour**, not causation. A positive SHAP value means a feature pushed the fitted model toward higher predicted delinquency risk for that observation. It does not prove that changing the feature would cause repayment behaviour to change.
-
-### Planned visuals
+### Visual summary
 
 ![Global SHAP importance](../../reports/figures/module4/shap_global_importance.png)
 
 ![Global SHAP beeswarm](../../reports/figures/module4/shap_global_beeswarm.png)
 
-Local waterfall charts will be added for low-, typical-, and high-risk cases after execution.
+The bar chart answers **which features matter most overall**. The beeswarm adds direction and spread, showing whether high or low values tend to move individual predictions upward or downward.
 
-**Expected outputs:**
+### Representative local cases
+
+| Case | Raw risk | Calibrated risk | Observed outcome | Main local message |
+|---|---:|---:|---:|---|
+| Low-risk | 10.87% | **2.17%** | Repaid | Higher recharge frequency and recharge amounts strongly push risk downward |
+| Typical-risk | 26.91% | **10.01%** | Repaid | Recharge-frequency and recharge-amount variables still reduce risk materially |
+| High-risk | 70.94% | **47.06%** | Delinquent | `rental30` and recharge-amount variables push the prediction strongly upward |
+
+#### Low-risk case
+
+Strongest contributors:
+
+- `cnt_ma_rech90`: SHAP **-0.1069**
+- `sumamnt_ma_rech90`: SHAP **-0.0797**
+- `sumamnt_ma_rech30`: SHAP **-0.0621**
+
+![Low-risk local SHAP](../../reports/figures/module4/shap_local_low_risk.png)
+
+#### Typical-risk case
+
+Strongest contributors:
+
+- `cnt_ma_rech90`: SHAP **-0.0761**
+- `sumamnt_ma_rech90`: SHAP **-0.0587**
+- `medianmarechprebal90`: SHAP **-0.0349**
+
+![Typical-risk local SHAP](../../reports/figures/module4/shap_local_typical_risk.png)
+
+#### High-risk case
+
+Strongest contributors:
+
+- `rental30`: SHAP **+0.0661**
+- `sumamnt_ma_rech90`: SHAP **+0.0468**
+- `sumamnt_ma_rech30`: SHAP **+0.0427**
+
+![High-risk local SHAP](../../reports/figures/module4/shap_local_high_risk.png)
+
+### Interpretation
+
+The SHAP results support a coherent business story. The model primarily distinguishes repayment risk through patterns of **recharge frequency, recharge value, account activity, and rental/decrement behaviour**.
+
+The local examples are also internally consistent:
+
+- the low-risk observation is pushed down mainly by stronger recharge activity;
+- the typical case still benefits from similar recharge-related signals but to a lesser extent;
+- the high-risk observation is pushed upward by `rental30` and recharge-amount patterns.
+
+Calibration then rescales these raw Random Forest probabilities substantially. For example, the low-risk case moves from 10.87% raw risk to 2.17% calibrated risk, while the high-risk case moves from 70.94% to 47.06%. SHAP explains why the Random Forest ranked these cases as it did; isotonic calibration separately makes the probability scale more realistic.
+
+### Interpretation limits
+
+SHAP describes **how the fitted model uses the data**. It does not prove causal effects.
+
+For example, a positive SHAP contribution from `rental30` means that this variable increased the model's predicted delinquency risk for that observation. It does not mean that changing rental behaviour would necessarily change actual repayment behaviour.
+
+Likewise, feature importance does not establish fairness or policy appropriateness. Important variables still need to be interpreted in context.
+
+### Decision
+
+**Retain SHAP as the primary explainability approach for the selected Random Forest.**
+
+The global and local explanations are sufficiently coherent for use in the assignment, and they support the decision to prefer Random Forest over XGBoost when predictive performance is materially similar.
+
+**Outputs:**
 - `reports/tables/module4_shap_global_importance.csv`
 - `reports/tables/module4_shap_local_cases.csv`
 - `reports/tables/module4_shap_summary.json`
