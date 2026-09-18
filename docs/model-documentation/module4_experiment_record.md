@@ -245,7 +245,8 @@ Planned figures:
 | Baseline | Retain logistic regression for interpretability/reference |
 | Challengers | Random forest and XGBoost |
 | Development-period leader | Tuned random forest |
-| Final holdout | Completed: nonlinear models retain useful ranking but fail the pre-agreed stability threshold; calibration remains unresolved |
+| Final holdout | Completed: nonlinear models retain useful ranking but fail the pre-agreed stability threshold |
+| Calibration | Development-only assessment selects isotonic by the pre-defined Brier-first rule; gains are modest and mixed across calibration measures |
 
 
 ---
@@ -254,7 +255,7 @@ Planned figures:
 
 **Script:** `src/models/assess_module4_calibration.py`
 
-**Status:** **Pending local execution**
+**Status:** **Completed**
 
 ### Purpose
 
@@ -278,11 +279,34 @@ Calibration method selection is based on development-only evidence:
 
 ROC-AUC, average precision, and top-20% capture are monitored to ensure calibration does not materially damage ranking performance.
 
-### Methodological caution
+### Output
 
-The need to revisit calibration became particularly visible after the final holdout evaluation. Therefore, if the selected calibration method is later applied to the already-opened holdout, that result will be treated as **confirmatory/sensitivity evidence**, not as a second independent final validation.
+| Model | Method | Mean ROC-AUC | Minimum ROC-AUC | Mean AP | Mean Brier | Mean ECE | Mean abs. calibration gap | Mean top-20% capture |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| Random forest | Isotonic | 0.8332 | 0.8226 | 0.5737 | **0.1005** | **0.0464** | 0.0384 | 61.83% |
+| Random forest | Uncalibrated | **0.8340** | **0.8234** | **0.5873** | 0.1021 | 0.0481 | **0.0291** | **61.92%** |
+| Random forest | Platt | 0.8340 | 0.8234 | 0.5873 | 0.1045 | 0.0533 | 0.0385 | 61.92% |
+| XGBoost | Isotonic | 0.8414 | 0.8195 | 0.5744 | **0.1026** | 0.0588 | 0.0502 | **61.21%** |
+| XGBoost | Platt | **0.8424** | **0.8199** | **0.5867** | 0.1042 | **0.0586** | **0.0487** | 61.06% |
+| XGBoost | Uncalibrated | 0.8424 | 0.8199 | 0.5867 | 0.1065 | 0.0734 | 0.0535 | 61.06% |
 
-**Expected machine-readable outputs:**
+### Interpretation
+
+Under the pre-defined selection rule, isotonic calibration has the best mean Brier score for both nonlinear models. For random forest it also gives a small ECE improvement over the uncalibrated model, although the mean absolute calibration gap becomes slightly worse. For XGBoost, isotonic improves Brier score and ECE relative to the uncalibrated model, but Platt has a marginally lower ECE and calibration gap.
+
+The calibration gains are therefore real but modest rather than decisive. Isotonic also slightly reduces ROC-AUC and average precision, which is consistent with the stepwise mapping creating probability ties. Top-20% capture is essentially preserved.
+
+The random-forest result is particularly nuanced: the uncalibrated model already has the smallest mean absolute calibration gap, while isotonic wins on the primary Brier criterion and slightly on ECE. This means calibration is not uniformly better on every measure.
+
+### Decision
+
+**Freeze isotonic calibration as the development-selected calibration method for both nonlinear candidates**, because the selection rule specified mean Brier score as the primary criterion before the results were observed.
+
+Do not reinterpret this as evidence that isotonic is universally superior. The development results show a trade-off: improved probability error on average, with small losses in ranking metrics and mixed effects on calibration-in-the-large.
+
+Any application of isotonic calibration to the already-opened final holdout will be treated as **confirmatory/sensitivity evidence**, not as a second independent final validation.
+
+**Machine-readable outputs:**
 - `reports/tables/module4_calibration_fold_metrics.csv`
 - `reports/tables/module4_calibration_summary.csv`
 - `reports/tables/module4_calibration_summary.json`
