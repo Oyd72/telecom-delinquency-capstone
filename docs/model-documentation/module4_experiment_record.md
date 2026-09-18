@@ -246,3 +246,45 @@ Planned figures:
 | Challengers | Random forest and XGBoost |
 | Development-period leader | Tuned random forest |
 | Final holdout | Completed: nonlinear models retain useful ranking but fail the pre-agreed stability threshold; calibration remains unresolved |
+
+
+---
+
+## 6. Development-only calibration assessment
+
+**Script:** `src/models/assess_module4_calibration.py`
+
+**Status:** **Pending local execution**
+
+### Purpose
+
+Assess whether probability calibration can be improved for the two tuned nonlinear challengers without using the 14–23 July final holdout for method selection.
+
+The experiment compares:
+
+- uncalibrated probabilities;
+- Platt scaling;
+- isotonic calibration.
+
+For each development-period evaluation fold, the base model is trained on earlier observations, the calibrator is fitted only on the immediately preceding seven calendar days, and performance is measured on a later development block.
+
+### Selection rule
+
+Calibration method selection is based on development-only evidence:
+
+1. mean Brier score;
+2. mean expected calibration error;
+3. mean absolute calibration-in-the-large gap.
+
+ROC-AUC, average precision, and top-20% capture are monitored to ensure calibration does not materially damage ranking performance.
+
+### Methodological caution
+
+The need to revisit calibration became particularly visible after the final holdout evaluation. Therefore, if the selected calibration method is later applied to the already-opened holdout, that result will be treated as **confirmatory/sensitivity evidence**, not as a second independent final validation.
+
+**Expected machine-readable outputs:**
+- `reports/tables/module4_calibration_fold_metrics.csv`
+- `reports/tables/module4_calibration_summary.csv`
+- `reports/tables/module4_calibration_summary.json`
+
+**MLflow experiment:** `module4_development_calibration`
