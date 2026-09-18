@@ -580,3 +580,72 @@ The three-scenario design is preferable to generating a single synthetic continu
 - `reports/tables/module4_synthetic_scenario_summary.json`
 - `reports/figures/module4/synthetic_scenario_rates.png`
 - `reports/figures/module4/synthetic_scenario_probability_distributions.png`
+
+
+---
+
+## 11. SHAP explainability for the selected Random Forest
+
+**Script:** `src/models/explain_module4_random_forest.py`
+
+**Status:** **Pending local execution**
+
+### Purpose
+
+Explain how the selected tuned Random Forest uses the 12 approved predictors, both globally and for individual observations.
+
+### What SHAP explains
+
+SHAP is applied to the **base Random Forest**. Isotonic calibration is a separate monotonic post-processing step, so the SHAP values explain the feature logic of the tree model itself. For local examples, the record will show both the raw Random Forest probability and the calibrated probability.
+
+```mermaid
+flowchart LR
+    A[Input features] --> B[Random Forest]
+    B --> C[Raw delinquency score]
+    B --> D[SHAP explanation]
+    C --> E[Isotonic calibration]
+    E --> F[Calibrated risk]
+    D --> G[Global + local interpretation]
+```
+
+### Planned global outputs
+
+- mean absolute SHAP importance table;
+- global SHAP bar chart;
+- SHAP beeswarm plot on a reproducible sample of the final holdout.
+
+These will answer:
+
+> Which features influence the model most across many observations, and in what direction do high or low values tend to push predictions?
+
+### Planned local outputs
+
+Three representative holdout observations will be selected around the:
+
+- 10th percentile of calibrated risk;
+- 50th percentile;
+- 90th percentile.
+
+Each local explanation will show the strongest feature contributions that push the prediction above or below the model's baseline expectation.
+
+### Interpretation caution
+
+SHAP explains **model behaviour**, not causation. A positive SHAP value means a feature pushed the fitted model toward higher predicted delinquency risk for that observation. It does not prove that changing the feature would cause repayment behaviour to change.
+
+### Planned visuals
+
+![Global SHAP importance](../../reports/figures/module4/shap_global_importance.png)
+
+![Global SHAP beeswarm](../../reports/figures/module4/shap_global_beeswarm.png)
+
+Local waterfall charts will be added for low-, typical-, and high-risk cases after execution.
+
+**Expected outputs:**
+- `reports/tables/module4_shap_global_importance.csv`
+- `reports/tables/module4_shap_local_cases.csv`
+- `reports/tables/module4_shap_summary.json`
+- `reports/figures/module4/shap_global_importance.png`
+- `reports/figures/module4/shap_global_beeswarm.png`
+- `reports/figures/module4/shap_local_low_risk.png`
+- `reports/figures/module4/shap_local_typical_risk.png`
+- `reports/figures/module4/shap_local_high_risk.png`
