@@ -758,3 +758,66 @@ The global and local explanations are sufficiently coherent for use in the assig
 - `reports/figures/module4/shap_local_low_risk.png`
 - `reports/figures/module4/shap_local_typical_risk.png`
 - `reports/figures/module4/shap_local_high_risk.png`
+
+
+---
+
+## 12. Fairness feasibility and operational robustness
+
+**Script:** `src/models/assess_module4_fairness_robustness.py`
+
+**Status:** **Pending local execution**
+
+### Fairness scope
+
+The dataset still does not contain attributes that directly identify protected demographic groups or other clearly defensible fairness groups. We therefore do **not** fabricate or infer demographic groups for fairness testing.
+
+The assessment instead records:
+
+- whether any direct protected-trait fields are present;
+- whether group-fairness metrics are supportable from the available data;
+- the remaining limitation that indirect proxy effects cannot be ruled out solely from feature names or SHAP results.
+
+### Operational robustness scope
+
+Operational robustness is assessed separately from fairness.
+
+Two observed business-relevant segmentations are used:
+
+- account-tenure quartiles based on `aon`;
+- recharge-activity quartiles based on `cnt_ma_rech90`.
+
+These are **not fairness groups**. They are used only to test whether model performance depends excessively on a narrow portion of the observed population.
+
+### Controlled sensitivity analysis
+
+The five strongest SHAP features are perturbed by plus/minus **0.10 of their training-period interquartile range**, with values clipped to the observed training range.
+
+```mermaid
+flowchart LR
+    A[Holdout observation] --> B[Selected calibrated Random Forest]
+    B --> C[Baseline risk]
+    A --> D[Modest feature perturbation]
+    D --> E[Re-score]
+    C --> F[Compare calibrated-risk movement]
+    E --> F
+```
+
+The analysis reports median, 95th-percentile, and maximum risk movement, together with the share of observations changing by at least 5 or 10 percentage points.
+
+### Planned visuals
+
+![Operational segment ROC-AUC](../../reports/figures/module4/operational_segment_roc_auc.png)
+
+![Feature sensitivity](../../reports/figures/module4/feature_sensitivity_p95.png)
+
+### Interpretation limits
+
+Operational subgroup consistency is not evidence of demographic fairness. Likewise, sensitivity testing describes local model stability under modest feature changes; it does not establish causation or policy appropriateness.
+
+**Expected outputs:**
+- `reports/tables/module4_operational_robustness_segments.csv`
+- `reports/tables/module4_feature_sensitivity.csv`
+- `reports/tables/module4_fairness_robustness_summary.json`
+- `reports/figures/module4/operational_segment_roc_auc.png`
+- `reports/figures/module4/feature_sensitivity_p95.png`
