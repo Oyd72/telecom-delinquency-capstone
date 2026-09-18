@@ -693,6 +693,56 @@ For example, a positive SHAP contribution from `rental30` means that this variab
 
 Likewise, feature importance does not establish fairness or policy appropriateness. Important variables still need to be interpreted in context.
 
+
+
+### Two pillars supporting confidence in the model
+
+The evidence developed so far supports confidence in the preferred model through two distinct but complementary pillars.
+
+```mermaid
+flowchart TD
+    A[Confidence in the preferred model] --> B[1. Feature and data-level evidence]
+    A --> C[2. Structural model-logic evidence]
+
+    B --> B1[Customer-history variables tested]
+    B --> B2[Returning-customer fields add negligible value]
+    B --> B3[Primary feature set passes leakage review]
+    B --> B4[Behavioural and recharge variables remain useful]
+
+    C --> C1[SHAP global importance]
+    C --> C2[SHAP local explanations]
+    C --> C3[Recharge and account behaviour dominate]
+    C --> C4[Local contribution directions are coherent]
+```
+
+#### Pillar 1 — Feature and data-level evidence
+
+Earlier analysis assessed the variables themselves and, in particular, the customer-history fields. The evidence showed that `prior_tx_count` and `is_repeat_customer` add negligible predictive value, are affected by the limited observation window, and are less relevant in a final holdout where most observations belong to customers not previously seen in development.
+
+The primary specification therefore relies instead on features that are available to both new and returning customers. The 12-feature set also passed the leakage and structural review: no identifier, source target, duplicate predictor, or near-deterministic target relationship was found.
+
+This pillar gives confidence that the model is built on a defensible and operationally usable feature set rather than on fragile customer-history artefacts.
+
+#### Pillar 2 — Structural model-logic evidence
+
+The SHAP analysis adds a separate layer of confidence by assessing how the fitted Random Forest actually uses those variables.
+
+The most influential features are dominated by recharge frequency, recharge amount, account activity, and related behavioural measures. These signals are also visible in representative local explanations: stronger recharge behaviour pushes some cases toward lower predicted delinquency risk, while other account and recharge patterns push high-risk cases upward.
+
+This does not prove causation, but it shows that the model's internal logic is coherent with the behavioural assumptions underpinning the project. The model is not merely producing acceptable performance metrics; its decisions can also be traced back to a plausible pattern of feature use.
+
+#### Combined interpretation
+
+Together, the two pillars strengthen confidence in the model in different ways:
+
+- **feature-level evidence** supports the appropriateness and robustness of the input specification;
+- **structural explainability evidence** supports the internal coherence and interpretability of the fitted model logic.
+
+This combined evidence increases confidence that the preferred Random Forest is learning meaningful behavioural relationships rather than relying on unstable customer-history fields or accidental artefacts.
+
+It does **not** remove the temporal-stability limitation identified in the independent holdout. The model remains the preferred assignment candidate, but stronger production-readiness claims would still require validation over a longer historical period.
+
+
 ### Decision
 
 **Retain SHAP as the primary explainability approach for the selected Random Forest.**
