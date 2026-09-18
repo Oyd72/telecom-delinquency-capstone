@@ -490,3 +490,69 @@ Given the strong feature drift, scenario generation should explicitly acknowledg
 **Figures:**
 - `reports/figures/module4/post23_feature_psi.png`
 - `reports/figures/module4/post23_score_distribution.png`
+
+
+---
+
+## 10. Synthetic post-23 July scenario dataset
+
+**Script:** `src/models/generate_post23_synthetic_scenarios.py`
+
+**Status:** **Pending local execution**
+
+### Purpose
+
+Use the genuine post-23 July predictor values for clearly labelled scenario analysis without pretending that the missing/unreliable repayment outcomes are known.
+
+### Scenario design
+
+```mermaid
+flowchart LR
+    A[Real post-23 July predictor values] --> B[Selected Random Forest]
+    B --> C[Isotonic calibration]
+    C --> D[Model-consistent scenario]
+    C --> E[Historical-prevalence-aligned scenario]
+    C --> F[Holdout-stress-aligned scenario]
+    D --> G[Synthetic delinquency draws]
+    E --> G
+    F --> G
+    G --> H[Scenario / robustness analysis only]
+```
+
+The scenarios are:
+
+| Scenario | Purpose |
+|---|---|
+| Model-consistent | Uses the selected model's calibrated post-23 July probabilities directly |
+| Historical-prevalence-aligned | Preserves case ranking but shifts the population mean toward the observed labelled-period delinquency rate |
+| Holdout-stress-aligned | Preserves case ranking but shifts the population mean toward the higher final-holdout delinquency rate |
+
+The alternative scenarios use a constant log-odds shift rather than overwriting individual feature relationships. This preserves the relative risk ordering while changing the population-level expected delinquency rate transparently.
+
+### Safeguards
+
+Synthetic labels will be explicitly marked and stored under `data/synthetic/`.
+
+They will **not** be:
+
+- merged into the official labelled training population;
+- used to claim improved observed model performance;
+- interpreted as reconstructed true repayment history;
+- used to replace the original post-23 July source labels.
+
+### Planned visuals
+
+After execution, the running record will incorporate:
+
+![Synthetic scenario rates](../../reports/figures/module4/synthetic_scenario_rates.png)
+
+![Synthetic scenario probability distributions](../../reports/figures/module4/synthetic_scenario_probability_distributions.png)
+
+These figures compare expected vs realised synthetic delinquency rates and show how the risk-probability distributions differ across scenarios.
+
+**Expected outputs:**
+- `data/synthetic/module4_post23_synthetic_scenarios.csv`
+- `reports/tables/module4_synthetic_scenario_summary.csv`
+- `reports/tables/module4_synthetic_scenario_summary.json`
+- `reports/figures/module4/synthetic_scenario_rates.png`
+- `reports/figures/module4/synthetic_scenario_probability_distributions.png`
