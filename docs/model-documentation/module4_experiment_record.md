@@ -312,3 +312,45 @@ Any application of isotonic calibration to the already-opened final holdout will
 - `reports/tables/module4_calibration_summary.json`
 
 **MLflow experiment:** `module4_development_calibration`
+
+
+---
+
+## 7. Calibrated holdout sensitivity analysis
+
+**Script:** `src/models/confirm_module4_calibration_holdout.py`
+
+**Status:** **Pending local execution**
+
+### Purpose
+
+Apply the development-selected **isotonic calibration** method to the already-opened final holdout as confirmatory/sensitivity evidence.
+
+Chronology is preserved:
+
+- base model training: through **6 July 2016**;
+- calibration window: **7-13 July 2016**;
+- evaluation: **14-23 July 2016** final holdout.
+
+The script compares uncalibrated and isotonic-calibrated probabilities from the **same base-model train/calibration split**. This isolates the effect of calibration as far as possible.
+
+### Methodological status
+
+This is **not** a second independent final validation. The final holdout had already been opened before this analysis. The isotonic method itself was frozen using development-only evidence, but the holdout results here are interpreted only as sensitivity/confirmatory evidence.
+
+### Planned checks
+
+- ROC-AUC
+- average precision
+- Brier score
+- expected calibration error
+- top-20% capture
+- mean predicted risk vs observed delinquency rate
+- absolute calibration-in-the-large gap
+- comparison with the prevalence-only Brier baseline
+
+**Expected machine-readable outputs:**
+- `reports/tables/module4_calibrated_holdout_metrics.csv`
+- `reports/tables/module4_calibrated_holdout_summary.json`
+
+**MLflow experiment:** `module4_calibrated_holdout_sensitivity`
