@@ -196,7 +196,8 @@ def main() -> None:
     if missing:
         raise ValueError(f"Missing required columns: {missing}")
 
-    mlflow.set_tracking_uri((PROJECT_ROOT / "mlruns").as_uri())
+    mlflow_db = PROJECT_ROOT / "mlflow.db"
+    mlflow.set_tracking_uri(f"sqlite:///{mlflow_db.as_posix()}")
     mlflow.set_experiment("module4_candidate_model_benchmark")
 
     records = []
@@ -307,7 +308,7 @@ def main() -> None:
     print(f"Fold metrics written to: {FOLD_PATH.relative_to(PROJECT_ROOT)}")
     print(f"Summary written to: {SUMMARY_PATH.relative_to(PROJECT_ROOT)}")
     print(f"JSON summary written to: {JSON_PATH.relative_to(PROJECT_ROOT)}")
-    print(f"MLflow tracking directory: {(PROJECT_ROOT / 'mlruns').relative_to(PROJECT_ROOT)}")
+    print(f"MLflow tracking database: {mlflow_db.relative_to(PROJECT_ROOT)}")
 
 
 if __name__ == "__main__":
