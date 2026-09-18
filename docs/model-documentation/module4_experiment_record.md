@@ -498,7 +498,7 @@ Given the strong feature drift, scenario generation should explicitly acknowledg
 
 **Script:** `src/models/generate_post23_synthetic_scenarios.py`
 
-**Status:** **Pending local execution**
+**Status:** **Completed**
 
 ### Purpose
 
@@ -510,47 +510,71 @@ Use the genuine post-23 July predictor values for clearly labelled scenario anal
 flowchart LR
     A[Real post-23 July predictor values] --> B[Selected Random Forest]
     B --> C[Isotonic calibration]
-    C --> D[Model-consistent scenario]
-    C --> E[Historical-prevalence-aligned scenario]
-    C --> F[Holdout-stress-aligned scenario]
-    D --> G[Synthetic delinquency draws]
+    C --> D[Model-consistent]
+    C --> E[Historical-prevalence-aligned]
+    C --> F[Holdout-stress-aligned]
+    D --> G[Synthetic Bernoulli draws]
     E --> G
     F --> G
     G --> H[Scenario / robustness analysis only]
 ```
 
-The scenarios are:
+The three scenarios preserve the real feature values and differ only in the expected delinquency level.
 
-| Scenario | Purpose |
-|---|---|
-| Model-consistent | Uses the selected model's calibrated post-23 July probabilities directly |
-| Historical-prevalence-aligned | Preserves case ranking but shifts the population mean toward the observed labelled-period delinquency rate |
-| Holdout-stress-aligned | Preserves case ranking but shifts the population mean toward the higher final-holdout delinquency rate |
+### Output
 
-The alternative scenarios use a constant log-odds shift rather than overwriting individual feature relationships. This preserves the relative risk ordering while changing the population-level expected delinquency rate transparently.
+| Scenario | Rows | Expected delinquency probability | Realised synthetic delinquency rate | Log-odds shift | Median probability | 95th percentile probability |
+|---|---:|---:|---:|---:|---:|---:|
+| Model-consistent | 58,825 | **14.20%** | 14.10% | 0.000 | 7.90% | 47.06% |
+| Historical-prevalence-aligned | 58,825 | **17.35%** | 17.47% | 0.301 | 10.38% | 54.57% |
+| Holdout-stress-aligned | 58,825 | **20.78%** | 20.70% | 0.588 | 13.38% | 61.55% |
 
-### Safeguards
+A fixed random seed of 42 makes the realised synthetic outcomes reproducible.
 
-Synthetic labels will be explicitly marked and stored under `data/synthetic/`.
+### Visual summary
 
-They will **not** be:
+```mermaid
+flowchart LR
+    A["Model-consistent<br/>14.20% expected<br/>14.10% realised"] --> B["Historical-aligned<br/>17.35% expected<br/>17.47% realised"] --> C["Holdout-stress<br/>20.78% expected<br/>20.70% realised"]
+```
 
-- merged into the official labelled training population;
-- used to claim improved observed model performance;
-- interpreted as reconstructed true repayment history;
-- used to replace the original post-23 July source labels.
-
-### Planned visuals
-
-After execution, the running record will incorporate:
+The realised synthetic delinquency rates closely track the intended scenario means, which confirms that the sampling process behaves as designed.
 
 ![Synthetic scenario rates](../../reports/figures/module4/synthetic_scenario_rates.png)
 
 ![Synthetic scenario probability distributions](../../reports/figures/module4/synthetic_scenario_probability_distributions.png)
 
-These figures compare expected vs realised synthetic delinquency rates and show how the risk-probability distributions differ across scenarios.
+### Interpretation
 
-**Expected outputs:**
+The scenario dataset gives us three plausible *analytical futures* for exactly the same post-23 July customers and feature values.
+
+The model-consistent scenario reflects what the selected calibrated model expects from the shifted later population. The historical-prevalence-aligned scenario asks what the same customers would look like if overall delinquency returned to the labelled-period average. The holdout-stress scenario asks what would happen if the later population experienced the higher delinquency level observed in the final holdout.
+
+Because the adjustment is applied as a constant log-odds shift, the relative risk ordering of individual observations is preserved within each scenario. What changes is the population-level expected event rate.
+
+This is useful for robustness and sensitivity work because it separates two questions:
+
+- which customers appear relatively riskier based on their observed features;
+- how the same risk ordering behaves under different plausible overall delinquency environments.
+
+### Safeguards and interpretation limits
+
+The synthetic dataset is **not** a repaired version of the original data and does not create observed repayment history after 23 July.
+
+It must remain separate from the official modelling dataset and must not be used to:
+
+- increase the official labelled training population;
+- report synthetic-label performance as observed model performance;
+- recalibrate or validate the model as though synthetic outcomes were ground truth;
+- claim that any one scenario represents what actually happened after 23 July.
+
+### Decision
+
+**Retain the synthetic dataset for scenario, sensitivity, and demonstration analysis only.**
+
+The three-scenario design is preferable to generating a single synthetic continuation because it makes the underlying assumptions visible rather than hiding them inside one fabricated outcome series.
+
+**Outputs:**
 - `data/synthetic/module4_post23_synthetic_scenarios.csv`
 - `reports/tables/module4_synthetic_scenario_summary.csv`
 - `reports/tables/module4_synthetic_scenario_summary.json`
