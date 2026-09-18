@@ -247,6 +247,7 @@ Planned figures:
 | Development-period leader | Tuned random forest |
 | Final holdout | Completed: nonlinear models retain useful ranking but fail the pre-agreed stability threshold |
 | Calibration | Isotonic selected on development data and supported by holdout sensitivity analysis; probability quality improves materially with minimal ranking loss |
+| Final model selection | Prefer tuned Random Forest + isotonic calibration; retain calibrated XGBoost as challenger |
 
 
 ---
@@ -366,3 +367,51 @@ The remaining model-selection question is now primarily the trade-off between ra
 - `reports/tables/module4_calibrated_holdout_summary.json`
 
 **MLflow experiment:** `module4_calibrated_holdout_sensitivity`
+
+
+---
+
+## 8. Final model selection
+
+### Decision rule
+
+Where competing models deliver materially similar business-relevant performance, prefer the simpler and more interpretable option unless the more complex model provides a meaningful gain that justifies additional implementation, maintenance, computational, and explanation burden.
+
+### Evidence considered
+
+After development-only tuning and isotonic calibration:
+
+- Random forest and XGBoost show very similar discrimination and top-20% capture.
+- Random forest has a slightly better calibrated-holdout Brier score (0.1230 vs 0.1234).
+- XGBoost has a marginally higher top-20% capture (54.51% vs 54.04%).
+- The differences are too small to justify choosing XGBoost on predictive performance alone.
+- Random forest is operationally and conceptually simpler than gradient boosting and is easier to explain to non-technical stakeholders, while still supporting SHAP-based global and local explanation.
+
+### Selection
+
+**Primary Module 4 model: tuned Random Forest with isotonic calibration.**
+
+Frozen base-model parameters:
+
+- `n_estimators=300`
+- `max_depth=8`
+- `min_samples_leaf=20`
+- `max_features="sqrt"`
+- `class_weight="balanced_subsample"`
+- `random_state=42`
+
+Calibration:
+
+- isotonic regression;
+- fitted on a chronologically later calibration window than the base-model training data and earlier than the scored evaluation period.
+
+### Challenger retained
+
+**XGBoost with isotonic calibration** remains the documented challenger model. It is not rejected as ineffective; it is simply not preferred because its small metric advantage on one operational measure does not justify the additional model complexity.
+
+### Validation caveat
+
+The selected random forest still missed the pre-agreed independent-holdout temporal-stability criterion before calibration. Calibration materially improved probability quality but does not remove that stability finding, because calibration does not change the underlying ranking model in a way that restores the original independent holdout result.
+
+The selected model should therefore be described as the **preferred candidate for this assignment**, not as a fully production-validated model. Longer historical coverage would be needed to establish stronger temporal stability.
+
