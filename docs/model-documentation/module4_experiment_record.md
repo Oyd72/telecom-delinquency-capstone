@@ -246,7 +246,7 @@ Planned figures:
 | Challengers | Random forest and XGBoost |
 | Development-period leader | Tuned random forest |
 | Final holdout | Completed: nonlinear models retain useful ranking but fail the pre-agreed stability threshold |
-| Calibration | Development-only assessment selects isotonic by the pre-defined Brier-first rule; gains are modest and mixed across calibration measures |
+| Calibration | Isotonic selected on development data and supported by holdout sensitivity analysis; probability quality improves materially with minimal ranking loss |
 
 
 ---
@@ -320,7 +320,7 @@ Any application of isotonic calibration to the already-opened final holdout will
 
 **Script:** `src/models/confirm_module4_calibration_holdout.py`
 
-**Status:** **Pending local execution**
+**Status:** **Completed**
 
 ### Purpose
 
@@ -334,22 +334,34 @@ Chronology is preserved:
 
 The script compares uncalibrated and isotonic-calibrated probabilities from the **same base-model train/calibration split**. This isolates the effect of calibration as far as possible.
 
-### Methodological status
+### Output
 
-This is **not** a second independent final validation. The final holdout had already been opened before this analysis. The isotonic method itself was frozen using development-only evidence, but the holdout results here are interpreted only as sensitivity/confirmatory evidence.
+| Model | Method | ROC-AUC | Average precision | Brier | ECE (10 bins) | Top-20% capture | Mean predicted risk | Observed delinquency rate | Abs. calibration gap | Beats prevalence Brier |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| Random forest | Uncalibrated | 0.8291 | 0.5777 | 0.1424 | 0.1389 | 54.04% | 34.67% | 20.78% | 0.1389 | Yes |
+| Random forest | Isotonic | 0.8287 | 0.5667 | **0.1230** | **0.0293** | 54.04% | 17.85% | 20.78% | **0.0293** | Yes |
+| XGBoost | Uncalibrated | 0.8270 | 0.5752 | 0.1488 | 0.1463 | 54.58% | 35.41% | 20.78% | 0.1463 | Yes |
+| XGBoost | Isotonic | 0.8271 | 0.5689 | **0.1234** | **0.0291** | 54.51% | 17.94% | 20.78% | **0.0284** | Yes |
 
-### Planned checks
+### Interpretation
 
-- ROC-AUC
-- average precision
-- Brier score
-- expected calibration error
-- top-20% capture
-- mean predicted risk vs observed delinquency rate
-- absolute calibration-in-the-large gap
-- comparison with the prevalence-only Brier baseline
+The sensitivity result supports the development-period calibration decision. Isotonic calibration materially improves probability quality for both nonlinear candidates on the already-opened holdout.
 
-**Expected machine-readable outputs:**
+For random forest, Brier score improves from 0.1424 to 0.1230 and ECE falls from 0.1389 to 0.0293. Mean predicted risk moves from 34.67% to 17.85%, much closer to the observed 20.78% delinquency rate. Top-20% capture is unchanged at 54.04%, while ROC-AUC changes only marginally.
+
+For XGBoost, Brier score improves from 0.1488 to 0.1234 and ECE falls from 0.1463 to 0.0291. Mean predicted risk moves from 35.41% to 17.94%, again much closer to the observed rate. Top-20% capture is essentially unchanged and ROC-AUC is effectively stable.
+
+The calibrated probabilities slightly underpredict average risk, but the calibration gap is far smaller than before calibration. This is a material improvement in probability reliability without meaningful loss of ranking performance.
+
+### Decision
+
+**Retain isotonic calibration as the preferred probability-calibration approach for both nonlinear candidates.**
+
+The result strengthens the case for calibration but does not create a new independent validation result. The original final-holdout assessment remains the formal independent holdout evaluation. These calibrated results are confirmatory/sensitivity evidence.
+
+The remaining model-selection question is now primarily the trade-off between random forest and XGBoost. Their calibrated holdout performance is very close. Random forest has a slightly better Brier score; XGBoost has a marginally higher top-20% capture. Any final choice should therefore return to the agreed complexity-versus-value principle rather than rely on tiny metric differences.
+
+**Machine-readable outputs:**
 - `reports/tables/module4_calibrated_holdout_metrics.csv`
 - `reports/tables/module4_calibrated_holdout_summary.json`
 
