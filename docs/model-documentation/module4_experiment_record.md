@@ -415,3 +415,53 @@ The selected random forest still missed the pre-agreed independent-holdout tempo
 
 The selected model should therefore be described as the **preferred candidate for this assignment**, not as a fully production-validated model. Longer historical coverage would be needed to establish stronger temporal stability.
 
+
+
+---
+
+## 9. Post-23 July feature-quality and score-behaviour analysis
+
+**Script:** `src/models/analyze_post23_feature_quality.py`
+
+**Status:** **Pending local execution**
+
+### Purpose
+
+Assess whether the 24 July-21 August records contain predictor information that remains usable for exploratory robustness and scenario analysis, without treating their all-success outcome labels as valid ground truth.
+
+The analysis compares the 12 selected predictors in the labelled modelling population with the post-23 July population using:
+
+- missingness rates;
+- observed min/max ranges and out-of-labelled-range rates;
+- robust median shifts relative to the labelled-period interquartile range;
+- Population Stability Index (PSI) as a descriptive distribution-shift measure;
+- calibrated selected-model score distributions.
+
+### Model-score check
+
+The selected tuned Random Forest is trained through 6 July, isotonic calibration is fitted on 7-13 July, and both the 14-23 July holdout and the post-23 July period are scored. Post-23 July outcome labels are not used in this step.
+
+This allows us to ask whether the later observations occupy a broadly similar risk-score space even though their outcome labels are unsuitable for supervised validation.
+
+### Interpretation rule
+
+PSI bands are used descriptively:
+
+- below 0.10: low shift;
+- 0.10-0.25: moderate shift;
+- 0.25 or above: high shift.
+
+These are not treated as universal accept/reject thresholds.
+
+### Decision gate for synthetic outcomes
+
+Synthetic repayment outcomes will only be considered after this analysis. If the later predictor population is sufficiently interpretable for scenario analysis, any synthetic labels will be stored separately from observed outcomes and will not be used to inflate official training size or reported model performance.
+
+**Expected machine-readable outputs:**
+- `reports/tables/module4_post23_feature_quality.csv`
+- `reports/tables/module4_post23_score_distribution.csv`
+- `reports/tables/module4_post23_feature_quality_summary.json`
+
+**Expected figures:**
+- `reports/figures/module4/post23_feature_psi.png`
+- `reports/figures/module4/post23_score_distribution.png`
