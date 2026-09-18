@@ -1,0 +1,53 @@
+{
+  "analysis_role": "synthetic_scenario_only",
+  "observed_ground_truth_repaired": false,
+  "official_training_population_extended": false,
+  "source_post23_rows": 58825,
+  "scenario_count": 3,
+  "random_seed": 42,
+  "labelled_prevalence": 0.17352603686483117,
+  "final_holdout_prevalence": 0.20779810108908126,
+  "base_post23_mean_calibrated_probability": 0.14203916000214445,
+  "scenarios": [
+    {
+      "scenario": "model_consistent",
+      "rows": 58825,
+      "target_mean_probability": 0.14203916000214445,
+      "actual_mean_probability": 0.14203916000214445,
+      "realized_synthetic_delinquency_rate": 0.14101147471313216,
+      "log_odds_shift": 0.0,
+      "p05_probability": 0.009672619047619048,
+      "median_probability": 0.07898448519040902,
+      "p95_probability": 0.47058823529411764
+    },
+    {
+      "scenario": "historical_prevalence_aligned",
+      "rows": 58825,
+      "target_mean_probability": 0.17352603686483117,
+      "actual_mean_probability": 0.17352603686483117,
+      "realized_synthetic_delinquency_rate": 0.17468763280917976,
+      "log_odds_shift": 0.3009882537227343,
+      "p05_probability": 0.01302533315034903,
+      "median_probability": 0.10384284113628871,
+      "p95_probability": 0.545673626212268
+    },
+    {
+      "scenario": "holdout_stress_aligned",
+      "rows": 58825,
+      "target_mean_probability": 0.20779810108908126,
+      "actual_mean_probability": 0.20779810108908123,
+      "realized_synthetic_delinquency_rate": 0.20700382490437738,
+      "log_odds_shift": 0.5881637498780325,
+      "p05_probability": 0.017283426549208405,
+      "median_probability": 0.13376616065313068,
+      "p95_probability": 0.6154738623823115
+    }
+  ],
+  "usage_restrictions": [
+    "Do not merge synthetic labels into observed labelled data for official model training.",
+    "Do not report performance on synthetic labels as observed model performance.",
+    "Do not interpret a synthetic scenario as the true post-23 July repayment history.",
+    "Use only for scenario, robustness, sensitivity, or demonstration analysis."
+  ],
+  "method_note": "All scenarios preserve actual post-23 July predictor values. Baseline probabilities come from the selected Random Forest with development-selected isotonic calibration. Alternative scenarios apply one constant log-odds intercept shift, preserving case ranking while changing the population-level expected delinquency rate."
+}
