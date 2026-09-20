@@ -1,0 +1,30 @@
+{
+  "rows": 150767,
+  "target": "delinquent_5d",
+  "candidate_feature_count": 12,
+  "candidate_features": [
+    "cnt_ma_rech90",
+    "daily_decr30",
+    "last_rech_date_ma",
+    "sumamnt_ma_rech90",
+    "aon",
+    "last_rech_amt_ma",
+    "daily_decr90",
+    "sumamnt_ma_rech30",
+    "medianamnt_ma_rech30",
+    "medianmarechprebal90",
+    "rental30",
+    "cnt_ma_rech30"
+  ],
+  "temporal_control": "pdate",
+  "temporal_control_used_as_predictor": false,
+  "identifier_present_in_model_ready_data": false,
+  "source_label_present_in_model_ready_data": false,
+  "forbidden_predictors_in_feature_set": [],
+  "near_deterministic_target_flags": [],
+  "exact_duplicate_feature_pairs": [],
+  "direct_fairness_name_flags": [],
+  "fairness_screen_note": "No conclusion about indirect proxy behaviour is drawn from column names. Potential indirect effects will be reviewed during modelling and interpretation.",
+  "missingness_max_rate": 0.020176829146961867,
+  "status": "pass"
+}

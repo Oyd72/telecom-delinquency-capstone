@@ -1,0 +1,78 @@
+{
+  "analysis_role": "development_only_feature_set_sensitivity",
+  "final_holdout_used": false,
+  "model_hyperparameters_changed": false,
+  "calibration_method_changed": false,
+  "calibration_days": 7,
+  "variants": {
+    "current_12": [
+      "cnt_ma_rech90",
+      "daily_decr30",
+      "last_rech_date_ma",
+      "sumamnt_ma_rech90",
+      "aon",
+      "last_rech_amt_ma",
+      "daily_decr90",
+      "sumamnt_ma_rech30",
+      "medianamnt_ma_rech30",
+      "medianmarechprebal90",
+      "rental30",
+      "cnt_ma_rech30"
+    ],
+    "drift_reduced_7": [
+      "cnt_ma_rech90",
+      "sumamnt_ma_rech90",
+      "last_rech_amt_ma",
+      "sumamnt_ma_rech30",
+      "medianamnt_ma_rech30",
+      "medianmarechprebal90",
+      "cnt_ma_rech30"
+    ]
+  },
+  "folds": [
+    {
+      "fold": "late_june",
+      "eval_start": "2016-06-14",
+      "eval_end": "2016-06-23"
+    },
+    {
+      "fold": "turn_of_month",
+      "eval_start": "2016-06-24",
+      "eval_end": "2016-07-03"
+    },
+    {
+      "fold": "early_july",
+      "eval_start": "2016-07-04",
+      "eval_end": "2016-07-13"
+    }
+  ],
+  "summary": [
+    {
+      "variant": "drift_reduced_7",
+      "mean_roc_auc": 0.8383947244131263,
+      "min_roc_auc": 0.830280156604754,
+      "mean_average_precision": 0.4993716893381403,
+      "mean_brier": 0.10562025181641355,
+      "mean_ece": 0.034954881464815464,
+      "mean_top20_capture": 0.6095589578766859,
+      "min_top20_capture": 0.5934205743366049,
+      "mean_roc_auc_change_vs_current": 0.0051968012128424945,
+      "mean_top20_capture_change_vs_current": -0.00869454631985389,
+      "mean_brier_change_vs_current": 0.005152191065704817
+    },
+    {
+      "variant": "current_12",
+      "mean_roc_auc": 0.8331979232002839,
+      "min_roc_auc": 0.8226238202046763,
+      "mean_average_precision": 0.5737092046828375,
+      "mean_brier": 0.10046806075070873,
+      "mean_ece": 0.046426903963128506,
+      "mean_top20_capture": 0.6182535041965398,
+      "min_top20_capture": 0.5817884405670665,
+      "mean_roc_auc_change_vs_current": 0.0,
+      "mean_top20_capture_change_vs_current": 0.0,
+      "mean_brier_change_vs_current": 0.0
+    }
+  ],
+  "interpretation_note": "This comparison revisits the 12-feature and 7-feature variants using only development-period chronological folds. It is intended to determine whether the holdout result for the smaller model is supported by earlier time windows."
+}

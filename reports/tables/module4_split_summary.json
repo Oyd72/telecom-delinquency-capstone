@@ -1,0 +1,42 @@
+{
+  "source_rows": 209592,
+  "date_min": "2016-06-01",
+  "date_max": "2016-08-21",
+  "modelling_cutoff_inclusive": "2016-07-23",
+  "holdout_start": "2016-07-14",
+  "splits": [
+    {
+      "population": "development",
+      "purpose": "training + time-aware CV",
+      "start_date": "2016-06-01",
+      "end_date": "2016-07-13",
+      "rows": 122119,
+      "delinquent_rows": 20209,
+      "delinquency_rate": 0.16548612419033892
+    },
+    {
+      "population": "final_holdout",
+      "purpose": "untouched final evaluation",
+      "start_date": "2016-07-14",
+      "end_date": "2016-07-23",
+      "rows": 28648,
+      "delinquent_rows": 5953,
+      "delinquency_rate": 0.20779810108908126
+    },
+    {
+      "population": "post_23_july",
+      "purpose": "exploratory robustness/distribution checks only",
+      "start_date": "2016-07-24",
+      "end_date": "2016-08-21",
+      "rows": 58825,
+      "delinquent_rows": 0,
+      "delinquency_rate": 0.0
+    }
+  ],
+  "customer_continuity": {
+    "holdout_rows": 28648.0,
+    "holdout_rows_seen_customer": 3437.0,
+    "holdout_rows_unseen_customer": 25211.0,
+    "share_unseen_customer": 0.8800265289025412
+  }
+}

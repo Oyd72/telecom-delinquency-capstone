@@ -1,0 +1,192 @@
+{
+  "model": "tuned_random_forest",
+  "calibration": "isotonic",
+  "shap_explains": "base_random_forest_positive_class_output",
+  "calibration_explanation_note": "SHAP values explain the Random Forest feature logic. Isotonic calibration is a monotonic post-processing layer and is reported separately through raw and calibrated risk values.",
+  "training_end": "2016-07-06",
+  "calibration_period": [
+    "2016-07-07",
+    "2016-07-13"
+  ],
+  "explanation_population": [
+    "2016-07-14",
+    "2016-07-23"
+  ],
+  "global_sample_rows": 2000,
+  "base_value": 0.5000000000000002,
+  "top_global_features": [
+    {
+      "feature": "cnt_ma_rech90",
+      "mean_abs_shap": 0.07576301933162052,
+      "mean_shap": -0.05473375064218711
+    },
+    {
+      "feature": "sumamnt_ma_rech90",
+      "mean_abs_shap": 0.060346366872994425,
+      "mean_shap": -0.04286553539635435
+    },
+    {
+      "feature": "sumamnt_ma_rech30",
+      "mean_abs_shap": 0.042174900779920144,
+      "mean_shap": -0.020139619352321877
+    },
+    {
+      "feature": "cnt_ma_rech30",
+      "mean_abs_shap": 0.03761105712872318,
+      "mean_shap": -0.014724844465813906
+    },
+    {
+      "feature": "daily_decr30",
+      "mean_abs_shap": 0.03045149841456508,
+      "mean_shap": -0.019504261636938813
+    },
+    {
+      "feature": "rental30",
+      "mean_abs_shap": 0.02682882660267563,
+      "mean_shap": 0.01927747187559882
+    },
+    {
+      "feature": "last_rech_date_ma",
+      "mean_abs_shap": 0.02506903607706157,
+      "mean_shap": 0.0033610424475564848
+    },
+    {
+      "feature": "daily_decr90",
+      "mean_abs_shap": 0.02135871590564405,
+      "mean_shap": -0.0047166502288084715
+    },
+    {
+      "feature": "aon",
+      "mean_abs_shap": 0.016518821236097023,
+      "mean_shap": -0.003306348765850467
+    },
+    {
+      "feature": "medianmarechprebal90",
+      "mean_abs_shap": 0.01590800832285567,
+      "mean_shap": -0.008215287961522395
+    }
+  ],
+  "representative_cases": [
+    {
+      "case": "low_risk",
+      "quantile_target": 0.1,
+      "index": 64,
+      "calibrated_risk": 0.02169811320754717,
+      "observed_outcome": 0,
+      "raw_risk": 0.10865717832553026,
+      "top_contributors": [
+        {
+          "feature": "cnt_ma_rech90",
+          "feature_value": 18.0,
+          "shap_value": -0.10690956465872471,
+          "direction": "decreases predicted delinquency risk"
+        },
+        {
+          "feature": "sumamnt_ma_rech90",
+          "feature_value": 14816.0,
+          "shap_value": -0.07971760938049971,
+          "direction": "decreases predicted delinquency risk"
+        },
+        {
+          "feature": "sumamnt_ma_rech30",
+          "feature_value": 10778.0,
+          "shap_value": -0.06214520012510622,
+          "direction": "decreases predicted delinquency risk"
+        },
+        {
+          "feature": "cnt_ma_rech30",
+          "feature_value": 12.0,
+          "shap_value": -0.0587458722122041,
+          "direction": "decreases predicted delinquency risk"
+        },
+        {
+          "feature": "daily_decr30",
+          "feature_value": 10119.985,
+          "shap_value": -0.03608870509505005,
+          "direction": "decreases predicted delinquency risk"
+        }
+      ]
+    },
+    {
+      "case": "typical_risk",
+      "quantile_target": 0.5,
+      "index": 203,
+      "calibrated_risk": 0.10013440860215053,
+      "observed_outcome": 0,
+      "raw_risk": 0.2691002274106743,
+      "top_contributors": [
+        {
+          "feature": "cnt_ma_rech90",
+          "feature_value": 6.0,
+          "shap_value": -0.0761463601906363,
+          "direction": "decreases predicted delinquency risk"
+        },
+        {
+          "feature": "sumamnt_ma_rech90",
+          "feature_value": 12527.0,
+          "shap_value": -0.05871597291299736,
+          "direction": "decreases predicted delinquency risk"
+        },
+        {
+          "feature": "medianmarechprebal90",
+          "feature_value": 104.5,
+          "shap_value": -0.0348948086889345,
+          "direction": "decreases predicted delinquency risk"
+        },
+        {
+          "feature": "aon",
+          "feature_value": 119.0,
+          "shap_value": 0.03439885353775018,
+          "direction": "increases predicted delinquency risk"
+        },
+        {
+          "feature": "cnt_ma_rech30",
+          "feature_value": 4.0,
+          "shap_value": -0.031185068934975944,
+          "direction": "decreases predicted delinquency risk"
+        }
+      ]
+    },
+    {
+      "case": "high_risk",
+      "quantile_target": 0.9,
+      "index": 123,
+      "calibrated_risk": 0.47058823529411764,
+      "observed_outcome": 1,
+      "raw_risk": 0.7094011787791482,
+      "top_contributors": [
+        {
+          "feature": "rental30",
+          "feature_value": 12969.51,
+          "shap_value": 0.06614255519137983,
+          "direction": "increases predicted delinquency risk"
+        },
+        {
+          "feature": "sumamnt_ma_rech90",
+          "feature_value": 2309.0,
+          "shap_value": 0.046806186442421766,
+          "direction": "increases predicted delinquency risk"
+        },
+        {
+          "feature": "sumamnt_ma_rech30",
+          "feature_value": 770.0,
+          "shap_value": 0.042725825951565925,
+          "direction": "increases predicted delinquency risk"
+        },
+        {
+          "feature": "cnt_ma_rech30",
+          "feature_value": 1.0,
+          "shap_value": 0.03914416236583854,
+          "direction": "increases predicted delinquency risk"
+        },
+        {
+          "feature": "daily_decr90",
+          "feature_value": 1555.5,
+          "shap_value": 0.022373573658690898,
+          "direction": "increases predicted delinquency risk"
+        }
+      ]
+    }
+  ],
+  "interpretation_caution": "SHAP describes how the fitted model uses features; it does not establish causal effects or prove that changing a feature would change repayment."
+}

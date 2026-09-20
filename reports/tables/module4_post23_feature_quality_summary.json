@@ -1,0 +1,58 @@
+{
+  "analysis_role": "post_cutoff_feature_quality_and_score_behaviour",
+  "outcome_labels_used_for_evaluation": false,
+  "labelled_rows": 150767,
+  "post23_rows": 58825,
+  "labelled_period_start": "2016-06-01",
+  "labelled_period_end": "2016-07-23",
+  "post23_period_start": "2016-07-24",
+  "post23_period_end": "2016-08-21",
+  "feature_count": 12,
+  "high_psi_features": [
+    "daily_decr30",
+    "daily_decr90",
+    "rental30",
+    "sumamnt_ma_rech90",
+    "cnt_ma_rech90",
+    "last_rech_amt_ma"
+  ],
+  "moderate_psi_features": [
+    "medianamnt_ma_rech30",
+    "sumamnt_ma_rech30"
+  ],
+  "features_with_abs_missing_rate_change_ge_1pct": [
+    "aon"
+  ],
+  "features_with_post23_out_of_range_rate_ge_1pct": [],
+  "score_distribution": [
+    {
+      "population": "final_holdout",
+      "rows": 28648,
+      "mean_score": 0.17852108953385395,
+      "std_score": 0.19369693849546374,
+      "p05": 0.009672619047619048,
+      "p25": 0.03432700993676603,
+      "median": 0.10013440860215053,
+      "p75": 0.2625698324022346,
+      "p95": 0.6190476190476192
+    },
+    {
+      "population": "post_23_july",
+      "rows": 58825,
+      "mean_score": 0.14203916000214445,
+      "std_score": 0.1571743974166566,
+      "p05": 0.009672619047619048,
+      "p25": 0.028917283120376596,
+      "median": 0.07898448519040902,
+      "p75": 0.18486171761280934,
+      "p95": 0.47058823529411764
+    }
+  ],
+  "interpretation_rule": {
+    "psi_low": "<0.10",
+    "psi_moderate": "0.10-0.25",
+    "psi_high": ">=0.25",
+    "note": "PSI thresholds are used as descriptive drift bands, not as universal accept/reject criteria."
+  },
+  "synthetic_outcome_next_step": "Only consider synthetic repayment outcomes if the post-23 July feature population is sufficiently interpretable for scenario analysis. Synthetic labels must remain explicitly separated from observed outcomes and must not be used to inflate official model performance or training evidence."
+}

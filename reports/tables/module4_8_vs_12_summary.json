@@ -1,0 +1,104 @@
+{
+  "analysis_role": "direct_8_vs_12_comparison",
+  "development_final_holdout_used": false,
+  "holdout_sensitivity_independent_validation": false,
+  "model_hyperparameters_changed": false,
+  "calibration_method_changed": false,
+  "variants": {
+    "challenger_8": [
+      "cnt_ma_rech90",
+      "sumamnt_ma_rech90",
+      "last_rech_amt_ma",
+      "sumamnt_ma_rech30",
+      "medianamnt_ma_rech30",
+      "medianmarechprebal90",
+      "cnt_ma_rech30",
+      "daily_decr30"
+    ],
+    "current_12": [
+      "cnt_ma_rech90",
+      "daily_decr30",
+      "last_rech_date_ma",
+      "sumamnt_ma_rech90",
+      "aon",
+      "last_rech_amt_ma",
+      "daily_decr90",
+      "sumamnt_ma_rech30",
+      "medianamnt_ma_rech30",
+      "medianmarechprebal90",
+      "rental30",
+      "cnt_ma_rech30"
+    ]
+  },
+  "development_summary": [
+    {
+      "variant": "challenger_8",
+      "feature_count": 8,
+      "mean_roc_auc": 0.8398198411486134,
+      "min_roc_auc": 0.831179765373611,
+      "mean_average_precision": 0.5778362389299477,
+      "min_average_precision": 0.519106311969189,
+      "mean_brier": 0.10065369272952833,
+      "mean_ece": 0.0488673116362363,
+      "mean_top20_capture": 0.6228251113765239,
+      "min_top20_capture": 0.5808796801163213,
+      "mean_roc_auc_change_vs_current12": 0.006620464529340286,
+      "mean_average_precision_change_vs_current12": 0.004106782631245309,
+      "mean_brier_change_vs_current12": 0.00018563197881962812,
+      "mean_ece_change_vs_current12": 0.0024404076731076862,
+      "mean_top20_capture_change_vs_current12": 0.004571607179984061
+    },
+    {
+      "variant": "current_12",
+      "feature_count": 12,
+      "mean_roc_auc": 0.8331993766192731,
+      "min_roc_auc": 0.8226271548532184,
+      "mean_average_precision": 0.5737294562987024,
+      "min_average_precision": 0.5250883786438227,
+      "mean_brier": 0.1004680607507087,
+      "mean_ece": 0.04642690396312862,
+      "mean_top20_capture": 0.6182535041965398,
+      "min_top20_capture": 0.5817884405670665,
+      "mean_roc_auc_change_vs_current12": 0.0,
+      "mean_average_precision_change_vs_current12": 0.0,
+      "mean_brier_change_vs_current12": 0.0,
+      "mean_ece_change_vs_current12": 0.0,
+      "mean_top20_capture_change_vs_current12": 0.0
+    }
+  ],
+  "holdout_sensitivity": [
+    {
+      "variant": "challenger_8",
+      "feature_count": 8,
+      "roc_auc": 0.8210794204302951,
+      "average_precision": 0.5554857973667566,
+      "brier": 0.12488267442075833,
+      "ece_10bin": 0.03136872816412289,
+      "top20_capture": 0.535696287586091,
+      "mean_predicted_risk": 0.17656899872780674,
+      "observed_delinquency_rate": 0.20779810108908126,
+      "roc_auc_change_vs_current12": -0.007643849058204033,
+      "average_precision_change_vs_current12": -0.011191585800592763,
+      "brier_change_vs_current12": 0.0019264726336911397,
+      "ece_10bin_change_vs_current12": 0.0020917137465666057,
+      "top20_capture_change_vs_current12": -0.0047035108348731924
+    },
+    {
+      "variant": "current_12",
+      "feature_count": 12,
+      "roc_auc": 0.8287232694884992,
+      "average_precision": 0.5666773831673494,
+      "brier": 0.12295620178706719,
+      "ece_10bin": 0.02927701441755628,
+      "top20_capture": 0.5403997984209642,
+      "mean_predicted_risk": 0.17852108667152497,
+      "observed_delinquency_rate": 0.20779810108908126,
+      "roc_auc_change_vs_current12": 0.0,
+      "average_precision_change_vs_current12": 0.0,
+      "brier_change_vs_current12": 0.0,
+      "ece_10bin_change_vs_current12": 0.0,
+      "top20_capture_change_vs_current12": 0.0
+    }
+  ],
+  "interpretation_note": "Development folds provide the main comparison. The already-opened holdout is used only as sensitivity evidence and cannot reset the independent validation."
+}

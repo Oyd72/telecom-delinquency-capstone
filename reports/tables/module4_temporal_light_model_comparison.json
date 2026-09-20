@@ -1,0 +1,101 @@
+{
+  "analysis_role": "post_hoc_temporal_dependence_sensitivity",
+  "independent_validation": false,
+  "model_hyperparameters_changed": false,
+  "calibration_method_changed": false,
+  "chronology": {
+    "train_end": "2016-07-06",
+    "calibration_start": "2016-07-07",
+    "calibration_end": "2016-07-13",
+    "holdout_start": "2016-07-14",
+    "holdout_end": "2016-07-23"
+  },
+  "variants": {
+    "current_12": [
+      "cnt_ma_rech90",
+      "daily_decr30",
+      "last_rech_date_ma",
+      "sumamnt_ma_rech90",
+      "aon",
+      "last_rech_amt_ma",
+      "daily_decr90",
+      "sumamnt_ma_rech30",
+      "medianamnt_ma_rech30",
+      "medianmarechprebal90",
+      "rental30",
+      "cnt_ma_rech30"
+    ],
+    "temporal_light_10": [
+      "cnt_ma_rech90",
+      "daily_decr30",
+      "sumamnt_ma_rech90",
+      "last_rech_amt_ma",
+      "daily_decr90",
+      "sumamnt_ma_rech30",
+      "medianamnt_ma_rech30",
+      "medianmarechprebal90",
+      "rental30",
+      "cnt_ma_rech30"
+    ],
+    "drift_reduced_7": [
+      "cnt_ma_rech90",
+      "sumamnt_ma_rech90",
+      "last_rech_amt_ma",
+      "sumamnt_ma_rech30",
+      "medianamnt_ma_rech30",
+      "medianmarechprebal90",
+      "cnt_ma_rech30"
+    ]
+  },
+  "results": [
+    {
+      "variant": "current_12",
+      "feature_count": 12,
+      "features": "cnt_ma_rech90;daily_decr30;last_rech_date_ma;sumamnt_ma_rech90;aon;last_rech_amt_ma;daily_decr90;sumamnt_ma_rech30;medianamnt_ma_rech30;medianmarechprebal90;rental30;cnt_ma_rech30",
+      "roc_auc": 0.8287234397285603,
+      "average_precision": 0.5666791862399062,
+      "brier": 0.12295620178706719,
+      "ece_10bin": 0.02927701441755626,
+      "top20_capture": 0.5403997984209642,
+      "mean_predicted_risk": 0.178521086671525,
+      "observed_delinquency_rate": 0.20779810108908126,
+      "calibration_gap": -0.029277014417556257,
+      "roc_auc_change_vs_current": 0.0,
+      "top20_capture_change_vs_current": 0.0,
+      "brier_change_vs_current": 0.0
+    },
+    {
+      "variant": "temporal_light_10",
+      "feature_count": 10,
+      "features": "cnt_ma_rech90;daily_decr30;sumamnt_ma_rech90;last_rech_amt_ma;daily_decr90;sumamnt_ma_rech30;medianamnt_ma_rech30;medianmarechprebal90;rental30;cnt_ma_rech30",
+      "roc_auc": 0.8195097515542454,
+      "average_precision": 0.5609240509129041,
+      "brier": 0.1247067441417592,
+      "ece_10bin": 0.032287561900186876,
+      "top20_capture": 0.53737611288426,
+      "mean_predicted_risk": 0.17619384562019547,
+      "observed_delinquency_rate": 0.20779810108908126,
+      "calibration_gap": -0.03160425546888579,
+      "roc_auc_change_vs_current": -0.009213688174314894,
+      "top20_capture_change_vs_current": -0.0030236855367041793,
+      "brier_change_vs_current": 0.0017505423546920057
+    },
+    {
+      "variant": "drift_reduced_7",
+      "feature_count": 7,
+      "features": "cnt_ma_rech90;sumamnt_ma_rech90;last_rech_amt_ma;sumamnt_ma_rech30;medianamnt_ma_rech30;medianmarechprebal90;cnt_ma_rech30",
+      "roc_auc": 0.825120778846799,
+      "average_precision": 0.5545038526552767,
+      "brier": 0.12231146725651888,
+      "ece_10bin": 0.025607411860185517,
+      "top20_capture": 0.5568620863430204,
+      "mean_predicted_risk": 0.18220814245425174,
+      "observed_delinquency_rate": 0.20779810108908126,
+      "calibration_gap": -0.02558995863482952,
+      "roc_auc_change_vs_current": -0.0036026608817613104,
+      "top20_capture_change_vs_current": 0.016462287922056174,
+      "brier_change_vs_current": -0.0006447345305483076
+    }
+  ],
+  "interpretation_note": "This experiment isolates feature-set dependence. The already-opened holdout is reused only as sensitivity evidence, so results must not be presented as a second independent final validation."
+}

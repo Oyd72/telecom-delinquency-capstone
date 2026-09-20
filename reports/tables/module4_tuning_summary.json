@@ -1,0 +1,95 @@
+{
+  "development_rows": 122119,
+  "holdout_opened": false,
+  "feature_count": 12,
+  "features": [
+    "cnt_ma_rech90",
+    "daily_decr30",
+    "last_rech_date_ma",
+    "sumamnt_ma_rech90",
+    "aon",
+    "last_rech_amt_ma",
+    "daily_decr90",
+    "sumamnt_ma_rech30",
+    "medianamnt_ma_rech30",
+    "medianmarechprebal90",
+    "rental30",
+    "cnt_ma_rech30"
+  ],
+  "rf_grid": [
+    {
+      "max_depth": 8,
+      "min_samples_leaf": 20,
+      "max_features": "sqrt"
+    },
+    {
+      "max_depth": 12,
+      "min_samples_leaf": 20,
+      "max_features": "sqrt"
+    },
+    {
+      "max_depth": 12,
+      "min_samples_leaf": 10,
+      "max_features": 0.7
+    },
+    {
+      "max_depth": null,
+      "min_samples_leaf": 20,
+      "max_features": "sqrt"
+    }
+  ],
+  "xgb_grid": [
+    {
+      "max_depth": 3,
+      "learning_rate": 0.05,
+      "min_child_weight": 5
+    },
+    {
+      "max_depth": 4,
+      "learning_rate": 0.05,
+      "min_child_weight": 5
+    },
+    {
+      "max_depth": 5,
+      "learning_rate": 0.05,
+      "min_child_weight": 5
+    },
+    {
+      "max_depth": 4,
+      "learning_rate": 0.03,
+      "min_child_weight": 10
+    }
+  ],
+  "best_by_model": [
+    {
+      "model": "random_forest",
+      "config_id": "random_forest_01",
+      "mean_roc_auc": 0.8710905896668081,
+      "min_roc_auc": 0.8417314295571028,
+      "mean_average_precision": 0.6316173308881687,
+      "mean_brier": 0.10121414125557236,
+      "mean_top20_capture": 0.6640790942850785,
+      "min_top20_capture": 0.5830607051981098,
+      "max_depth": 8.0,
+      "min_samples_leaf": 20.0,
+      "max_features": "sqrt",
+      "learning_rate": NaN,
+      "min_child_weight": NaN
+    },
+    {
+      "model": "xgboost",
+      "config_id": "xgboost_03",
+      "mean_roc_auc": 0.8687560140754891,
+      "min_roc_auc": 0.8416578810027019,
+      "mean_average_precision": 0.6286647124881628,
+      "mean_brier": 0.10620932777722676,
+      "mean_top20_capture": 0.6496327794785087,
+      "min_top20_capture": 0.5812431842966194,
+      "max_depth": 5.0,
+      "min_samples_leaf": NaN,
+      "max_features": null,
+      "learning_rate": 0.05,
+      "min_child_weight": 5.0
+    }
+  ]
+}

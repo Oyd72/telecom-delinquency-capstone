@@ -1,0 +1,83 @@
+{
+  "holdout_opened": true,
+  "holdout_opened_for_tuning": false,
+  "development_rows": 122119,
+  "holdout_rows": 28648,
+  "development_delinquency_rate": 0.16548612419033892,
+  "holdout_delinquency_rate": 0.20779810108908126,
+  "features": [
+    "cnt_ma_rech90",
+    "daily_decr30",
+    "last_rech_date_ma",
+    "sumamnt_ma_rech90",
+    "aon",
+    "last_rech_amt_ma",
+    "daily_decr90",
+    "sumamnt_ma_rech30",
+    "medianamnt_ma_rech30",
+    "medianmarechprebal90",
+    "rental30",
+    "cnt_ma_rech30"
+  ],
+  "acceptance": {
+    "minimum_roc_auc": 0.8,
+    "minimum_top20_capture": 0.5,
+    "maximum_roc_auc_drop_vs_development": 0.03
+  },
+  "results": [
+    {
+      "model": "logistic_regression",
+      "roc_auc": 0.8015669043254929,
+      "average_precision": 0.4825241657998358,
+      "brier": 0.18079513209141926,
+      "prevalence_baseline_brier": 0.16640835366193293,
+      "brier_better_than_prevalence_baseline": false,
+      "top20_capture": 0.5071392575172182,
+      "mean_predicted_risk": 0.39658821153917084,
+      "observed_delinquency_rate": 0.20779810108908126,
+      "calibration_in_the_large_error": 0.1887901104500896,
+      "development_mean_roc_auc": 0.801738,
+      "roc_auc_drop_vs_development": 0.0001710956745070158,
+      "passes_roc_auc": true,
+      "passes_top20_capture": true,
+      "passes_stability": true,
+      "passes_core_acceptance": false
+    },
+    {
+      "model": "random_forest",
+      "roc_auc": 0.8308411890794554,
+      "average_precision": 0.5806827041741648,
+      "brier": 0.14895896052082072,
+      "prevalence_baseline_brier": 0.16640835366193293,
+      "brier_better_than_prevalence_baseline": true,
+      "top20_capture": 0.5419116411893163,
+      "mean_predicted_risk": 0.36565499472992824,
+      "observed_delinquency_rate": 0.20779810108908126,
+      "calibration_in_the_large_error": 0.15785689364084698,
+      "development_mean_roc_auc": 0.871091,
+      "roc_auc_drop_vs_development": 0.04024981092054458,
+      "passes_roc_auc": true,
+      "passes_top20_capture": true,
+      "passes_stability": false,
+      "passes_core_acceptance": false
+    },
+    {
+      "model": "xgboost",
+      "roc_auc": 0.8316420575406225,
+      "average_precision": 0.5822111329614802,
+      "brier": 0.1548139750957489,
+      "prevalence_baseline_brier": 0.16640835366193293,
+      "brier_better_than_prevalence_baseline": true,
+      "top20_capture": 0.5504787502099782,
+      "mean_predicted_risk": 0.3717016875743866,
+      "observed_delinquency_rate": 0.20779810108908126,
+      "calibration_in_the_large_error": 0.16390358648530534,
+      "development_mean_roc_auc": 0.868756,
+      "roc_auc_drop_vs_development": 0.03711394245937749,
+      "passes_roc_auc": true,
+      "passes_top20_capture": true,
+      "passes_stability": false,
+      "passes_core_acceptance": false
+    }
+  ]
+}

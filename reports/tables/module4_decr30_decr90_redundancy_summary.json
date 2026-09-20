@@ -1,0 +1,172 @@
+{
+  "analysis_role": "development_only_decrement_redundancy_check",
+  "final_holdout_used": false,
+  "variants": {
+    "base_7": [
+      "cnt_ma_rech90",
+      "sumamnt_ma_rech90",
+      "last_rech_amt_ma",
+      "sumamnt_ma_rech30",
+      "medianamnt_ma_rech30",
+      "medianmarechprebal90",
+      "cnt_ma_rech30"
+    ],
+    "base_plus_daily_decr30": [
+      "cnt_ma_rech90",
+      "sumamnt_ma_rech90",
+      "last_rech_amt_ma",
+      "sumamnt_ma_rech30",
+      "medianamnt_ma_rech30",
+      "medianmarechprebal90",
+      "cnt_ma_rech30",
+      "daily_decr30"
+    ],
+    "base_plus_daily_decr90": [
+      "cnt_ma_rech90",
+      "sumamnt_ma_rech90",
+      "last_rech_amt_ma",
+      "sumamnt_ma_rech30",
+      "medianamnt_ma_rech30",
+      "medianmarechprebal90",
+      "cnt_ma_rech30",
+      "daily_decr90"
+    ],
+    "base_plus_both_decr": [
+      "cnt_ma_rech90",
+      "sumamnt_ma_rech90",
+      "last_rech_amt_ma",
+      "sumamnt_ma_rech30",
+      "medianamnt_ma_rech30",
+      "medianmarechprebal90",
+      "cnt_ma_rech30",
+      "daily_decr30",
+      "daily_decr90"
+    ],
+    "full_12_reference": [
+      "cnt_ma_rech90",
+      "daily_decr30",
+      "last_rech_date_ma",
+      "sumamnt_ma_rech90",
+      "aon",
+      "last_rech_amt_ma",
+      "daily_decr90",
+      "sumamnt_ma_rech30",
+      "medianamnt_ma_rech30",
+      "medianmarechprebal90",
+      "rental30",
+      "cnt_ma_rech30"
+    ]
+  },
+  "folds": [
+    {
+      "fold": "late_june",
+      "eval_start": "2016-06-14",
+      "eval_end": "2016-06-23"
+    },
+    {
+      "fold": "turn_of_month",
+      "eval_start": "2016-06-24",
+      "eval_end": "2016-07-03"
+    },
+    {
+      "fold": "early_july",
+      "eval_start": "2016-07-04",
+      "eval_end": "2016-07-13"
+    }
+  ],
+  "summary": [
+    {
+      "variant": "base_7",
+      "feature_count": 7,
+      "mean_roc_auc": 0.8383943042659013,
+      "min_roc_auc": 0.830281284806695,
+      "mean_average_precision": 0.4993663676572712,
+      "min_average_precision": 0.462076127511026,
+      "mean_brier": 0.10562025181641356,
+      "mean_ece": 0.03495488146481546,
+      "mean_top20_capture": 0.6093371792117935,
+      "min_top20_capture": 0.5934205743366049,
+      "mean_roc_auc_change_vs_base7": 0.0,
+      "mean_average_precision_change_vs_base7": 0.0,
+      "mean_brier_change_vs_base7": 0.0,
+      "mean_ece_change_vs_base7": 0.0,
+      "mean_top20_capture_change_vs_base7": 0.0
+    },
+    {
+      "variant": "base_plus_both_decr",
+      "feature_count": 9,
+      "mean_roc_auc": 0.8148577959690703,
+      "min_roc_auc": 0.7880891841053381,
+      "mean_average_precision": 0.5584136062209043,
+      "min_average_precision": 0.5186031109769083,
+      "mean_brier": 0.09967581982738853,
+      "mean_ece": 0.030776216701375786,
+      "mean_top20_capture": 0.5968135142673181,
+      "min_top20_capture": 0.579425663395129,
+      "mean_roc_auc_change_vs_base7": -0.02353650829683107,
+      "mean_average_precision_change_vs_base7": 0.05904723856363309,
+      "mean_brier_change_vs_base7": -0.0059444319890250286,
+      "mean_ece_change_vs_base7": -0.004178664763439671,
+      "mean_top20_capture_change_vs_base7": -0.012523664944475432
+    },
+    {
+      "variant": "base_plus_daily_decr30",
+      "feature_count": 8,
+      "mean_roc_auc": 0.8398175688282716,
+      "min_roc_auc": 0.8311792648819074,
+      "mean_average_precision": 0.5778597078078379,
+      "min_average_precision": 0.5191061051482102,
+      "mean_brier": 0.10065369272952833,
+      "mean_ece": 0.04886731163623625,
+      "mean_top20_capture": 0.6228251113765239,
+      "min_top20_capture": 0.5808796801163213,
+      "mean_roc_auc_change_vs_base7": 0.0014232645623702966,
+      "mean_average_precision_change_vs_base7": 0.07849334015056669,
+      "mean_brier_change_vs_base7": -0.0049665590868852305,
+      "mean_ece_change_vs_base7": 0.01391243017142079,
+      "mean_top20_capture_change_vs_base7": 0.01348793216473032
+    },
+    {
+      "variant": "base_plus_daily_decr90",
+      "feature_count": 8,
+      "mean_roc_auc": 0.8396489622849354,
+      "min_roc_auc": 0.8307080777035156,
+      "mean_average_precision": 0.5772470258239041,
+      "min_average_precision": 0.5173110749453745,
+      "mean_brier": 0.10077684188581859,
+      "mean_ece": 0.049086871673121146,
+      "mean_top20_capture": 0.6227839964659113,
+      "min_top20_capture": 0.579425663395129,
+      "mean_roc_auc_change_vs_base7": 0.0012546580190340162,
+      "mean_average_precision_change_vs_base7": 0.07788065816663287,
+      "mean_brier_change_vs_base7": -0.004843409930594969,
+      "mean_ece_change_vs_base7": 0.01413199020830569,
+      "mean_top20_capture_change_vs_base7": 0.013446817254117782
+    },
+    {
+      "variant": "full_12_reference",
+      "feature_count": 12,
+      "mean_roc_auc": 0.8331982725730525,
+      "min_roc_auc": 0.8226240075444821,
+      "mean_average_precision": 0.5737673059425451,
+      "min_average_precision": 0.5250883786438227,
+      "mean_brier": 0.10046806075070873,
+      "mean_ece": 0.04642690396312854,
+      "mean_top20_capture": 0.6182535041965398,
+      "min_top20_capture": 0.5817884405670665,
+      "mean_roc_auc_change_vs_base7": -0.005196031692848879,
+      "mean_average_precision_change_vs_base7": 0.07440093828527389,
+      "mean_brier_change_vs_base7": -0.005152191065704831,
+      "mean_ece_change_vs_base7": 0.011472022498313084,
+      "mean_top20_capture_change_vs_base7": 0.00891632498474626
+    }
+  ],
+  "incremental_both_vs_best_single": {
+    "mean_roc_auc": -0.024959772859201368,
+    "mean_average_precision": -0.019446101586933606,
+    "mean_brier": -0.000977872902139798,
+    "mean_ece": -0.018091094934860462,
+    "mean_top20_capture": -0.026011597109205753
+  },
+  "interpretation_note": "If adding both decrement variables produces little or no gain over the best single-variable add-back, they are functionally redundant for this model setup. If both materially improve multiple metrics, they carry complementary signal."
+}

@@ -1,0 +1,13 @@
+feature,role,dtype,missing_count,missing_rate,unique_non_null,pearson_target_correlation,abs_target_correlation,near_deterministic_target_flag,direct_fairness_name_hits
+cnt_ma_rech90,candidate_predictor,int64,0,0.0,90,-0.25861480414973226,0.25861480414973226,False,
+daily_decr30,candidate_predictor,float64,0,0.0,113041,-0.10787060072819693,0.10787060072819693,False,
+last_rech_date_ma,candidate_predictor,float64,2066,0.013703263976864964,90,0.11300561557392703,0.11300561557392703,False,
+sumamnt_ma_rech90,candidate_predictor,int64,0,0.0,21645,-0.21809888562981516,0.21809888562981516,False,
+aon,candidate_predictor,float64,3042,0.020176829146961867,2326,-0.07578426579590254,0.07578426579590254,False,
+last_rech_amt_ma,candidate_predictor,int64,0,0.0,68,-0.14240384646075355,0.14240384646075355,False,
+daily_decr90,candidate_predictor,float64,0,0.0,107955,-0.10798973871828471,0.10798973871828471,False,
+sumamnt_ma_rech30,candidate_predictor,float64,0,0.0,12676,-0.22458703884224915,0.22458703884224915,False,
+medianamnt_ma_rech30,candidate_predictor,float64,0,0.0,494,-0.15362823775742954,0.15362823775742954,False,
+medianmarechprebal90,candidate_predictor,float64,0,0.0,18670,-0.044405966072947986,0.044405966072947986,False,
+rental30,candidate_predictor,float64,0,0.0,97194,0.03074909461065207,0.03074909461065207,False,
+cnt_ma_rech30,candidate_predictor,int64,0,0.0,67,-0.26761869229646557,0.26761869229646557,False,

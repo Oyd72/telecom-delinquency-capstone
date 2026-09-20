@@ -1,0 +1,29 @@
+{
+  "fairness_scope": {
+    "direct_protected_fields_available": false,
+    "direct_protected_name_hits": {},
+    "group_fairness_metrics_supported": false,
+    "reason": "The modelling dataset does not contain attributes that directly identify protected demographic groups or other clearly defensible fairness groups. No protected groups are inferred or fabricated.",
+    "proxy_note": "Potential indirect proxy effects cannot be ruled out solely from column names or model explainability and remain a governance limitation."
+  },
+  "robustness_scope": {
+    "operational_segments_are_fairness_groups": false,
+    "segment_types": [
+      "account_tenure_quartile",
+      "recharge90_quartile"
+    ],
+    "overall_holdout_roc_auc": 0.8287232694884992,
+    "max_operational_segment_roc_auc_spread": 0.17606830480634417,
+    "sensitivity_features": [
+      "cnt_ma_rech90",
+      "sumamnt_ma_rech90",
+      "sumamnt_ma_rech30",
+      "cnt_ma_rech30",
+      "daily_decr30"
+    ],
+    "sensitivity_perturbation": "plus/minus 0.10 training IQR, clipped to training range",
+    "max_p95_abs_probability_change": 0.05631475297542596,
+    "max_share_abs_change_ge_10pp": 0.0115
+  },
+  "interpretation_caution": "Operational subgroup stability is not evidence of demographic fairness. Sensitivity analysis tests local model stability under modest input changes, not causal responses or policy appropriateness."
+}
