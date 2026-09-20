@@ -18,6 +18,12 @@ aggregate run export provide a repository-safe record of the experiments.
 
 ![MLflow experiment run counts](figures/module4/mlflow_experiment_run_counts.png)
 
+## MLflow UI evidence
+
+The tuning experiment is also captured directly from the local MLflow Model training interface. The screenshot shows 24 tracked tuning runs, successful run status, model-family/configuration names, core evaluation metrics, and selected hyperparameters.
+
+![MLflow model tuning runs](figures/module4/mlflow_model_tuning_runs.png)
+
 ## What was tracked
 
 The runs record model and calibration choices, feature counts, chronology controls,
