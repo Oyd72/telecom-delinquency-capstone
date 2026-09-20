@@ -859,3 +859,52 @@ The sensible next question is therefore not whether we should immediately replac
 - `reports/tables/module4_temporal_light_model_comparison.json`
 - `reports/figures/module4/temporal_light_model_performance.png`
 - `reports/figures/module4/temporal_light_model_calibration.png`
+
+
+---
+
+## 14. Development-only check of the 12-feature and 7-feature models
+
+**Script:** `src/models/compare_dev_12_vs_7.py`
+
+**Status:** **Pending local execution**
+
+The seven-feature drift-reduced model looked unexpectedly strong on the already-opened holdout. Before giving that result too much weight, we are taking it back into the earlier development period and asking whether the same pattern appears there.
+
+The comparison is deliberately narrow. The Random Forest settings remain unchanged, isotonic calibration remains unchanged, and the final holdout is not used. The only thing that changes is the feature set:
+
+- the current 12-feature model;
+- the seven-feature recharge-behaviour model.
+
+For each chronological development fold, the base model is trained on the earlier data, calibration is fitted on the immediately preceding seven days, and the model is then evaluated on the next block of time.
+
+```mermaid
+flowchart LR
+    A[Earlier development data] --> B[Train fixed Random Forest]
+    B --> C[7-day calibration window]
+    C --> D[Later development fold]
+    D --> E[12-feature metrics]
+    D --> F[7-feature metrics]
+    E --> G[Compare mean + weakest-fold performance]
+    F --> G
+```
+
+This check matters because a good result here would show that the seven-feature model is not merely exploiting something peculiar about the final holdout. It would give us earlier chronological evidence that a smaller, less temporally sensitive feature set can carry much of the same predictive signal.
+
+The comparison will focus on both average and weakest-fold performance, not just the mean. That is important because a simpler model is only attractive if it remains reasonably consistent across the different development windows.
+
+Planned visuals:
+
+![Development 12 vs 7 ROC-AUC](../../reports/figures/module4/development_12_vs_7_roc_auc.png)
+
+![Development 12 vs 7 top-20% capture](../../reports/figures/module4/development_12_vs_7_capture.png)
+
+![Development 12 vs 7 calibration](../../reports/figures/module4/development_12_vs_7_calibration.png)
+
+**Expected outputs:**
+- `reports/tables/module4_dev_12_vs_7_fold_metrics.csv`
+- `reports/tables/module4_dev_12_vs_7_summary.csv`
+- `reports/tables/module4_dev_12_vs_7_summary.json`
+- `reports/figures/module4/development_12_vs_7_roc_auc.png`
+- `reports/figures/module4/development_12_vs_7_capture.png`
+- `reports/figures/module4/development_12_vs_7_calibration.png`
