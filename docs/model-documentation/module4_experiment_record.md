@@ -1064,36 +1064,37 @@ That does not yet make the eight-feature version the formal selected model. The 
 
 **Script:** `src/models/compare_model_8_vs_12.py`
 
-**Status:** **Pending local execution**
+**Status:** **Completed**
 
-The redundancy check suggests that most of the useful extra precision can be recovered by adding only `daily_decr30` to the seven-feature recharge core. That gives us a compact eight-feature challenger that is materially simpler than the 12-feature model but still retains the strongest single decrement signal.
+The eight-feature challenger performs very well in the development period, but the final holdout tells a slightly different story. That makes this comparison useful precisely because it does not collapse into a simple winner.
 
-This comparison puts those two models side by side in the cleanest way we can manage at this stage.
+Across the three development folds, the eight-feature model is marginally stronger on the main ranking and prioritisation measures:
 
-The main evidence comes from the same three development-only chronological folds used in the earlier checks. The Random Forest settings and isotonic calibration remain fixed. We then look at the already-opened 14-23 July holdout separately, only as sensitivity evidence.
+| Variant | Mean ROC-AUC | Weakest-fold ROC-AUC | Mean average precision | Mean Brier | Mean ECE | Mean top-20% capture |
+|---|---:|---:|---:|---:|---:|---:|
+| 8-feature challenger | **0.8398** | **0.8312** | **0.5778** | 0.1007 | 0.0489 | **62.28%** |
+| Current 12-feature model | 0.8332 | 0.8226 | 0.5737 | **0.1005** | **0.0464** | 61.83% |
+
+The differences are small, but they consistently favour the eight-feature challenger on development ROC-AUC, average precision, and top-20% capture. The 12-feature model keeps a slight edge on Brier score and ECE.
+
+Fold by fold, the challenger is strongest in late June and around the turn of the month. In early July, the two models are almost indistinguishable, with the 12-feature model slightly ahead on average precision and capture.
+
+The already-opened holdout moves the balance back toward the 12-feature model:
+
+| Variant | ROC-AUC | Average precision | Brier | ECE | Top-20% capture |
+|---|---:|---:|---:|---:|---:|
+| 8-feature challenger | 0.8211 | 0.5555 | 0.1249 | 0.0314 | 53.57% |
+| Current 12-feature model | **0.8287** | **0.5667** | **0.1230** | **0.0293** | **54.04%** |
+
+The holdout differences are still modest, but they all point in the same direction. The 12-feature model retains a little more discrimination, slightly better probability quality, and slightly stronger capture on the later period.
 
 ```mermaid
 flowchart LR
-    A[7-feature recharge core] --> B[+ daily_decr30]
-    B --> C[8-feature challenger]
-    D[Current 12-feature model] --> E[Direct comparison]
-    C --> E
-    E --> F[Development folds]
-    E --> G[Already-opened holdout sensitivity]
+    A[Development folds] --> B[8-feature challenger slightly stronger]
+    C[Already-opened holdout] --> D[12-feature model slightly stronger]
+    B --> E[Trade-off rather than clear winner]
+    D --> E
 ```
-
-The question is no longer whether the eight-feature model can produce a good score. We already know it can. The question is whether it offers a **better balance between predictive value, temporal dependence, calibration, and simplicity** than the existing 12-feature specification.
-
-The comparison therefore keeps several metrics in view together:
-
-- ROC-AUC for overall ranking;
-- average precision for concentration of true delinquencies among higher-risk cases;
-- top-20% capture for the operational prioritisation objective;
-- Brier score and ECE for probability quality.
-
-A separate trade-off figure will place average precision against Brier score, which should make it easier to see whether one model is buying extra precision at the cost of poorer probability estimates.
-
-Planned visuals:
 
 ![8 vs 12 development comparison](../../reports/figures/module4/model_8_vs_12_development.png)
 
@@ -1101,7 +1102,20 @@ Planned visuals:
 
 ![8 vs 12 precision/calibration trade-off](../../reports/figures/module4/model_8_vs_12_tradeoff.png)
 
-**Expected outputs:**
+The practical interpretation is that the eight-feature model is not merely a stripped-down compromise. It is a genuinely competitive model in the development period, and its performance is good enough to show that most of the useful signal is concentrated in a compact behavioural core plus `daily_decr30`.
+
+At the same time, the 12-feature model appears to carry a small amount of additional resilience into the final holdout. That is consistent with the earlier add-back analysis: some of the extra variables do add value, but the value is uneven and partly time-dependent.
+
+For the assignment, this supports keeping the 12-feature model as the formal selected model. The eight-feature version remains a credible challenger with a strong simplicity argument. If a fresh future validation window became available, it would be worth testing both models side by side before any production decision.
+
+The comparison also gives us a clearer account of the trade-off:
+
+- the **8-feature model** is simpler, less dependent on several drifting or redundant variables, and at least as strong in development;
+- the **12-feature model** gives up some simplicity but appears slightly more resilient on the later holdout.
+
+That is a more useful conclusion than declaring one model universally better.
+
+**Outputs:**
 - `reports/tables/module4_8_vs_12_dev_fold_metrics.csv`
 - `reports/tables/module4_8_vs_12_dev_summary.csv`
 - `reports/tables/module4_8_vs_12_holdout_sensitivity.csv`
