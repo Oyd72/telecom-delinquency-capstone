@@ -1006,33 +1006,34 @@ For the assignment, the 12-feature Random Forest remains the formal selected mod
 
 **Script:** `src/models/check_decr30_decr90_redundancy.py`
 
-**Status:** **Pending local execution**
+**Status:** **Completed**
 
-The add-back exercise suggested that `daily_decr30` and `daily_decr90` contribute almost the same kind of value when each is added to the seven-feature recharge model. Their results were so close that it is reasonable to ask whether keeping both really buys us anything.
+The answer is fairly clear: the two decrement variables are **not complementary in this model**. Adding either one to the seven-feature recharge base gives almost the same benefit, while adding both together actually makes the model worse on several of the metrics that matter most.
 
-This comparison therefore keeps the same development-only chronological folds, the same Random Forest settings, and the same isotonic calibration, and tests five variants:
+| Variant | Mean ROC-AUC | Mean average precision | Mean Brier | Mean ECE | Mean top-20% capture |
+|---|---:|---:|---:|---:|---:|
+| Base 7 | 0.8384 | 0.4994 | 0.1056 | 0.0350 | 60.93% |
+| + `daily_decr30` | **0.8398** | **0.5779** | 0.1007 | 0.0489 | **62.28%** |
+| + `daily_decr90` | 0.8396 | 0.5772 | 0.1008 | 0.0491 | 62.28% |
+| + both decrement variables | 0.8149 | 0.5584 | **0.0997** | **0.0308** | 59.68% |
+| Full 12 reference | 0.8332 | 0.5738 | 0.1005 | 0.0464 | 61.83% |
 
-- the seven-feature recharge base;
-- base + `daily_decr30`;
-- base + `daily_decr90`;
-- base + both decrement variables;
-- the full 12-feature model as a reference.
+The one-variable versions are almost interchangeable. `daily_decr30` has a tiny edge on mean ROC-AUC, average precision, Brier score, and top-20% capture, but the differences from `daily_decr90` are so small that they are practically negligible.
 
-The key question is not which model has the largest number in isolation. It is whether **adding both decrement variables produces a material gain over the better single-variable version**.
+The important comparison is what happens when the second decrement variable is added. Relative to the better single-feature version, using both together changes mean ROC-AUC by about **-0.025**, mean average precision by about **-0.019**, and mean top-20% capture by about **-0.026**. Brier score and ECE improve slightly, but that improvement comes at a noticeable cost in discrimination and operational capture.
+
+The fold-level picture shows that this is not a one-off anomaly. In late June, both single-variable versions produce ROC-AUC around **0.840**, average precision around **0.660**, and top-20% capture around **65.3%**. Adding both at once drops ROC-AUC to **0.788** and capture to **58.7%**. The same direction appears around the turn of the month and again in early July.
 
 ```mermaid
-flowchart LR
-    A[7-feature base] --> B[+ daily_decr30]
+flowchart TD
+    A[7-feature recharge base] --> B[+ daily_decr30]
     A --> C[+ daily_decr90]
     A --> D[+ both]
-    B --> E[Compare incremental value of second decrement feature]
+    B --> E[Large AP and capture gain]
     C --> E
-    D --> E
+    D --> F[Better calibration error, but weaker ranking and capture]
+    E --> G[One decrement variable is enough]
 ```
-
-If the two-variable version barely improves average precision, ROC-AUC, Brier score, or top-20% capture over the better single-variable add-back, the practical conclusion would be that the two fields are largely redundant in this model. If adding both produces a clear and repeatable improvement across several metrics, then they carry complementary information.
-
-Planned visuals:
 
 ![Decrement-feature average precision](../../reports/figures/module4/decr30_decr90_average_precision.png)
 
@@ -1040,7 +1041,15 @@ Planned visuals:
 
 ![Decrement-feature Brier score](../../reports/figures/module4/decr30_decr90_brier.png)
 
-**Expected outputs:**
+The most plausible interpretation is redundancy. Both variables describe daily account-spend behaviour over overlapping windows, and they appear to carry very similar predictive information. Once one is present, the other does not add useful independent signal under this Random Forest specification. Instead, adding both seems to alter the tree structure in a way that improves probability error slightly but weakens ranking and case prioritisation.
+
+For this dataset and model, `daily_decr30` is the more natural one to retain if only one decrement feature is kept. Its performance is marginally better, and the shorter 30-day window is also easier to interpret as recent behaviour. That preference is analytical rather than universal; it follows from this experiment, not from the field name alone.
+
+This result sharpens the model-simplification story considerably. A compact eight-feature challenger — the seven recharge variables plus `daily_decr30` — may capture most of the extra precision that previously appeared to require the full 12-feature model, while avoiding several of the more temporally sensitive or redundant inputs.
+
+That does not yet make the eight-feature version the formal selected model. The next sensible check would be to compare that eight-feature candidate directly with the current 12-feature model across the same development chronology and, separately, on the already-opened holdout as sensitivity evidence.
+
+**Outputs:**
 - `reports/tables/module4_decr30_decr90_redundancy_fold_metrics.csv`
 - `reports/tables/module4_decr30_decr90_redundancy_summary.csv`
 - `reports/tables/module4_decr30_decr90_redundancy_summary.json`
