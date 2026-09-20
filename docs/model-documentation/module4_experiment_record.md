@@ -1079,3 +1079,22 @@ The inference layer returns probabilities only. It does not implement an approva
 - `models/README.md`
 - `tests/unit/test_inference_contract.py`
 - `pytest.ini`
+
+
+---
+
+## 19. FastAPI prediction endpoint
+
+**File:** `src/api/app.py`
+
+**Status:** **Implemented; local test pending**
+
+The packaged model is now exposed through a small FastAPI service so the project has an explicit `/predict` endpoint rather than only a command-line batch scorer.
+
+The service accepts the same 12-feature contract used by the packaged model and returns the raw Random Forest probability, the isotonic-calibrated five-day delinquency probability, model name, and artefact version. It does not convert the score into an approval or decline decision.
+
+A separate `/health` route is included for a basic availability check.
+
+Unit tests cover successful prediction, missing-feature rejection, and the health endpoint. The binary model remains local; the API loads the packaged artefact from `models/selected_random_forest_isotonic.joblib`.
+
+The assignment report will link directly to the GitHub implementation where the word limit does not justify reproducing technical detail in the narrative.
