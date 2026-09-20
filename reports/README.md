@@ -42,3 +42,17 @@ This file links the experiments to the relevant tables and figures and should be
 ## Module 4 fairness assessment
 
 The formal Module 4 fairness artefact is `reports/module4_fairness_report.md`. It records why demographic fairness metrics cannot be validly calculated from the available data, separates fairness from operational robustness, and links to the supporting segment and sensitivity outputs.
+
+
+## Module 4 validation evidence
+
+The final Module 4 evidence is deliberately split between concise interpretive reports and reproducible tables/figures.
+
+- `module4_fairness_report.md` — formal fairness-feasibility assessment, representation limits, operational robustness and residual risks.
+- `module4_mlflow_evidence.md` — repository-safe summary of the local MLflow experiment history, including the tuning screenshot.
+- `tables/module4_classification_metrics.csv` and `tables/module4_classification_threshold.json` — thresholded holdout accuracy, precision, recall, F1 and majority-class baseline.
+- `tables/module4_counterfactual_explanations.csv` and `tables/module4_counterfactual_summary.json` — constrained contrastive explanations around the frozen operating threshold.
+- `figures/module4/final_holdout_confusion_matrix.png` and `figures/module4/final_holdout_roc_curve.png` — conventional classification artefacts.
+- `figures/module4/mlflow_model_tuning_runs.png` — direct MLflow Model training evidence showing tracked runs, metrics and parameters.
+
+The complete modelling narrative remains in `docs/model-documentation/module4_experiment_record.md`.
