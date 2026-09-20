@@ -16,7 +16,7 @@ mlruns/
 /models/*
 !/models/.gitkeep
 !/models/README.md
-!/models/selected_model_metadata.json
+!/models/selected_model_metadata.json\n!/models/selected_random_forest_isotonic.joblib
 
 # Python
 __pycache__/
