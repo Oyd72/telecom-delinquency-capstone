@@ -1180,3 +1180,31 @@ No demographic bias-mitigation algorithm was applied because there is no defensi
 - `reports/tables/module4_operational_robustness_segments.csv`
 - `reports/tables/module4_feature_sensitivity.csv`
 - `docs/governance/representation_bias_assessment.md`
+
+
+---
+
+## 22. Counterfactual-style local explanations
+
+**Script:** `src/models/generate_module4_counterfactuals.py`
+
+**Status:** **Pending local execution**
+
+The assignment asks for an explanation of what would need to change for a different model outcome. The project therefore adds a constrained counterfactual-style analysis around the frozen classification threshold.
+
+The analysis is deliberately framed as **contrastive model behaviour**, not as a causal or behavioural recommendation. A result such as “changing feature X from A to B would move the fitted score below the threshold” does not mean that a customer should change that behaviour, or that doing so would cause repayment.
+
+Three holdout cases are examined:
+
+- the closest score just below the frozen threshold;
+- the closest score just above the frozen threshold;
+- a representative high-risk case near the 90th percentile.
+
+The search first tests one-feature changes. Candidate values are drawn from values actually observed in the training population near empirical quantiles. If no single-feature change crosses the threshold, a two-feature fallback is tested among the five strongest global SHAP features.
+
+Distance is measured relative to each feature's training interquartile range so that changes on very different numerical scales can be compared.
+
+**Expected outputs:**
+- `reports/tables/module4_counterfactual_explanations.csv`
+- `reports/tables/module4_counterfactual_summary.json`
+- `reports/figures/module4/counterfactual_risk_changes.png`
