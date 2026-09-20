@@ -1,0 +1,21 @@
+{
+  "threshold_selected_on_final_holdout": false,
+  "development_folds": [
+    "late_june",
+    "turn_of_month",
+    "early_july"
+  ],
+  "threshold_selection_rule": "Require recall >= 0.50 and precision >= 0.45 where feasible; then maximize F1 among qualifying thresholds.",
+  "threshold_selection_status": "precision_recall_target_met",
+  "selected_threshold": 0.1751412429378531,
+  "development_precision_at_selected_threshold": 0.5582993890020367,
+  "development_recall_at_selected_threshold": 0.5896350070578745,
+  "development_f1_at_selected_threshold": 0.5735395076661545,
+  "holdout_confusion_matrix": {
+    "true_negative": 16457,
+    "false_positive": 6238,
+    "false_negative": 1328,
+    "true_positive": 4625
+  },
+  "methodological_note": "Classification metrics are supplementary to the project's ranking and calibration metrics. The threshold was frozen using development-only chronological predictions before being applied to the final holdout."
+}
