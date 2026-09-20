@@ -1,0 +1,44 @@
+{
+  "artifact_version": "1.0.0",
+  "model_name": "telecom_delinquency_random_forest_isotonic",
+  "artifact_filename": "selected_random_forest_isotonic.joblib",
+  "artifact_sha256": "b70912867f0838f1e020a973ba5aa3f69e601a1dfce681dbe7d8b84e934dab9e",
+  "feature_count": 12,
+  "features": [
+    "cnt_ma_rech90",
+    "daily_decr30",
+    "last_rech_date_ma",
+    "sumamnt_ma_rech90",
+    "aon",
+    "last_rech_amt_ma",
+    "daily_decr90",
+    "sumamnt_ma_rech30",
+    "medianamnt_ma_rech30",
+    "medianmarechprebal90",
+    "rental30",
+    "cnt_ma_rech30"
+  ],
+  "target_definition": "delinquent_5d = 1 when repayment was not completed within 5 days",
+  "training_rows": 101241,
+  "calibration_rows": 20878,
+  "training_end": "2016-07-06",
+  "calibration_start": "2016-07-07",
+  "calibration_end": "2016-07-13",
+  "final_holdout_used_for_fitting": false,
+  "random_state": 42,
+  "model_parameters": {
+    "n_estimators": 300,
+    "max_depth": 8,
+    "min_samples_leaf": 20,
+    "max_features": "sqrt",
+    "class_weight": "balanced_subsample"
+  },
+  "calibration_method": "isotonic",
+  "selected_model_status": "Formal Module 4 selected model. The 8-feature model remains a documented challenger.",
+  "known_limitations": [
+    "Available historical period is short.",
+    "Final holdout showed temporal performance degradation beyond the pre-defined stability threshold.",
+    "Demographic group-fairness metrics are not supported by the available data.",
+    "Model is intended for risk prioritisation support, not autonomous credit decisions."
+  ]
+}
