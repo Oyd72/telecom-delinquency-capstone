@@ -1152,3 +1152,31 @@ These conventional metrics supplement rather than replace the project's main evi
 - `reports/tables/module4_classification_threshold.json`
 - `reports/figures/module4/final_holdout_confusion_matrix.png`
 - `reports/figures/module4/final_holdout_roc_curve.png`
+
+
+---
+
+## 21. Formal fairness assessment
+
+**Report:** `reports/module4_fairness_report.md`
+
+**Status:** **Completed**
+
+The earlier robustness work has now been packaged into a standalone fairness artefact so the assignment requirement is explicit rather than left implicit across several technical files.
+
+The report does not manufacture a demographic result. It records that the model-ready dataset has no usable protected-group attributes, so demographic parity, Equalized Odds, Equal Opportunity, and protected-group error-rate gaps cannot be calculated responsibly.
+
+Instead, the report separates three things that could otherwise be confused:
+
+- representation diagnostics, including the imbalance between first-time and returning borrowers;
+- operational robustness across tenure and recharge-frequency segments;
+- residual fairness risks, especially unmeasured proxy effects and the risk of unfair operational use.
+
+No demographic bias-mitigation algorithm was applied because there is no defensible protected-group attribute or measurable disparity objective on which to base one.
+
+**Supporting files:**
+- `reports/module4_fairness_report.md`
+- `reports/tables/module4_fairness_metrics_status.json`
+- `reports/tables/module4_operational_robustness_segments.csv`
+- `reports/tables/module4_feature_sensitivity.csv`
+- `docs/governance/representation_bias_assessment.md`
