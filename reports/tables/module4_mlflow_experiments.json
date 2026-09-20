@@ -1,0 +1,45 @@
+{
+  "tracking_backend": "sqlite",
+  "database_committed_to_git": false,
+  "expected_experiments": [
+    "module4_candidate_model_benchmark",
+    "module4_model_tuning",
+    "module4_final_holdout_evaluation",
+    "module4_development_calibration",
+    "module4_calibrated_holdout_sensitivity"
+  ],
+  "experiments": [
+    {
+      "experiment": "module4_candidate_model_benchmark",
+      "experiment_id": "1",
+      "run_count": 9,
+      "artifact_location": "file:C:/Users/Eszter/Projects/telecom-delinquency-capstone/mlruns/1"
+    },
+    {
+      "experiment": "module4_model_tuning",
+      "experiment_id": "2",
+      "run_count": 24,
+      "artifact_location": "file:C:/Users/Eszter/Projects/telecom-delinquency-capstone/mlruns/2"
+    },
+    {
+      "experiment": "module4_final_holdout_evaluation",
+      "experiment_id": "3",
+      "run_count": 6,
+      "artifact_location": "file:C:/Users/Eszter/Projects/telecom-delinquency-capstone/mlruns/3"
+    },
+    {
+      "experiment": "module4_development_calibration",
+      "experiment_id": "4",
+      "run_count": 18,
+      "artifact_location": "file:C:/Users/Eszter/Projects/telecom-delinquency-capstone/mlruns/4"
+    },
+    {
+      "experiment": "module4_calibrated_holdout_sensitivity",
+      "experiment_id": "5",
+      "run_count": 4,
+      "artifact_location": "file:C:/Users/Eszter/Projects/telecom-delinquency-capstone/mlruns/5"
+    }
+  ],
+  "total_runs": 61,
+  "note": "The SQLite tracking database remains local. This export contains only aggregate experiment metadata, parameters and metrics suitable for repository evidence."
+}
