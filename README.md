@@ -26,7 +26,8 @@ Raw validation is diagnostic: it is meant to show the defects present in the unt
 - `src/data/` – cleaning logic
 - `src/data_quality/` – Great Expectations validation scripts for raw, interim, and processed data
 - `src/features/` – model-dataset construction, temporal diagnostics, and feature-selection work
-- `src/models/` – model development, calibration, explainability, robustness, and feature-sensitivity experiments; see `src/models/README.md` for an index
+- `src/models/` – model development, calibration, explainability, robustness, feature-sensitivity experiments, and selected-model packaging; see `src/models/README.md` for an index
+- `src/inference/` – stable batch inference contract for the packaged selected model
 - `src/pipeline/` – Prefect orchestration
 - `src/privacy/` – privacy-safe pipeline audit logging
 - `src/monitoring/` – representation and operational slice diagnostics
@@ -39,7 +40,7 @@ Raw validation is diagnostic: it is meant to show the defects present in the unt
 ### Reserved areas
 
 - `notebooks/` – exploratory notebooks if needed; reusable logic belongs in `src/`
-- `models/` – persisted model artefacts and metadata once a final artefact is produced
+- `models/` – local persisted model binary plus committed privacy-safe metadata and artefact documentation
 - `dashboards/` – Power BI deliverables
 - `config/` – shared configuration if project parameters are externalised
 - `.github/workflows/` – CI automation if introduced later
