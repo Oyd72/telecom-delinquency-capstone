@@ -821,3 +821,57 @@ Operational subgroup consistency is not evidence of demographic fairness. Likewi
 - `reports/tables/module4_fairness_robustness_summary.json`
 - `reports/figures/module4/operational_segment_roc_auc.png`
 - `reports/figures/module4/feature_sensitivity_p95.png`
+
+
+---
+
+## 13. Parallel test with less temporal dependence
+
+**Script:** `src/models/compare_temporal_light_variants.py`
+
+**Status:** **Pending local execution**
+
+We have only a short slice of history, so it is worth asking a slightly different question from the one used for the main model: how much of the model's usefulness survives if we deliberately reduce its dependence on variables that are more closely tied to tenure, recency, or the temporal shifts already seen in the data?
+
+To keep that comparison clean, the Random Forest settings and isotonic calibration are left unchanged. Only the feature set changes.
+
+The three versions are:
+
+| Variant | Features removed | Remaining features |
+|---|---|---:|
+| Current model | None | 12 |
+| Temporal-light | `aon`, `last_rech_date_ma` | 10 |
+| Drift-reduced | Temporal-light removals plus `daily_decr30`, `daily_decr90`, `rental30` | 7 |
+
+The temporal-light version removes explicit tenure and recency fields but keeps 30- and 90-day recharge summaries. Those rolling measures still describe behaviour available at scoring time, so removing them simply because they use a time window would throw away much of the useful signal.
+
+The drift-reduced version goes further. It removes the three account-activity features that showed particularly strong temporal/distribution movement earlier in the project. This gives us a more demanding test of whether a smaller behavioural core still carries enough information to be useful.
+
+```mermaid
+flowchart LR
+    A[Current 12-feature model] --> B[Remove tenure + recency]
+    B --> C[Temporal-light: 10 features]
+    C --> D[Remove strongest drifting activity features]
+    D --> E[Drift-reduced: 7 features]
+    A --> F[Compare on same fixed model and calibration]
+    C --> F
+    E --> F
+```
+
+This is a post-hoc sensitivity test, not another independent validation. The holdout has already been opened, so the comparison is useful for understanding model dependence, not for resetting the evidence base.
+
+The most interesting outcome will not necessarily be which variant has the highest score. If the smaller variants perform almost as well, that would strengthen confidence that the model is not leaning too heavily on short-window temporal quirks. If performance drops sharply, that would tell us the current model genuinely depends on those signals and that the limited historical window remains a more important constraint.
+
+The script will compare ROC-AUC, average precision, Brier score, expected calibration error, top-20% capture, and predicted risk level across all three variants.
+
+Planned visuals:
+
+![Temporal-light performance comparison](../../reports/figures/module4/temporal_light_model_performance.png)
+
+![Temporal-light calibration comparison](../../reports/figures/module4/temporal_light_model_calibration.png)
+
+**Expected outputs:**
+- `reports/tables/module4_temporal_light_model_comparison.csv`
+- `reports/tables/module4_temporal_light_model_comparison.json`
+- `reports/figures/module4/temporal_light_model_performance.png`
+- `reports/figures/module4/temporal_light_model_calibration.png`
