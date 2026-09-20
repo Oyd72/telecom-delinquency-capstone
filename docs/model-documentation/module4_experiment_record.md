@@ -924,3 +924,57 @@ For now, the most defensible position is to keep the 12-feature model as the for
 - `reports/figures/module4/development_12_vs_7_roc_auc.png`
 - `reports/figures/module4/development_12_vs_7_capture.png`
 - `reports/figures/module4/development_12_vs_7_calibration.png`
+
+
+---
+
+## 15. Incremental add-back of the five excluded predictors
+
+**Script:** `src/models/incremental_addback_analysis.py`
+
+**Status:** **Pending local execution**
+
+The previous comparison told us that the seven recharge-based predictors carry most of the model's ranking power, while the five additional variables seem to help only in certain periods and on certain metrics. The next step is to separate those effects rather than treat the five predictors as one block.
+
+We start from the seven-feature recharge model and add the excluded variables back in several ways:
+
+- one at a time: `aon`, `last_rech_date_ma`, `daily_decr30`, `daily_decr90`, `rental30`;
+- as a tenure/recency pair: `aon` + `last_rech_date_ma`;
+- as an account-activity trio: `daily_decr30` + `daily_decr90` + `rental30`;
+- all five together, recreating the original 12-feature model.
+
+The Random Forest settings, isotonic calibration, and development-only chronological folds stay unchanged. The final holdout is not used.
+
+```mermaid
+flowchart LR
+    A[7-feature recharge base] --> B1[+ aon]
+    A --> B2[+ last_rech_date_ma]
+    A --> B3[+ daily_decr30]
+    A --> B4[+ daily_decr90]
+    A --> B5[+ rental30]
+    A --> C1[+ tenure / recency pair]
+    A --> C2[+ activity trio]
+    A --> D[+ all five = 12-feature model]
+```
+
+This experiment is meant to answer a narrower question than ordinary feature selection: **where does the extra value of the larger model actually come from?**
+
+If one variable or one thematic group explains most of the lift in average precision or Brier score, we will know that the five-feature block is not equally valuable. If none of the individual add-backs reproduces the improvement but the grouped or full versions do, that would point to interactions rather than one dominant predictor.
+
+The comparison will focus especially on average precision and Brier score, because those are where the 12-feature model previously showed the clearest advantage over the seven-feature version. ROC-AUC and top-20% capture remain in view so that we do not improve one metric at the expense of the core ranking objective.
+
+Planned visuals:
+
+![Incremental add-back average precision](../../reports/figures/module4/incremental_addback_average_precision.png)
+
+![Incremental add-back Brier score](../../reports/figures/module4/incremental_addback_brier.png)
+
+![Incremental add-back ROC-AUC](../../reports/figures/module4/incremental_addback_roc_auc.png)
+
+**Expected outputs:**
+- `reports/tables/module4_incremental_addback_fold_metrics.csv`
+- `reports/tables/module4_incremental_addback_summary.csv`
+- `reports/tables/module4_incremental_addback_summary.json`
+- `reports/figures/module4/incremental_addback_average_precision.png`
+- `reports/figures/module4/incremental_addback_brier.png`
+- `reports/figures/module4/incremental_addback_roc_auc.png`
