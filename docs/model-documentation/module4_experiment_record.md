@@ -867,33 +867,43 @@ The sensible next question is therefore not whether we should immediately replac
 
 **Script:** `src/models/compare_dev_12_vs_7.py`
 
-**Status:** **Pending local execution**
+**Status:** **Completed**
 
-The seven-feature drift-reduced model looked unexpectedly strong on the already-opened holdout. Before giving that result too much weight, we are taking it back into the earlier development period and asking whether the same pattern appears there.
+The seven-feature model held up surprisingly well when we moved the comparison back into the development period. This matters because it reduces the chance that its good holdout result was simply a quirk of the final ten-day window.
 
-The comparison is deliberately narrow. The Random Forest settings remain unchanged, isotonic calibration remains unchanged, and the final holdout is not used. The only thing that changes is the feature set:
+Across the three chronological development folds, the seven-feature version actually has the higher mean ROC-AUC:
 
-- the current 12-feature model;
-- the seven-feature recharge-behaviour model.
+| Variant | Mean ROC-AUC | Weakest-fold ROC-AUC | Mean average precision | Mean Brier | Mean ECE | Mean top-20% capture | Weakest-fold capture |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Current 12-feature model | 0.8332 | 0.8226 | **0.5737** | **0.1005** | 0.0464 | **61.83%** | 58.18% |
+| Drift-reduced 7-feature model | **0.8384** | **0.8303** | 0.4994 | 0.1056 | **0.0350** | 60.96% | **59.34%** |
 
-For each chronological development fold, the base model is trained on the earlier data, calibration is fitted on the immediately preceding seven days, and the model is then evaluated on the next block of time.
+The picture is not one-sided, though. The seven-feature model is slightly better on mean and minimum ROC-AUC, slightly better on ECE, and has the stronger weakest-fold capture. The 12-feature model keeps a clear advantage in average precision and has the better Brier score overall.
+
+That average-precision gap deserves attention. It is driven mainly by the late-June fold, where the 12-feature model reaches **0.647** while the seven-feature version falls to **0.462**. In the other two folds the difference is much smaller, and by early July the seven-feature model is slightly ahead. So the simpler model is not uniformly better; it gives up some precision in at least one development window even while preserving ranking performance.
+
+The fold-by-fold results make the trade-off easier to see:
+
+| Fold | Variant | ROC-AUC | Average precision | Brier | Top-20% capture |
+|---|---|---:|---:|---:|---:|
+| Late June | 12 features | 0.8226 | **0.6468** | **0.0859** | **63.91%** |
+| Late June | 7 features | **0.8303** | 0.4621 | 0.1072 | 60.01% |
+| Turn of month | 12 features | 0.8453 | **0.5493** | 0.0997 | 63.38% |
+| Turn of month | 7 features | **0.8487** | 0.5050 | **0.0982** | **63.52%** |
+| Early July | 12 features | 0.8316 | 0.5251 | 0.1158 | 58.18% |
+| Early July | 7 features | **0.8362** | **0.5310** | **0.1114** | **59.34%** |
 
 ```mermaid
-flowchart LR
-    A[Earlier development data] --> B[Train fixed Random Forest]
-    B --> C[7-day calibration window]
-    C --> D[Later development fold]
-    D --> E[12-feature metrics]
-    D --> F[7-feature metrics]
-    E --> G[Compare mean + weakest-fold performance]
-    F --> G
+flowchart TD
+    A[Development-only comparison] --> B[7 features: slightly stronger ROC-AUC]
+    A --> C[12 features: stronger average precision]
+    A --> D[7 features: better ECE and weakest-fold stability]
+    A --> E[12 features: better mean Brier]
+    B --> F[No simple winner]
+    C --> F
+    D --> F
+    E --> F
 ```
-
-This check matters because a good result here would show that the seven-feature model is not merely exploiting something peculiar about the final holdout. It would give us earlier chronological evidence that a smaller, less temporally sensitive feature set can carry much of the same predictive signal.
-
-The comparison will focus on both average and weakest-fold performance, not just the mean. That is important because a simpler model is only attractive if it remains reasonably consistent across the different development windows.
-
-Planned visuals:
 
 ![Development 12 vs 7 ROC-AUC](../../reports/figures/module4/development_12_vs_7_roc_auc.png)
 
@@ -901,7 +911,13 @@ Planned visuals:
 
 ![Development 12 vs 7 calibration](../../reports/figures/module4/development_12_vs_7_calibration.png)
 
-**Expected outputs:**
+The important conclusion is therefore not that the seven-feature model should automatically replace the original one. Rather, the development-period evidence confirms that the simpler recharge-only specification is genuinely competitive across time. It is not merely surviving on the holdout by accident.
+
+That strengthens the case for treating it as a serious alternative because it removes explicit tenure, recency, and the strongest drifting activity variables while keeping most of the discrimination and operational capture. At the same time, the loss in average precision and the slightly worse mean Brier score mean there is still a real cost to simplification.
+
+For now, the most defensible position is to keep the 12-feature model as the formal selected model for the assignment, while documenting the seven-feature version as a **credible lower-temporal-dependence challenger**. If the project were moving toward production, this challenger would deserve a fresh validation period of its own before any switch in model specification.
+
+**Outputs:**
 - `reports/tables/module4_dev_12_vs_7_fold_metrics.csv`
 - `reports/tables/module4_dev_12_vs_7_summary.csv`
 - `reports/tables/module4_dev_12_vs_7_summary.json`
