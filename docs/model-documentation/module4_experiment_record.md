@@ -1230,3 +1230,32 @@ The exercise is explicitly contrastive. It answers, “what small observed-range
 - `reports/tables/module4_counterfactual_explanations.csv`
 - `reports/tables/module4_counterfactual_summary.json`
 - `reports/figures/module4/counterfactual_risk_changes.png`
+
+
+---
+
+## 23. MLflow experiment evidence
+
+**Script:** `src/models/export_module4_mlflow_evidence.py`
+
+**Status:** **Pending local execution**
+
+The Module 4 experiments have been tracked locally in MLflow using a SQLite backend. The tracking database itself stays outside GitHub, but the assignment needs visible evidence that the benchmark, tuning, calibration and holdout work was actually tracked.
+
+A small export script now reads the local `mlflow.db` and produces a repository-safe summary of the five core Module 4 experiments:
+
+- candidate-model benchmark;
+- model tuning;
+- final holdout evaluation;
+- development-only calibration;
+- calibrated holdout sensitivity.
+
+The export preserves experiment names, run IDs, run names, parameters and metrics, but does not commit the SQLite database.
+
+For the submission, the GitHub summary can be linked from the report and a single MLflow UI screenshot can be included as visual evidence.
+
+**Expected outputs:**
+- `reports/module4_mlflow_evidence.md`
+- `reports/tables/module4_mlflow_runs.csv`
+- `reports/tables/module4_mlflow_experiments.json`
+- `reports/figures/module4/mlflow_experiment_run_counts.png`
