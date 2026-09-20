@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 from fastapi.testclient import TestClient
 
 import src.api.app as api_module
@@ -69,7 +70,7 @@ def test_predict_endpoint(monkeypatch):
     assert response.status_code == 200
     body = response.json()
     assert body["raw_delinquency_probability"] == 0.30
-    assert body["calibrated_delinquency_probability"] == 0.225
+    assert body["calibrated_delinquency_probability"] == pytest.approx(0.225)
     assert body["model_name"] == "test_model"
     assert body["artifact_version"] == "test"
 
