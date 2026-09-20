@@ -932,38 +932,46 @@ For now, the most defensible position is to keep the 12-feature model as the for
 
 **Script:** `src/models/incremental_addback_analysis.py`
 
-**Status:** **Pending local execution**
+**Status:** **Completed**
 
-The previous comparison told us that the seven recharge-based predictors carry most of the model's ranking power, while the five additional variables seem to help only in certain periods and on certain metrics. The next step is to separate those effects rather than treat the five predictors as one block.
+This experiment finally tells us where the extra value of the larger 12-feature model is coming from.
 
-We start from the seven-feature recharge model and add the excluded variables back in several ways:
+Starting with the seven recharge-behaviour features, we added the five excluded variables back one at a time and in small groups. The result is not that all five matter equally. In fact, most of the extra average-precision value comes from just two variables: `daily_decr30` and `daily_decr90`.
 
-- one at a time: `aon`, `last_rech_date_ma`, `daily_decr30`, `daily_decr90`, `rental30`;
-- as a tenure/recency pair: `aon` + `last_rech_date_ma`;
-- as an account-activity trio: `daily_decr30` + `daily_decr90` + `rental30`;
-- all five together, recreating the original 12-feature model.
+| Variant | Mean ROC-AUC | Mean average precision | Mean Brier | Mean ECE | Mean top-20% capture |
+|---|---:|---:|---:|---:|---:|
+| Base 7 | 0.8384 | 0.4994 | 0.1056 | 0.0350 | 60.96% |
+| + `daily_decr30` | 0.8398 | **0.5780** | 0.1007 | 0.0489 | **62.28%** |
+| + `daily_decr90` | 0.8396 | 0.5772 | 0.1008 | 0.0491 | 62.25% |
+| + `rental30` | 0.8437 | 0.5388 | 0.1032 | 0.0343 | 61.45% |
+| + tenure/recency pair | **0.8462** | 0.5153 | 0.1047 | 0.0333 | 61.28% |
+| + activity trio | 0.8271 | 0.5677 | 0.1008 | 0.0457 | 61.59% |
+| Full 12 | 0.8340 | 0.5757 | **0.1006** | 0.0476 | 62.09% |
 
-The Random Forest settings, isotonic calibration, and development-only chronological folds stay unchanged. The final holdout is not used.
+The most striking result is that adding just `daily_decr30` to the seven-feature base produces almost the same average-precision gain as restoring all five variables. Mean AP rises from about **0.499 to 0.578**, while the full 12-feature model reaches **0.576**. `daily_decr90` behaves almost identically.
+
+That gain is heavily concentrated in late June. In that fold, average precision jumps from **0.462** in the seven-feature model to about **0.661** when either decrement feature is added back. The full 12-feature model reaches **0.655**. In the later folds, however, those same decrement features add much less and become slightly harmful by early July. This makes their value look distinctly time-dependent rather than universally stable.
+
+`rental30` contributes differently. It improves ROC-AUC and calibration modestly, but does not reproduce the large average-precision gain of the decrement variables.
+
+The tenure/recency pair — `aon` plus `last_rech_date_ma` — gives the strongest mean ROC-AUC of all tested variants, at **0.846**, but only a modest increase in average precision. That suggests these variables help refine overall ranking rather than materially improve identification of positive cases.
+
+The grouped activity trio is also revealing. Adding `daily_decr30`, `daily_decr90`, and `rental30` together performs worse on ROC-AUC than adding the decrement variables individually. This suggests that the five extra predictors are not simply additive; interactions and redundancy matter.
 
 ```mermaid
-flowchart LR
-    A[7-feature recharge base] --> B1[+ aon]
-    A --> B2[+ last_rech_date_ma]
-    A --> B3[+ daily_decr30]
-    A --> B4[+ daily_decr90]
-    A --> B5[+ rental30]
-    A --> C1[+ tenure / recency pair]
-    A --> C2[+ activity trio]
-    A --> D[+ all five = 12-feature model]
+flowchart TD
+    A[7-feature recharge base] --> B[daily_decr30]
+    A --> C[daily_decr90]
+    A --> D[rental30]
+    A --> E[tenure + recency]
+    A --> F[all five]
+
+    B --> G[Large AP gain]
+    C --> G
+    D --> H[Moderate ranking / calibration gain]
+    E --> I[Best mean ROC-AUC]
+    F --> J[Best overall Brier, but no universal superiority]
 ```
-
-This experiment is meant to answer a narrower question than ordinary feature selection: **where does the extra value of the larger model actually come from?**
-
-If one variable or one thematic group explains most of the lift in average precision or Brier score, we will know that the five-feature block is not equally valuable. If none of the individual add-backs reproduces the improvement but the grouped or full versions do, that would point to interactions rather than one dominant predictor.
-
-The comparison will focus especially on average precision and Brier score, because those are where the 12-feature model previously showed the clearest advantage over the seven-feature version. ROC-AUC and top-20% capture remain in view so that we do not improve one metric at the expense of the core ranking objective.
-
-Planned visuals:
 
 ![Incremental add-back average precision](../../reports/figures/module4/incremental_addback_average_precision.png)
 
@@ -971,7 +979,19 @@ Planned visuals:
 
 ![Incremental add-back ROC-AUC](../../reports/figures/module4/incremental_addback_roc_auc.png)
 
-**Expected outputs:**
+The practical implication is clearer now. The seven recharge variables appear to carry the stable core of the model. The decrement variables add substantial value in some periods, especially for average precision, but that value is not stable across all development windows. The tenure/recency variables add smaller but more consistent ranking gains.
+
+So the five additional predictors should not be thought of as one homogeneous block. Their contribution is uneven:
+
+- **`daily_decr30` and `daily_decr90`** provide most of the large precision lift, but in a strongly time-dependent way;
+- **`aon` and `last_rech_date_ma`** mainly improve ranking;
+- **`rental30`** contributes modestly and differently again.
+
+That is useful evidence for model governance. It explains why the 12-feature model can outperform the seven-feature model on some metrics while still looking more temporally fragile.
+
+For the assignment, the 12-feature Random Forest remains the formal selected model. The seven-feature recharge model remains the lower-temporal-dependence challenger, while the add-back results show exactly which variables create the trade-off between stability and extra predictive value.
+
+**Outputs:**
 - `reports/tables/module4_incremental_addback_fold_metrics.csv`
 - `reports/tables/module4_incremental_addback_summary.csv`
 - `reports/tables/module4_incremental_addback_summary.json`
