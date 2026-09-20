@@ -1111,15 +1111,43 @@ The assignment report will link directly to the GitHub implementation where the 
 
 **Script:** `src/models/generate_module4_classification_artifacts.py`
 
-**Status:** **Pending local execution**
+**Status:** **Completed**
 
-The main project metrics are ranking and calibration measures because the model is intended for prioritisation rather than automatic lending decisions. The assignment nevertheless asks for conventional classification evidence as well, including precision, recall, F1, a confusion matrix, and ROC curve.
+The assignment asks for conventional classification metrics in addition to the ranking and calibration measures that are more natural for this project. We therefore froze an operating threshold using development-only chronological predictions and then applied that threshold unchanged to the final holdout.
 
-To avoid choosing a decision threshold on the final holdout, the operating threshold is selected from development-only chronological predictions. The rule is aligned with the original project success criteria: require recall of at least 50% and precision of at least 45% where feasible, then prefer the highest F1 among qualifying thresholds. The final holdout is used only after that threshold has been frozen.
+The development selection rule matched the original project criterion: seek at least **50% recall** and **45% precision**, then choose the qualifying threshold with the highest F1. A feasible threshold was found at **0.175141**.
 
-The script also reports a majority-class baseline so the conventional accuracy figure has context. This is supplementary evidence; it does not replace ROC-AUC, average precision, Brier score, calibration error, or top-risk capture as the more appropriate measures for this project.
+On the final holdout, the selected calibrated Random Forest produced:
 
-**Expected outputs:**
+| Metric | Result |
+|---|---:|
+| Accuracy | 0.7359 |
+| Precision | 0.4258 |
+| Recall | 0.7769 |
+| F1 | 0.5501 |
+| ROC-AUC | 0.8287 |
+| Average precision | 0.5667 |
+| Predicted positive rate | 37.92% |
+| Observed delinquency rate | 20.78% |
+
+The corresponding confusion matrix is:
+
+|  | Predicted on-time | Predicted delinquent |
+|---|---:|---:|
+| Observed on-time | 16,457 | 6,238 |
+| Observed delinquent | 1,328 | 4,625 |
+
+The threshold was not chosen on the holdout. That distinction matters because the holdout precision falls below the original **45%** target even though recall remains comfortably above **50%**. This is another sign that performance shifts over time and should not be presented as a stable production operating point.
+
+The majority-class baseline achieves **79.22% accuracy**, which is higher than the model's 73.59%. That does not make the baseline useful: it predicts no delinquent cases at all, giving precision, recall, and F1 of zero. The comparison is a good illustration of why accuracy is a poor headline metric for this imbalanced problem.
+
+![Final holdout confusion matrix](../../reports/figures/module4/final_holdout_confusion_matrix.png)
+
+![Final holdout ROC curve](../../reports/figures/module4/final_holdout_roc_curve.png)
+
+These conventional metrics supplement rather than replace the project's main evidence. ROC-AUC, average precision, calibration quality, and top-risk capture remain more informative for a prioritisation model that is not intended to make autonomous approve/decline decisions.
+
+**Outputs:**
 - `reports/tables/module4_classification_metrics.csv`
 - `reports/tables/module4_classification_threshold.json`
 - `reports/figures/module4/final_holdout_confusion_matrix.png`
