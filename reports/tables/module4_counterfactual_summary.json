@@ -1,0 +1,100 @@
+{
+  "analysis_type": "counterfactual_style_contrastive_explanation",
+  "classification_threshold": 0.1751412429378531,
+  "threshold_selected_on_holdout": false,
+  "candidate_value_source": "Observed training values nearest to empirical quantiles; no arbitrary out-of-range values are introduced.",
+  "single_feature_search": {
+    "features": [
+      "cnt_ma_rech90",
+      "daily_decr30",
+      "last_rech_date_ma",
+      "sumamnt_ma_rech90",
+      "aon",
+      "last_rech_amt_ma",
+      "daily_decr90",
+      "sumamnt_ma_rech30",
+      "medianamnt_ma_rech30",
+      "medianmarechprebal90",
+      "rental30",
+      "cnt_ma_rech30"
+    ],
+    "quantile_grid_size": 41
+  },
+  "two_feature_fallback": {
+    "features": [
+      "cnt_ma_rech90",
+      "sumamnt_ma_rech90",
+      "sumamnt_ma_rech30",
+      "cnt_ma_rech30",
+      "daily_decr30"
+    ],
+    "quantiles": [
+      0.05,
+      0.1,
+      0.25,
+      0.5,
+      0.75,
+      0.9,
+      0.95
+    ]
+  },
+  "cases": [
+    {
+      "case": "near_boundary_predicted_on_time",
+      "holdout_index": 132774,
+      "observed_outcome": 0,
+      "original_score": 0.16666666666666666,
+      "threshold": 0.1751412429378531,
+      "original_class": "predicted_on_time",
+      "target_direction": "increase_above_threshold",
+      "counterfactual_found": true,
+      "search_type": "single_feature",
+      "counterfactual_score": 0.18486171761280934,
+      "counterfactual_class": "predicted_delinquent",
+      "normalized_distance": 0.0001417635384179189,
+      "changes": [
+        {
+          "feature": "sumamnt_ma_rech30",
+          "from": 3079.0,
+          "to": 3078.0,
+          "delta": -1.0,
+          "normalized_abs_change_iqr": 0.0001417635384179189
+        }
+      ]
+    },
+    {
+      "case": "near_boundary_predicted_delinquent",
+      "holdout_index": 139294,
+      "observed_outcome": 1,
+      "original_score": 0.1761397307426794,
+      "threshold": 0.1751412429378531,
+      "original_class": "predicted_delinquent",
+      "target_direction": "decrease_below_threshold",
+      "counterfactual_found": true,
+      "search_type": "single_feature",
+      "counterfactual_score": 0.14324469090728906,
+      "counterfactual_class": "predicted_on_time",
+      "normalized_distance": 0.014684287812041116,
+      "changes": [
+        {
+          "feature": "aon",
+          "from": 516.0,
+          "to": 526.0,
+          "delta": 10.0,
+          "normalized_abs_change_iqr": 0.014684287812041116
+        }
+      ]
+    },
+    {
+      "case": "representative_high_risk",
+      "holdout_index": 123,
+      "observed_outcome": 1,
+      "original_score": 0.47058823529411764,
+      "threshold": 0.1751412429378531,
+      "original_class": "predicted_delinquent",
+      "target_direction": "decrease_below_threshold",
+      "counterfactual_found": false
+    }
+  ],
+  "interpretation_caution": "These are contrastive explanations of fitted model behaviour. They are not causal claims, behavioural recommendations, or evidence that a customer could or should change the listed feature to alter repayment outcomes. Feature combinations may also be statistically uncommon even when each candidate value was observed in training data."
+}
