@@ -1238,23 +1238,30 @@ The exercise is explicitly contrastive. It answers, “what small observed-range
 
 **Script:** `src/models/export_module4_mlflow_evidence.py`
 
-**Status:** **Pending local execution**
+**Status:** **Completed**
 
-The Module 4 experiments have been tracked locally in MLflow using a SQLite backend. The tracking database itself stays outside GitHub, but the assignment needs visible evidence that the benchmark, tuning, calibration and holdout work was actually tracked.
+The Module 4 modelling work was tracked locally in MLflow using a SQLite backend. The tracking database itself stays outside GitHub, while a repository-safe export now preserves the experiment structure, run identifiers, parameters and metrics needed to demonstrate traceability.
 
-A small export script now reads the local `mlflow.db` and produces a repository-safe summary of the five core Module 4 experiments:
+Five core experiments were found in the local tracking database:
 
-- candidate-model benchmark;
-- model tuning;
-- final holdout evaluation;
-- development-only calibration;
-- calibrated holdout sensitivity.
+| Experiment | Tracked runs |
+|---|---:|
+| `module4_candidate_model_benchmark` | 9 |
+| `module4_model_tuning` | 24 |
+| `module4_final_holdout_evaluation` | 6 |
+| `module4_development_calibration` | 18 |
+| `module4_calibrated_holdout_sensitivity` | 4 |
+| **Total** | **61** |
 
-The export preserves experiment names, run IDs, run names, parameters and metrics, but does not commit the SQLite database.
+The run counts align with the modelling workflow: candidate benchmarking, hyperparameter tuning, final holdout evaluation, development-only calibration assessment, and the later calibrated-holdout sensitivity check.
 
-For the submission, the GitHub summary can be linked from the report and a single MLflow UI screenshot can be included as visual evidence.
+![MLflow experiment run counts](../../reports/figures/module4/mlflow_experiment_run_counts.png)
 
-**Expected outputs:**
+The SQLite database is intentionally not committed. The exported CSV and JSON provide the public audit trail without exposing or versioning the database file itself.
+
+For the assignment, the strongest single screenshot is the `module4_model_tuning` experiment because it shows the largest set of tracked runs and makes the parameter/metric comparison visible in one place. A second screenshot is not necessary unless space permits. The final-holdout experiment remains useful as linked GitHub evidence.
+
+**Outputs:**
 - `reports/module4_mlflow_evidence.md`
 - `reports/tables/module4_mlflow_runs.csv`
 - `reports/tables/module4_mlflow_experiments.json`
