@@ -1,0 +1,16 @@
+{
+  "tracking_backend": "sqlite",
+  "registered_model_name": "telecom_delinquency_random_forest_isotonic",
+  "registered_version": "1",
+  "alias": "champion",
+  "assignment_stage_tag": "Production",
+  "legacy_stage_status": "Production",
+  "legacy_stage_error": null,
+  "run_id": "9fac248f0ca743a890937687805af2b2",
+  "model_uri": "models:/m-9d4edf7b68ea4ef8bbe7c25306a3064f",
+  "artifact_version": "1.0.0",
+  "artifact_sha256": "b70912867f0838f1e020a973ba5aa3f69e601a1dfce681dbe7d8b84e934dab9e",
+  "model_artifact_logged": true,
+  "final_holdout_used_for_fitting": false,
+  "note": "MLflow model stages are deprecated in newer MLflow releases. The champion alias and explicit Production assignment-stage tag are the durable registry indicators; the script also attempts the legacy Production stage for assignment compatibility."
+}
