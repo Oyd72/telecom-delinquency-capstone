@@ -998,3 +998,52 @@ For the assignment, the 12-feature Random Forest remains the formal selected mod
 - `reports/figures/module4/incremental_addback_average_precision.png`
 - `reports/figures/module4/incremental_addback_brier.png`
 - `reports/figures/module4/incremental_addback_roc_auc.png`
+
+
+---
+
+## 16. Are `daily_decr30` and `daily_decr90` redundant?
+
+**Script:** `src/models/check_decr30_decr90_redundancy.py`
+
+**Status:** **Pending local execution**
+
+The add-back exercise suggested that `daily_decr30` and `daily_decr90` contribute almost the same kind of value when each is added to the seven-feature recharge model. Their results were so close that it is reasonable to ask whether keeping both really buys us anything.
+
+This comparison therefore keeps the same development-only chronological folds, the same Random Forest settings, and the same isotonic calibration, and tests five variants:
+
+- the seven-feature recharge base;
+- base + `daily_decr30`;
+- base + `daily_decr90`;
+- base + both decrement variables;
+- the full 12-feature model as a reference.
+
+The key question is not which model has the largest number in isolation. It is whether **adding both decrement variables produces a material gain over the better single-variable version**.
+
+```mermaid
+flowchart LR
+    A[7-feature base] --> B[+ daily_decr30]
+    A --> C[+ daily_decr90]
+    A --> D[+ both]
+    B --> E[Compare incremental value of second decrement feature]
+    C --> E
+    D --> E
+```
+
+If the two-variable version barely improves average precision, ROC-AUC, Brier score, or top-20% capture over the better single-variable add-back, the practical conclusion would be that the two fields are largely redundant in this model. If adding both produces a clear and repeatable improvement across several metrics, then they carry complementary information.
+
+Planned visuals:
+
+![Decrement-feature average precision](../../reports/figures/module4/decr30_decr90_average_precision.png)
+
+![Decrement-feature ROC-AUC](../../reports/figures/module4/decr30_decr90_roc_auc.png)
+
+![Decrement-feature Brier score](../../reports/figures/module4/decr30_decr90_brier.png)
+
+**Expected outputs:**
+- `reports/tables/module4_decr30_decr90_redundancy_fold_metrics.csv`
+- `reports/tables/module4_decr30_decr90_redundancy_summary.csv`
+- `reports/tables/module4_decr30_decr90_redundancy_summary.json`
+- `reports/figures/module4/decr30_decr90_average_precision.png`
+- `reports/figures/module4/decr30_decr90_roc_auc.png`
+- `reports/figures/module4/decr30_decr90_brier.png`
