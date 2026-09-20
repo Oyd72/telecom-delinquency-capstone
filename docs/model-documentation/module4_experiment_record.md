@@ -1056,3 +1056,56 @@ That does not yet make the eight-feature version the formal selected model. The 
 - `reports/figures/module4/decr30_decr90_average_precision.png`
 - `reports/figures/module4/decr30_decr90_roc_auc.png`
 - `reports/figures/module4/decr30_decr90_brier.png`
+
+
+---
+
+## 17. Direct comparison of the 8-feature challenger and the 12-feature model
+
+**Script:** `src/models/compare_model_8_vs_12.py`
+
+**Status:** **Pending local execution**
+
+The redundancy check suggests that most of the useful extra precision can be recovered by adding only `daily_decr30` to the seven-feature recharge core. That gives us a compact eight-feature challenger that is materially simpler than the 12-feature model but still retains the strongest single decrement signal.
+
+This comparison puts those two models side by side in the cleanest way we can manage at this stage.
+
+The main evidence comes from the same three development-only chronological folds used in the earlier checks. The Random Forest settings and isotonic calibration remain fixed. We then look at the already-opened 14-23 July holdout separately, only as sensitivity evidence.
+
+```mermaid
+flowchart LR
+    A[7-feature recharge core] --> B[+ daily_decr30]
+    B --> C[8-feature challenger]
+    D[Current 12-feature model] --> E[Direct comparison]
+    C --> E
+    E --> F[Development folds]
+    E --> G[Already-opened holdout sensitivity]
+```
+
+The question is no longer whether the eight-feature model can produce a good score. We already know it can. The question is whether it offers a **better balance between predictive value, temporal dependence, calibration, and simplicity** than the existing 12-feature specification.
+
+The comparison therefore keeps several metrics in view together:
+
+- ROC-AUC for overall ranking;
+- average precision for concentration of true delinquencies among higher-risk cases;
+- top-20% capture for the operational prioritisation objective;
+- Brier score and ECE for probability quality.
+
+A separate trade-off figure will place average precision against Brier score, which should make it easier to see whether one model is buying extra precision at the cost of poorer probability estimates.
+
+Planned visuals:
+
+![8 vs 12 development comparison](../../reports/figures/module4/model_8_vs_12_development.png)
+
+![8 vs 12 holdout sensitivity](../../reports/figures/module4/model_8_vs_12_holdout.png)
+
+![8 vs 12 precision/calibration trade-off](../../reports/figures/module4/model_8_vs_12_tradeoff.png)
+
+**Expected outputs:**
+- `reports/tables/module4_8_vs_12_dev_fold_metrics.csv`
+- `reports/tables/module4_8_vs_12_dev_summary.csv`
+- `reports/tables/module4_8_vs_12_holdout_sensitivity.csv`
+- `reports/tables/module4_8_vs_12_summary.json`
+- `reports/figures/module4/model_8_vs_12_development.png`
+- `reports/figures/module4/model_8_vs_12_holdout.png`
+- `reports/figures/module4/model_8_vs_12_tradeoff.png`
