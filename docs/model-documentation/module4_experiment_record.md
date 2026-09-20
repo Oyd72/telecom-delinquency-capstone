@@ -768,33 +768,33 @@ The global and local explanations are sufficiently coherent for use in the assig
 
 **Status:** **Completed**
 
-There is no defensible demographic fairness analysis available from this dataset. None of the modelling fields directly identify protected demographic groups, and creating substitute groups from unrelated variables would give a false impression of precision. We therefore keep the fairness conclusion narrow: direct group-fairness metrics are not supported by the data, while possible indirect proxy effects remain a governance limitation that cannot be ruled out from column names or SHAP alone.
+The fairness part of this exercise is necessarily limited by the data. None of the modelling fields directly identify protected demographic groups, so there is no defensible basis for producing demographic group-fairness metrics. We deliberately did not manufacture substitute groups from unrelated variables just to fill that space. The remaining uncertainty is whether some behavioural variables could act as indirect proxies, which cannot be resolved from names or SHAP explanations alone.
 
-The robustness picture is more informative.
+The robustness results are more concrete.
 
-Across account-tenure quartiles, the model remains useful throughout the holdout. ROC-AUC ranges from about **0.81 to 0.85**, and performance improves as tenure increases. The shortest-tenure quartile captures about **47.6%** of delinquencies in its top risk fifth, while the longest-tenure quartile captures about **62.2%**. That pattern suggests the model has more stable signal when longer customer history is reflected in the observed account behaviour, but it is not dependent on long tenure to work at all.
+Across account-tenure quartiles, the model remains useful throughout the holdout. ROC-AUC ranges from about **0.81 to 0.85**, and the strongest-tenure group also has the best top-20% capture. That suggests longer observed account history gives the model a cleaner behavioural signal, but the shortest-tenure group is still usable rather than collapsing.
 
-The recharge-based slices tell a different story. Once the population is divided into narrow bands of `cnt_ma_rech90`, ROC-AUC falls to roughly **0.67-0.69**. This is not especially surprising because recharge activity is itself one of the strongest predictors in the model. By stratifying on that variable, we remove much of the between-customer variation the model normally uses to separate higher- and lower-risk cases. The result is therefore better read as a reminder that recharge behaviour carries much of the model's discriminating power than as evidence that the model simply stops working.
+Recharge-based slices look weaker, with ROC-AUC around **0.67-0.69**. I do not interpret that as simple model failure. Recharge activity is one of the model's strongest predictors, so once we divide the population into narrow recharge bands, much of the variation the model normally uses to separate risk has already been removed.
 
-The feature-sensitivity check is reassuring in a different way. Small perturbations usually leave calibrated risk unchanged. The larger movements are concentrated in recharge-amount variables, especially `sumamnt_ma_rech90`, where the 95th-percentile absolute risk movement is about **5.6 percentage points**. Even there, only about **1.15%** of sampled observations move by ten percentage points or more. This is consistent with a tree model that is mostly stable around an observation but can move when a perturbation crosses an important decision threshold.
+The perturbation test adds another perspective. Small input changes usually leave calibrated risk unchanged or nearly unchanged. The larger movements are concentrated mainly in recharge-amount variables. For `sumamnt_ma_rech90`, the 95th-percentile absolute change is about **5.6 percentage points**, but only about **1.15%** of sampled observations move by ten points or more.
 
 ```mermaid
 flowchart LR
     A[Fairness question] --> B[No direct protected-group fields]
-    B --> C[Do not manufacture demographic groups]
+    B --> C[No artificial demographic groups]
     A --> D[Robustness question]
-    D --> E[Tenure segments: broadly stable]
-    D --> F[Recharge segments: weaker within-band discrimination]
-    D --> G[Small feature perturbations: usually limited score movement]
+    D --> E[Tenure slices remain useful]
+    D --> F[Recharge slices show less within-band separation]
+    D --> G[Most small perturbations cause little score movement]
 ```
 
 ![Operational segment ROC-AUC](../../reports/figures/module4/operational_segment_roc_auc.png)
 
 ![Feature sensitivity](../../reports/figures/module4/feature_sensitivity_p95.png)
 
-The conclusion is therefore deliberately asymmetric. We cannot claim demographic fairness from these data, but we can say that the selected model shows useful operational robustness across tenure segments and is not generally hypersensitive to modest changes in its strongest inputs. Recharge-based subgroup performance is weaker, which is consistent with recharge activity being a major source of predictive separation in the full population.
+The conclusion is intentionally uneven. We cannot claim demographic fairness from these data, but we can say that the model is reasonably robust across operational tenure segments and is not generally hypersensitive to modest feature changes. The weaker recharge-slice results are consistent with recharge behaviour being central to the model's overall discrimination.
 
-This does not remove the temporal-stability limitation already identified elsewhere in the project.
+The temporal-stability limitation remains separate and unresolved.
 
 **Outputs:**
 - `reports/tables/module4_operational_robustness_segments.csv`
@@ -802,7 +802,6 @@ This does not remove the temporal-stability limitation already identified elsewh
 - `reports/tables/module4_fairness_robustness_summary.json`
 - `reports/figures/module4/operational_segment_roc_auc.png`
 - `reports/figures/module4/feature_sensitivity_p95.png`
-
 
 ---
 
@@ -812,9 +811,9 @@ This does not remove the temporal-stability limitation already identified elsewh
 
 **Status:** **Completed**
 
-Because the dataset covers only a short period, we tested whether the model could remain useful after removing variables that are more obviously tied to tenure, recency, or the temporal drift already seen in the data. The Random Forest settings and isotonic calibration were kept fixed; only the feature set changed.
+Because the history covers only a short period, we wanted to know how much useful signal survives when the model is made less dependent on tenure, recency, and variables that had shown the strongest temporal movement.
 
-The result is more interesting than expected.
+The Random Forest settings and isotonic calibration stayed fixed. Only the feature set changed.
 
 | Variant | Features | ROC-AUC | Average precision | Brier | ECE | Top-20% capture |
 |---|---:|---:|---:|---:|---:|---:|
@@ -822,9 +821,7 @@ The result is more interesting than expected.
 | Temporal-light | 10 | 0.8195 | 0.5609 | 0.1247 | 0.0323 | 53.74% |
 | Drift-reduced | 7 | 0.8251 | 0.5545 | **0.1223** | **0.0256** | **55.69%** |
 
-Simply removing `aon` and `last_rech_date_ma` produces a small deterioration, but not a collapse. ROC-AUC falls by about **0.009**, while top-20% capture is almost unchanged.
-
-The seven-feature drift-reduced version is more striking. After also removing `daily_decr30`, `daily_decr90`, and `rental30`, ROC-AUC is only about **0.004** below the current model. At the same time, top-20% capture rises from **54.04% to 55.69%**, and both Brier score and ECE improve slightly.
+Removing `aon` and `last_rech_date_ma` costs a little performance, but the model remains useful. More surprisingly, the seven-feature drift-reduced version recovers most of the lost discrimination and actually improves top-20% capture, Brier score, and ECE on this holdout sensitivity check.
 
 ```mermaid
 flowchart LR
@@ -836,30 +833,15 @@ flowchart LR
 
 ![Temporal-light calibration comparison](../../reports/figures/module4/temporal_light_model_calibration.png)
 
-This does not mean that the seven-feature model has replaced the selected 12-feature model. The comparison was designed after the holdout had already been opened, so it is sensitivity evidence rather than a fresh validation result. It would be methodologically weak to switch models simply because this post-hoc comparison looks attractive.
+The seven remaining variables are all recharge-behaviour measures. That fits the SHAP result, which had already shown that recharge behaviour dominates the model's internal logic.
 
-What it does tell us is important: much of the useful signal survives even after we remove explicit tenure/recency variables and the three features that showed the strongest temporal drift. That adds a third strand of confidence to the project. The model's usefulness does not appear to depend entirely on short-window temporal quirks.
-
-The seven remaining features are all recharge-behaviour measures:
-
-- `cnt_ma_rech90`
-- `sumamnt_ma_rech90`
-- `last_rech_amt_ma`
-- `sumamnt_ma_rech30`
-- `medianamnt_ma_rech30`
-- `medianmarechprebal90`
-- `cnt_ma_rech30`
-
-That is consistent with the SHAP analysis, which already showed recharge behaviour dominating the model's internal logic.
-
-The sensible next question is therefore not whether we should immediately replace the main model, but whether the seven-feature version also holds up across the **development-only chronological folds**. If it does, we would have stronger evidence that a simpler, less temporally sensitive model is a credible alternative rather than a holdout-specific accident.
+This comparison was designed after the holdout had already been opened, so it cannot serve as a fresh validation. What it does show is that the model's usefulness does not disappear when we strip away explicit tenure/recency fields and several strongly drifting activity variables. That made the seven-feature version worth testing again on earlier chronological folds.
 
 **Outputs:**
 - `reports/tables/module4_temporal_light_model_comparison.csv`
 - `reports/tables/module4_temporal_light_model_comparison.json`
 - `reports/figures/module4/temporal_light_model_performance.png`
 - `reports/figures/module4/temporal_light_model_calibration.png`
-
 
 ---
 
@@ -869,20 +851,16 @@ The sensible next question is therefore not whether we should immediately replac
 
 **Status:** **Completed**
 
-The seven-feature model held up surprisingly well when we moved the comparison back into the development period. This matters because it reduces the chance that its good holdout result was simply a quirk of the final ten-day window.
-
-Across the three chronological development folds, the seven-feature version actually has the higher mean ROC-AUC:
+The seven-feature model remained competitive when the comparison was moved back into the development period, which reduces the chance that its good holdout result was simply a late-period accident.
 
 | Variant | Mean ROC-AUC | Weakest-fold ROC-AUC | Mean average precision | Mean Brier | Mean ECE | Mean top-20% capture | Weakest-fold capture |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Current 12-feature model | 0.8332 | 0.8226 | **0.5737** | **0.1005** | 0.0464 | **61.83%** | 58.18% |
 | Drift-reduced 7-feature model | **0.8384** | **0.8303** | 0.4994 | 0.1056 | **0.0350** | 60.96% | **59.34%** |
 
-The picture is not one-sided, though. The seven-feature model is slightly better on mean and minimum ROC-AUC, slightly better on ECE, and has the stronger weakest-fold capture. The 12-feature model keeps a clear advantage in average precision and has the better Brier score overall.
+There is no neat winner. The seven-feature model is slightly stronger on mean and minimum ROC-AUC and has the better weakest-fold capture. The 12-feature model keeps a clear advantage in average precision and a somewhat better Brier score overall.
 
-That average-precision gap deserves attention. It is driven mainly by the late-June fold, where the 12-feature model reaches **0.647** while the seven-feature version falls to **0.462**. In the other two folds the difference is much smaller, and by early July the seven-feature model is slightly ahead. So the simpler model is not uniformly better; it gives up some precision in at least one development window even while preserving ranking performance.
-
-The fold-by-fold results make the trade-off easier to see:
+The average-precision gap comes mostly from late June, where the 12-feature model reaches **0.647** and the seven-feature version falls to **0.462**. In the other two folds the difference narrows considerably.
 
 | Fold | Variant | ROC-AUC | Average precision | Brier | Top-20% capture |
 |---|---|---:|---:|---:|---:|
@@ -893,29 +871,13 @@ The fold-by-fold results make the trade-off easier to see:
 | Early July | 12 features | 0.8316 | 0.5251 | 0.1158 | 58.18% |
 | Early July | 7 features | **0.8362** | **0.5310** | **0.1114** | **59.34%** |
 
-```mermaid
-flowchart TD
-    A[Development-only comparison] --> B[7 features: slightly stronger ROC-AUC]
-    A --> C[12 features: stronger average precision]
-    A --> D[7 features: better ECE and weakest-fold stability]
-    A --> E[12 features: better mean Brier]
-    B --> F[No simple winner]
-    C --> F
-    D --> F
-    E --> F
-```
-
 ![Development 12 vs 7 ROC-AUC](../../reports/figures/module4/development_12_vs_7_roc_auc.png)
 
 ![Development 12 vs 7 top-20% capture](../../reports/figures/module4/development_12_vs_7_capture.png)
 
 ![Development 12 vs 7 calibration](../../reports/figures/module4/development_12_vs_7_calibration.png)
 
-The important conclusion is therefore not that the seven-feature model should automatically replace the original one. Rather, the development-period evidence confirms that the simpler recharge-only specification is genuinely competitive across time. It is not merely surviving on the holdout by accident.
-
-That strengthens the case for treating it as a serious alternative because it removes explicit tenure, recency, and the strongest drifting activity variables while keeping most of the discrimination and operational capture. At the same time, the loss in average precision and the slightly worse mean Brier score mean there is still a real cost to simplification.
-
-For now, the most defensible position is to keep the 12-feature model as the formal selected model for the assignment, while documenting the seven-feature version as a **credible lower-temporal-dependence challenger**. If the project were moving toward production, this challenger would deserve a fresh validation period of its own before any switch in model specification.
+The important point is that the smaller model is genuinely viable across earlier time windows. At the same time, the loss in average precision is real enough that simplification is not free. We therefore kept the seven-feature version as a serious lower-temporal-dependence challenger rather than replacing the formal model.
 
 **Outputs:**
 - `reports/tables/module4_dev_12_vs_7_fold_metrics.csv`
@@ -925,7 +887,6 @@ For now, the most defensible position is to keep the 12-feature model as the for
 - `reports/figures/module4/development_12_vs_7_capture.png`
 - `reports/figures/module4/development_12_vs_7_calibration.png`
 
-
 ---
 
 ## 15. Incremental add-back of the five excluded predictors
@@ -934,9 +895,9 @@ For now, the most defensible position is to keep the 12-feature model as the for
 
 **Status:** **Completed**
 
-This experiment finally tells us where the extra value of the larger 12-feature model is coming from.
+The 7-vs-12 comparison raised a more useful question than simply asking which model was better: what were the five extra predictors actually buying us?
 
-Starting with the seven recharge-behaviour features, we added the five excluded variables back one at a time and in small groups. The result is not that all five matter equally. In fact, most of the extra average-precision value comes from just two variables: `daily_decr30` and `daily_decr90`.
+The answer is uneven.
 
 | Variant | Mean ROC-AUC | Mean average precision | Mean Brier | Mean ECE | Mean top-20% capture |
 |---|---:|---:|---:|---:|---:|
@@ -948,30 +909,11 @@ Starting with the seven recharge-behaviour features, we added the five excluded 
 | + activity trio | 0.8271 | 0.5677 | 0.1008 | 0.0457 | 61.59% |
 | Full 12 | 0.8340 | 0.5757 | **0.1006** | 0.0476 | 62.09% |
 
-The most striking result is that adding just `daily_decr30` to the seven-feature base produces almost the same average-precision gain as restoring all five variables. Mean AP rises from about **0.499 to 0.578**, while the full 12-feature model reaches **0.576**. `daily_decr90` behaves almost identically.
+Most of the average-precision lift comes from either `daily_decr30` or `daily_decr90`. Adding just `daily_decr30` raises mean AP from about **0.499 to 0.578**, essentially matching the full model. The effect is strongest in late June and weakens later, which makes the decrement signal look genuinely useful but also time-dependent.
 
-That gain is heavily concentrated in late June. In that fold, average precision jumps from **0.462** in the seven-feature model to about **0.661** when either decrement feature is added back. The full 12-feature model reaches **0.655**. In the later folds, however, those same decrement features add much less and become slightly harmful by early July. This makes their value look distinctly time-dependent rather than universally stable.
+The tenure/recency pair behaves differently. It gives the best mean ROC-AUC of all tested variants, but only a modest AP improvement. That suggests those fields help refine ranking more than they help concentrate positive cases.
 
-`rental30` contributes differently. It improves ROC-AUC and calibration modestly, but does not reproduce the large average-precision gain of the decrement variables.
-
-The tenure/recency pair — `aon` plus `last_rech_date_ma` — gives the strongest mean ROC-AUC of all tested variants, at **0.846**, but only a modest increase in average precision. That suggests these variables help refine overall ranking rather than materially improve identification of positive cases.
-
-The grouped activity trio is also revealing. Adding `daily_decr30`, `daily_decr90`, and `rental30` together performs worse on ROC-AUC than adding the decrement variables individually. This suggests that the five extra predictors are not simply additive; interactions and redundancy matter.
-
-```mermaid
-flowchart TD
-    A[7-feature recharge base] --> B[daily_decr30]
-    A --> C[daily_decr90]
-    A --> D[rental30]
-    A --> E[tenure + recency]
-    A --> F[all five]
-
-    B --> G[Large AP gain]
-    C --> G
-    D --> H[Moderate ranking / calibration gain]
-    E --> I[Best mean ROC-AUC]
-    F --> J[Best overall Brier, but no universal superiority]
-```
+`rental30` adds a smaller and more mixed benefit. The three activity variables together do not outperform the better single add-backs, which points to overlap and interaction rather than simple additive value.
 
 ![Incremental add-back average precision](../../reports/figures/module4/incremental_addback_average_precision.png)
 
@@ -979,17 +921,9 @@ flowchart TD
 
 ![Incremental add-back ROC-AUC](../../reports/figures/module4/incremental_addback_roc_auc.png)
 
-The practical implication is clearer now. The seven recharge variables appear to carry the stable core of the model. The decrement variables add substantial value in some periods, especially for average precision, but that value is not stable across all development windows. The tenure/recency variables add smaller but more consistent ranking gains.
+By this point, the larger feature set no longer looked like one coherent block of extra information. It looked more like several different contributions: decrement variables carrying most of the precision lift, tenure/recency helping ranking, and `rental30` adding a smaller signal of its own.
 
-So the five additional predictors should not be thought of as one homogeneous block. Their contribution is uneven:
-
-- **`daily_decr30` and `daily_decr90`** provide most of the large precision lift, but in a strongly time-dependent way;
-- **`aon` and `last_rech_date_ma`** mainly improve ranking;
-- **`rental30`** contributes modestly and differently again.
-
-That is useful evidence for model governance. It explains why the 12-feature model can outperform the seven-feature model on some metrics while still looking more temporally fragile.
-
-For the assignment, the 12-feature Random Forest remains the formal selected model. The seven-feature recharge model remains the lower-temporal-dependence challenger, while the add-back results show exactly which variables create the trade-off between stability and extra predictive value.
+That clarified why the 12-feature model can occasionally look stronger while also being more temporally fragile.
 
 **Outputs:**
 - `reports/tables/module4_incremental_addback_fold_metrics.csv`
@@ -999,7 +933,6 @@ For the assignment, the 12-feature Random Forest remains the formal selected mod
 - `reports/figures/module4/incremental_addback_brier.png`
 - `reports/figures/module4/incremental_addback_roc_auc.png`
 
-
 ---
 
 ## 16. Are `daily_decr30` and `daily_decr90` redundant?
@@ -1008,7 +941,7 @@ For the assignment, the 12-feature Random Forest remains the formal selected mod
 
 **Status:** **Completed**
 
-The answer is fairly clear: the two decrement variables are **not complementary in this model**. Adding either one to the seven-feature recharge base gives almost the same benefit, while adding both together actually makes the model worse on several of the metrics that matter most.
+The two decrement variables turned out to be largely interchangeable in this model.
 
 | Variant | Mean ROC-AUC | Mean average precision | Mean Brier | Mean ECE | Mean top-20% capture |
 |---|---:|---:|---:|---:|---:|
@@ -1018,22 +951,9 @@ The answer is fairly clear: the two decrement variables are **not complementary 
 | + both decrement variables | 0.8149 | 0.5584 | **0.0997** | **0.0308** | 59.68% |
 | Full 12 reference | 0.8332 | 0.5738 | 0.1005 | 0.0464 | 61.83% |
 
-The one-variable versions are almost interchangeable. `daily_decr30` has a tiny edge on mean ROC-AUC, average precision, Brier score, and top-20% capture, but the differences from `daily_decr90` are so small that they are practically negligible.
+Each single-variable version gives almost the same gain. Once both are included, ranking and capture actually deteriorate. Relative to the better single-feature version, the combined version loses about **0.025 ROC-AUC**, **0.019 average precision**, and **2.6 percentage points of top-20% capture**.
 
-The important comparison is what happens when the second decrement variable is added. Relative to the better single-feature version, using both together changes mean ROC-AUC by about **-0.025**, mean average precision by about **-0.019**, and mean top-20% capture by about **-0.026**. Brier score and ECE improve slightly, but that improvement comes at a noticeable cost in discrimination and operational capture.
-
-The fold-level picture shows that this is not a one-off anomaly. In late June, both single-variable versions produce ROC-AUC around **0.840**, average precision around **0.660**, and top-20% capture around **65.3%**. Adding both at once drops ROC-AUC to **0.788** and capture to **58.7%**. The same direction appears around the turn of the month and again in early July.
-
-```mermaid
-flowchart TD
-    A[7-feature recharge base] --> B[+ daily_decr30]
-    A --> C[+ daily_decr90]
-    A --> D[+ both]
-    B --> E[Large AP and capture gain]
-    C --> E
-    D --> F[Better calibration error, but weaker ranking and capture]
-    E --> G[One decrement variable is enough]
-```
+The fold-level results point in the same direction. In late June the single-feature versions reach about **0.840 ROC-AUC**, **0.660 AP**, and **65.3% capture**; the model with both drops to **0.788 ROC-AUC** and **58.7% capture**.
 
 ![Decrement-feature average precision](../../reports/figures/module4/decr30_decr90_average_precision.png)
 
@@ -1041,13 +961,9 @@ flowchart TD
 
 ![Decrement-feature Brier score](../../reports/figures/module4/decr30_decr90_brier.png)
 
-The most plausible interpretation is redundancy. Both variables describe daily account-spend behaviour over overlapping windows, and they appear to carry very similar predictive information. Once one is present, the other does not add useful independent signal under this Random Forest specification. Instead, adding both seems to alter the tree structure in a way that improves probability error slightly but weakens ranking and case prioritisation.
+The most plausible reading is redundancy. The two variables describe overlapping windows of similar spending behaviour, and the second one does not appear to add independent ranking signal once the first is present.
 
-For this dataset and model, `daily_decr30` is the more natural one to retain if only one decrement feature is kept. Its performance is marginally better, and the shorter 30-day window is also easier to interpret as recent behaviour. That preference is analytical rather than universal; it follows from this experiment, not from the field name alone.
-
-This result sharpens the model-simplification story considerably. A compact eight-feature challenger — the seven recharge variables plus `daily_decr30` — may capture most of the extra precision that previously appeared to require the full 12-feature model, while avoiding several of the more temporally sensitive or redundant inputs.
-
-That does not yet make the eight-feature version the formal selected model. The next sensible check would be to compare that eight-feature candidate directly with the current 12-feature model across the same development chronology and, separately, on the already-opened holdout as sensitivity evidence.
+If only one is kept, `daily_decr30` has a marginal edge and is easier to explain as recent behaviour. That led naturally to an eight-feature challenger: the seven recharge variables plus `daily_decr30`.
 
 **Outputs:**
 - `reports/tables/module4_decr30_decr90_redundancy_fold_metrics.csv`
@@ -1057,7 +973,6 @@ That does not yet make the eight-feature version the formal selected model. The 
 - `reports/figures/module4/decr30_decr90_roc_auc.png`
 - `reports/figures/module4/decr30_decr90_brier.png`
 
-
 ---
 
 ## 17. Direct comparison of the 8-feature challenger and the 12-feature model
@@ -1066,35 +981,25 @@ That does not yet make the eight-feature version the formal selected model. The 
 
 **Status:** **Completed**
 
-The eight-feature challenger performs very well in the development period, but the final holdout tells a slightly different story. That makes this comparison useful precisely because it does not collapse into a simple winner.
+The eight-feature challenger is strong enough that the final comparison becomes a trade-off rather than a simple confirmation of the larger model.
 
-Across the three development folds, the eight-feature model is marginally stronger on the main ranking and prioritisation measures:
+Across development folds, the smaller model has a slight edge on ranking and prioritisation:
 
 | Variant | Mean ROC-AUC | Weakest-fold ROC-AUC | Mean average precision | Mean Brier | Mean ECE | Mean top-20% capture |
 |---|---:|---:|---:|---:|---:|---:|
 | 8-feature challenger | **0.8398** | **0.8312** | **0.5778** | 0.1007 | 0.0489 | **62.28%** |
 | Current 12-feature model | 0.8332 | 0.8226 | 0.5737 | **0.1005** | **0.0464** | 61.83% |
 
-The differences are small, but they consistently favour the eight-feature challenger on development ROC-AUC, average precision, and top-20% capture. The 12-feature model keeps a slight edge on Brier score and ECE.
+The differences are not large. The eight-feature model is better on mean ROC-AUC, AP, and capture; the 12-feature version is slightly better on Brier score and ECE.
 
-Fold by fold, the challenger is strongest in late June and around the turn of the month. In early July, the two models are almost indistinguishable, with the 12-feature model slightly ahead on average precision and capture.
-
-The already-opened holdout moves the balance back toward the 12-feature model:
+On the already-opened holdout, the direction reverses:
 
 | Variant | ROC-AUC | Average precision | Brier | ECE | Top-20% capture |
 |---|---:|---:|---:|---:|---:|
 | 8-feature challenger | 0.8211 | 0.5555 | 0.1249 | 0.0314 | 53.57% |
 | Current 12-feature model | **0.8287** | **0.5667** | **0.1230** | **0.0293** | **54.04%** |
 
-The holdout differences are still modest, but they all point in the same direction. The 12-feature model retains a little more discrimination, slightly better probability quality, and slightly stronger capture on the later period.
-
-```mermaid
-flowchart LR
-    A[Development folds] --> B[8-feature challenger slightly stronger]
-    C[Already-opened holdout] --> D[12-feature model slightly stronger]
-    B --> E[Trade-off rather than clear winner]
-    D --> E
-```
+That later-period edge is modest, but every reported metric points the same way.
 
 ![8 vs 12 development comparison](../../reports/figures/module4/model_8_vs_12_development.png)
 
@@ -1102,18 +1007,9 @@ flowchart LR
 
 ![8 vs 12 precision/calibration trade-off](../../reports/figures/module4/model_8_vs_12_tradeoff.png)
 
-The practical interpretation is that the eight-feature model is not merely a stripped-down compromise. It is a genuinely competitive model in the development period, and its performance is good enough to show that most of the useful signal is concentrated in a compact behavioural core plus `daily_decr30`.
+The eight-feature model is therefore more than a stripped-down fallback. It shows that most of the useful signal can be captured with a smaller, cleaner feature set. The 12-feature version, however, appears to retain a small amount of extra resilience in the later holdout.
 
-At the same time, the 12-feature model appears to carry a small amount of additional resilience into the final holdout. That is consistent with the earlier add-back analysis: some of the extra variables do add value, but the value is uneven and partly time-dependent.
-
-For the assignment, this supports keeping the 12-feature model as the formal selected model. The eight-feature version remains a credible challenger with a strong simplicity argument. If a fresh future validation window became available, it would be worth testing both models side by side before any production decision.
-
-The comparison also gives us a clearer account of the trade-off:
-
-- the **8-feature model** is simpler, less dependent on several drifting or redundant variables, and at least as strong in development;
-- the **12-feature model** gives up some simplicity but appears slightly more resilient on the later holdout.
-
-That is a more useful conclusion than declaring one model universally better.
+For the assignment, that is enough reason to keep the 12-feature model as the formal selection while documenting the eight-feature version as a credible challenger. A fresh future validation window would be the right place to revisit that decision.
 
 **Outputs:**
 - `reports/tables/module4_8_vs_12_dev_fold_metrics.csv`
@@ -1124,7 +1020,6 @@ That is a more useful conclusion than declaring one model universally better.
 - `reports/figures/module4/model_8_vs_12_holdout.png`
 - `reports/figures/module4/model_8_vs_12_tradeoff.png`
 
-
 ---
 
 ## 18. Packaging and testing the selected model
@@ -1133,11 +1028,11 @@ That is a more useful conclusion than declaring one model universally better.
 
 **Status:** **Completed**
 
-The selected 12-feature Random Forest and its isotonic calibration layer have now been recreated, packaged, and tested end to end.
+Once the modelling decisions were settled, the selected model was recreated as a single local artefact containing the fitted median imputer, Random Forest, isotonic calibrator, feature order, and model metadata.
 
-The packaging run used **101,241 training rows** and **20,878 calibration rows**. The final 14-23 July holdout was not used for fitting, which keeps the packaged artefact aligned with the modelling chronology documented earlier.
+The package was fitted on **101,241 training rows** and calibrated on **20,878 rows** from 7-13 July. The final holdout remained outside fitting.
 
-The local binary artefact is:
+The local binary is:
 
 `models/selected_random_forest_isotonic.joblib`
 
@@ -1145,19 +1040,19 @@ The repository-safe metadata file is:
 
 `models/selected_model_metadata.json`
 
-The generated SHA-256 fingerprint is:
+Its SHA-256 fingerprint is:
 
 `b70912867f0838f1e020a973ba5aa3f69e601a1dfce681dbe7d8b84e934dab9e`
 
-This fingerprint gives a direct integrity link between the metadata and the exact binary model file. If the binary changes, the hash changes as well.
+That fingerprint gives us a simple integrity check between the metadata and the exact local binary.
 
 ```mermaid
 flowchart LR
-    A[12 required input features] --> B[Median imputer]
-    B --> C[Selected Random Forest]
-    C --> D[Raw delinquency probability]
-    D --> E[Isotonic calibrator]
-    E --> F[Calibrated 5-day delinquency probability]
+    A[12 required features] --> B[Median imputer]
+    B --> C[Random Forest]
+    C --> D[Raw probability]
+    D --> E[Isotonic calibration]
+    E --> F[Calibrated probability]
     F --> G[Version + metadata + SHA-256]
 ```
 
@@ -1168,24 +1063,11 @@ collected 2 items
 tests/unit/test_inference_contract.py .. [100%]
 ```
 
-Those tests confirm two basic safeguards:
+A real batch run then scored **10 rows from the actual model-ready dataset** without error. The mean calibrated delinquency probability was **0.117993**.
 
-- inference fails when a required feature is missing;
-- successful inference returns the expected raw probability, calibrated probability, model name, and artefact version fields.
+That run is evidence that the persisted package can be loaded and used against real project-shaped data. It is not a new performance evaluation.
 
-A real batch inference run was then performed against **10 rows from the actual model-ready dataset**. The packaged model scored all 10 rows successfully and returned a mean calibrated delinquency probability of **0.117993**.
-
-```text
-Inference completed.
-Rows scored: 10
-Mean calibrated delinquency probability: 0.117993
-```
-
-This is a functional test rather than a new model-performance evaluation. Its purpose is to show that the persisted artefact can be loaded and used on real project-shaped inputs through the defined inference contract.
-
-The inference layer does not make an approval or decline decision. It produces risk probabilities only.
-
-The temporary inference input and prediction output contain row-level data and therefore remain local; they are not repository evidence. The committed metadata, tests, and documented run result are sufficient to demonstrate the packaging and inference path.
+The inference layer returns probabilities only. It does not implement an approval or decline decision. The temporary row-level input and prediction files used for the test remain local and are not repository evidence.
 
 **Local artefact:**
 - `models/selected_random_forest_isotonic.joblib`
