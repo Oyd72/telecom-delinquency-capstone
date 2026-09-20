@@ -766,56 +766,37 @@ The global and local explanations are sufficiently coherent for use in the assig
 
 **Script:** `src/models/assess_module4_fairness_robustness.py`
 
-**Status:** **Pending local execution**
+**Status:** **Completed**
 
-### Fairness scope
+There is no defensible demographic fairness analysis available from this dataset. None of the modelling fields directly identify protected demographic groups, and creating substitute groups from unrelated variables would give a false impression of precision. We therefore keep the fairness conclusion narrow: direct group-fairness metrics are not supported by the data, while possible indirect proxy effects remain a governance limitation that cannot be ruled out from column names or SHAP alone.
 
-The dataset still does not contain attributes that directly identify protected demographic groups or other clearly defensible fairness groups. We therefore do **not** fabricate or infer demographic groups for fairness testing.
+The robustness picture is more informative.
 
-The assessment instead records:
+Across account-tenure quartiles, the model remains useful throughout the holdout. ROC-AUC ranges from about **0.81 to 0.85**, and performance improves as tenure increases. The shortest-tenure quartile captures about **47.6%** of delinquencies in its top risk fifth, while the longest-tenure quartile captures about **62.2%**. That pattern suggests the model has more stable signal when longer customer history is reflected in the observed account behaviour, but it is not dependent on long tenure to work at all.
 
-- whether any direct protected-trait fields are present;
-- whether group-fairness metrics are supportable from the available data;
-- the remaining limitation that indirect proxy effects cannot be ruled out solely from feature names or SHAP results.
+The recharge-based slices tell a different story. Once the population is divided into narrow bands of `cnt_ma_rech90`, ROC-AUC falls to roughly **0.67-0.69**. This is not especially surprising because recharge activity is itself one of the strongest predictors in the model. By stratifying on that variable, we remove much of the between-customer variation the model normally uses to separate higher- and lower-risk cases. The result is therefore better read as a reminder that recharge behaviour carries much of the model's discriminating power than as evidence that the model simply stops working.
 
-### Operational robustness scope
-
-Operational robustness is assessed separately from fairness.
-
-Two observed business-relevant segmentations are used:
-
-- account-tenure quartiles based on `aon`;
-- recharge-activity quartiles based on `cnt_ma_rech90`.
-
-These are **not fairness groups**. They are used only to test whether model performance depends excessively on a narrow portion of the observed population.
-
-### Controlled sensitivity analysis
-
-The five strongest SHAP features are perturbed by plus/minus **0.10 of their training-period interquartile range**, with values clipped to the observed training range.
+The feature-sensitivity check is reassuring in a different way. Small perturbations usually leave calibrated risk unchanged. The larger movements are concentrated in recharge-amount variables, especially `sumamnt_ma_rech90`, where the 95th-percentile absolute risk movement is about **5.6 percentage points**. Even there, only about **1.15%** of sampled observations move by ten percentage points or more. This is consistent with a tree model that is mostly stable around an observation but can move when a perturbation crosses an important decision threshold.
 
 ```mermaid
 flowchart LR
-    A[Holdout observation] --> B[Selected calibrated Random Forest]
-    B --> C[Baseline risk]
-    A --> D[Modest feature perturbation]
-    D --> E[Re-score]
-    C --> F[Compare calibrated-risk movement]
-    E --> F
+    A[Fairness question] --> B[No direct protected-group fields]
+    B --> C[Do not manufacture demographic groups]
+    A --> D[Robustness question]
+    D --> E[Tenure segments: broadly stable]
+    D --> F[Recharge segments: weaker within-band discrimination]
+    D --> G[Small feature perturbations: usually limited score movement]
 ```
-
-The analysis reports median, 95th-percentile, and maximum risk movement, together with the share of observations changing by at least 5 or 10 percentage points.
-
-### Planned visuals
 
 ![Operational segment ROC-AUC](../../reports/figures/module4/operational_segment_roc_auc.png)
 
 ![Feature sensitivity](../../reports/figures/module4/feature_sensitivity_p95.png)
 
-### Interpretation limits
+The conclusion is therefore deliberately asymmetric. We cannot claim demographic fairness from these data, but we can say that the selected model shows useful operational robustness across tenure segments and is not generally hypersensitive to modest changes in its strongest inputs. Recharge-based subgroup performance is weaker, which is consistent with recharge activity being a major source of predictive separation in the full population.
 
-Operational subgroup consistency is not evidence of demographic fairness. Likewise, sensitivity testing describes local model stability under modest feature changes; it does not establish causation or policy appropriateness.
+This does not remove the temporal-stability limitation already identified elsewhere in the project.
 
-**Expected outputs:**
+**Outputs:**
 - `reports/tables/module4_operational_robustness_segments.csv`
 - `reports/tables/module4_feature_sensitivity.csv`
 - `reports/tables/module4_fairness_robustness_summary.json`
@@ -829,48 +810,51 @@ Operational subgroup consistency is not evidence of demographic fairness. Likewi
 
 **Script:** `src/models/compare_temporal_light_variants.py`
 
-**Status:** **Pending local execution**
+**Status:** **Completed**
 
-We have only a short slice of history, so it is worth asking a slightly different question from the one used for the main model: how much of the model's usefulness survives if we deliberately reduce its dependence on variables that are more closely tied to tenure, recency, or the temporal shifts already seen in the data?
+Because the dataset covers only a short period, we tested whether the model could remain useful after removing variables that are more obviously tied to tenure, recency, or the temporal drift already seen in the data. The Random Forest settings and isotonic calibration were kept fixed; only the feature set changed.
 
-To keep that comparison clean, the Random Forest settings and isotonic calibration are left unchanged. Only the feature set changes.
+The result is more interesting than expected.
 
-The three versions are:
+| Variant | Features | ROC-AUC | Average precision | Brier | ECE | Top-20% capture |
+|---|---:|---:|---:|---:|---:|---:|
+| Current model | 12 | **0.8287** | **0.5667** | 0.1230 | 0.0293 | 54.04% |
+| Temporal-light | 10 | 0.8195 | 0.5609 | 0.1247 | 0.0323 | 53.74% |
+| Drift-reduced | 7 | 0.8251 | 0.5545 | **0.1223** | **0.0256** | **55.69%** |
 
-| Variant | Features removed | Remaining features |
-|---|---|---:|
-| Current model | None | 12 |
-| Temporal-light | `aon`, `last_rech_date_ma` | 10 |
-| Drift-reduced | Temporal-light removals plus `daily_decr30`, `daily_decr90`, `rental30` | 7 |
+Simply removing `aon` and `last_rech_date_ma` produces a small deterioration, but not a collapse. ROC-AUC falls by about **0.009**, while top-20% capture is almost unchanged.
 
-The temporal-light version removes explicit tenure and recency fields but keeps 30- and 90-day recharge summaries. Those rolling measures still describe behaviour available at scoring time, so removing them simply because they use a time window would throw away much of the useful signal.
-
-The drift-reduced version goes further. It removes the three account-activity features that showed particularly strong temporal/distribution movement earlier in the project. This gives us a more demanding test of whether a smaller behavioural core still carries enough information to be useful.
+The seven-feature drift-reduced version is more striking. After also removing `daily_decr30`, `daily_decr90`, and `rental30`, ROC-AUC is only about **0.004** below the current model. At the same time, top-20% capture rises from **54.04% to 55.69%**, and both Brier score and ECE improve slightly.
 
 ```mermaid
 flowchart LR
-    A[Current 12-feature model] --> B[Remove tenure + recency]
-    B --> C[Temporal-light: 10 features]
-    C --> D[Remove strongest drifting activity features]
-    D --> E[Drift-reduced: 7 features]
-    A --> F[Compare on same fixed model and calibration]
-    C --> F
-    E --> F
+    A[12 features<br/>ROC-AUC 0.829<br/>Capture 54.0%] --> B[10 features<br/>ROC-AUC 0.820<br/>Capture 53.7%]
+    B --> C[7 features<br/>ROC-AUC 0.825<br/>Capture 55.7%]
 ```
-
-This is a post-hoc sensitivity test, not another independent validation. The holdout has already been opened, so the comparison is useful for understanding model dependence, not for resetting the evidence base.
-
-The most interesting outcome will not necessarily be which variant has the highest score. If the smaller variants perform almost as well, that would strengthen confidence that the model is not leaning too heavily on short-window temporal quirks. If performance drops sharply, that would tell us the current model genuinely depends on those signals and that the limited historical window remains a more important constraint.
-
-The script will compare ROC-AUC, average precision, Brier score, expected calibration error, top-20% capture, and predicted risk level across all three variants.
-
-Planned visuals:
 
 ![Temporal-light performance comparison](../../reports/figures/module4/temporal_light_model_performance.png)
 
 ![Temporal-light calibration comparison](../../reports/figures/module4/temporal_light_model_calibration.png)
 
-**Expected outputs:**
+This does not mean that the seven-feature model has replaced the selected 12-feature model. The comparison was designed after the holdout had already been opened, so it is sensitivity evidence rather than a fresh validation result. It would be methodologically weak to switch models simply because this post-hoc comparison looks attractive.
+
+What it does tell us is important: much of the useful signal survives even after we remove explicit tenure/recency variables and the three features that showed the strongest temporal drift. That adds a third strand of confidence to the project. The model's usefulness does not appear to depend entirely on short-window temporal quirks.
+
+The seven remaining features are all recharge-behaviour measures:
+
+- `cnt_ma_rech90`
+- `sumamnt_ma_rech90`
+- `last_rech_amt_ma`
+- `sumamnt_ma_rech30`
+- `medianamnt_ma_rech30`
+- `medianmarechprebal90`
+- `cnt_ma_rech30`
+
+That is consistent with the SHAP analysis, which already showed recharge behaviour dominating the model's internal logic.
+
+The sensible next question is therefore not whether we should immediately replace the main model, but whether the seven-feature version also holds up across the **development-only chronological folds**. If it does, we would have stronger evidence that a simpler, less temporally sensitive model is a credible alternative rather than a holdout-specific accident.
+
+**Outputs:**
 - `reports/tables/module4_temporal_light_model_comparison.csv`
 - `reports/tables/module4_temporal_light_model_comparison.json`
 - `reports/figures/module4/temporal_light_model_performance.png`
