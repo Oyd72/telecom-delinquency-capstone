@@ -1259,10 +1259,11 @@ The run counts align with the modelling workflow: candidate benchmarking, hyperp
 
 The SQLite database is intentionally not committed. The exported CSV and JSON provide the public audit trail without exposing or versioning the database file itself.
 
-For the assignment, the strongest single screenshot is the `module4_model_tuning` experiment because it shows the largest set of tracked runs and makes the parameter/metric comparison visible in one place. A second screenshot is not necessary unless space permits. The final-holdout experiment remains useful as linked GitHub evidence.
+The assignment screenshot is now captured from the `module4_model_tuning` experiment in MLflow's Model training view. It shows the 24 tracked tuning runs together with average precision, Brier score, ROC-AUC, top-20% capture and selected hyperparameters (`max_depth`, `min_samples_leaf`). The final-holdout experiment remains available as linked GitHub evidence, but a second screenshot is not necessary.
 
 **Outputs:**
 - `reports/module4_mlflow_evidence.md`
 - `reports/tables/module4_mlflow_runs.csv`
 - `reports/tables/module4_mlflow_experiments.json`
 - `reports/figures/module4/mlflow_experiment_run_counts.png`
+- `reports/figures/module4/mlflow_model_tuning_runs.png`
