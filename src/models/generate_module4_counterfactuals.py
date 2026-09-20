@@ -120,7 +120,11 @@ def fit_selected_model(train: pd.DataFrame, calibration: pd.DataFrame):
 
 
 def calibrated_score(frame, imputer, model, calibrator):
-    x = imputer.transform(frame[FEATURES])
+    x = pd.DataFrame(
+        imputer.transform(frame[FEATURES]),
+        columns=FEATURES,
+        index=frame.index,
+    )
     raw = model.predict_proba(x)[:, 1]
     return np.asarray(calibrator.predict(raw), dtype=float)
 
