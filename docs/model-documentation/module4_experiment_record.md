@@ -1087,7 +1087,7 @@ The inference layer returns probabilities only. It does not implement an approva
 
 **File:** `src/api/app.py`
 
-**Status:** **Implemented; local test pending**
+**Status:** **Completed**
 
 The packaged model is now exposed through a small FastAPI service so the project has an explicit `/predict` endpoint rather than only a command-line batch scorer.
 
@@ -1095,6 +1095,32 @@ The service accepts the same 12-feature contract used by the packaged model and 
 
 A separate `/health` route is included for a basic availability check.
 
-Unit tests cover successful prediction, missing-feature rejection, and the health endpoint. The binary model remains local; the API loads the packaged artefact from `models/selected_random_forest_isotonic.joblib`.
+Unit tests cover successful prediction, missing-feature rejection, and the health endpoint. All three tests pass locally. The two warnings emitted by the test stack are deprecation warnings from dependencies and do not affect endpoint behaviour. The binary model remains local; the API loads the packaged artefact from `models/selected_random_forest_isotonic.joblib`.
+
+```text
+collected 3 items
+tests/unit/test_api.py ... [100%]
+```
 
 The assignment report will link directly to the GitHub implementation where the word limit does not justify reproducing technical detail in the narrative.
+
+
+---
+
+## 20. Conventional classification artefacts
+
+**Script:** `src/models/generate_module4_classification_artifacts.py`
+
+**Status:** **Pending local execution**
+
+The main project metrics are ranking and calibration measures because the model is intended for prioritisation rather than automatic lending decisions. The assignment nevertheless asks for conventional classification evidence as well, including precision, recall, F1, a confusion matrix, and ROC curve.
+
+To avoid choosing a decision threshold on the final holdout, the operating threshold is selected from development-only chronological predictions. The rule is aligned with the original project success criteria: require recall of at least 50% and precision of at least 45% where feasible, then prefer the highest F1 among qualifying thresholds. The final holdout is used only after that threshold has been frozen.
+
+The script also reports a majority-class baseline so the conventional accuracy figure has context. This is supplementary evidence; it does not replace ROC-AUC, average precision, Brier score, calibration error, or top-risk capture as the more appropriate measures for this project.
+
+**Expected outputs:**
+- `reports/tables/module4_classification_metrics.csv`
+- `reports/tables/module4_classification_threshold.json`
+- `reports/figures/module4/final_holdout_confusion_matrix.png`
+- `reports/figures/module4/final_holdout_roc_curve.png`
