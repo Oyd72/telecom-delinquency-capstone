@@ -26,14 +26,14 @@ Raw validation is diagnostic: it is meant to show the defects present in the unt
 - `src/data/` – cleaning logic
 - `src/data_quality/` – Great Expectations validation scripts for raw, interim, and processed data
 - `src/features/` – model-dataset construction, temporal diagnostics, and feature-selection work
-- `src/models/` – model comparison and calibration experiments
+- `src/models/` – model development, calibration, explainability, robustness, and feature-sensitivity experiments; see `src/models/README.md` for an index
 - `src/pipeline/` – Prefect orchestration
 - `src/privacy/` – privacy-safe pipeline audit logging
 - `src/monitoring/` – representation and operational slice diagnostics
 - `tests/unit/` – tests for transformations, privacy controls, and representation checks
 - `tests/validation/` – pipeline and validation contract tests
-- `reports/` – reproducible aggregate outputs for analysis, validation, privacy, and presentation
-- `docs/` – data dictionary, methodology, decision records, and governance material
+- `reports/` – reproducible aggregate outputs for analysis, validation, privacy, and presentation; row-level generated data stay local
+- `docs/` – data dictionary, methodology, decision records, governance material, and the Module 4 experiment record
 - `Dockerfile` – container build for the ETL pipeline
 
 ### Reserved areas
@@ -48,7 +48,7 @@ Empty reserved directories remain visible through `.gitkeep` files.
 
 ## Data and privacy position
 
-Raw, interim, and processed customer-level datasets stay out of GitHub. `.gitignore` excludes the contents of all three data folders.
+Raw, interim, processed, and synthetic row-level datasets stay out of GitHub. `.gitignore` excludes their contents while keeping the directory structure visible. Synthetic scenarios are reproducible from the committed generator script; only aggregate summaries and figures are suitable repository evidence.
 
 `msisdn` is kept only for the short part of preprocessing where customer-level chronology is needed. It is removed before the model-ready dataset is written and is never an approved predictor. The processed behavioural data are still treated as restricted analytical data; removing the identifier is not taken to mean that the dataset is fully anonymous.
 
@@ -63,7 +63,7 @@ The main governance documents are:
 - `docs/governance/model_development_narrative.md` – modelling decisions and results
 - `docs/governance/model_decision_log.md` – compact decision record and current model position
 
-`docs/data_dictionary.md` gives the current interpretation and modelling status of each field. `docs/data_dictionary_changelog.md` records material changes to those interpretations.
+`docs/data_dictionary.md` gives the current interpretation and modelling status of each field. `docs/data_dictionary_changelog.md` records material changes to those interpretations. The Module 4 modelling trail is consolidated in `docs/model-documentation/module4_experiment_record.md`, with a short navigation note in `docs/model-documentation/README.md`.
 
 ## Feature-selection history
 
@@ -90,7 +90,7 @@ Keeping the pipeline dependencies separate avoids putting the full analytical en
 
 ## Report evidence
 
-Row-level generated data are not committed. `reports/README.md` explains which aggregate outputs are suitable for the repository or assignment evidence and which should remain local.
+Row-level generated data are not committed. This includes synthetic scenario rows. `reports/README.md` explains which aggregate outputs are suitable for repository or assignment evidence and which should remain local. Figures used by the Module 4 experiment record live under `reports/figures/module4/`.
 
 ## Delivery approach
 
