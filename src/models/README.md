@@ -50,3 +50,11 @@ The following scripts pre-date the final Module 4 modelling sequence and remain 
 - `rolling_calibration_stability.py`
 
 They should not be confused with the current final-model workflow.
+
+
+### Packaging, assignment artefacts and experiment evidence
+
+- `package_selected_model.py` — recreates and packages the selected Random Forest, fitted imputer and isotonic calibrator, and writes repository-safe metadata with a SHA-256 fingerprint.
+- `generate_module4_classification_artifacts.py` — freezes a development-selected operating threshold and produces precision, recall, F1, accuracy, confusion-matrix and ROC evidence on the final holdout.
+- `generate_module4_counterfactuals.py` — generates constrained counterfactual-style explanations using observed-range candidate values and the frozen threshold.
+- `export_module4_mlflow_evidence.py` — exports repository-safe evidence from the local MLflow SQLite tracking database.
