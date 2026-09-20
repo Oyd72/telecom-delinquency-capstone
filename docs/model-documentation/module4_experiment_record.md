@@ -1131,11 +1131,25 @@ That is a more useful conclusion than declaring one model universally better.
 
 **Scripts:** `src/models/package_selected_model.py`, `src/inference/predict_selected_model.py`
 
-**Status:** **Pending local execution**
+**Status:** **Completed locally; metadata pending GitHub commit**
 
-The modelling work is now stable enough to package the selected 12-feature Random Forest and its isotonic calibration layer as one reproducible artefact.
+The selected 12-feature Random Forest and its isotonic calibration layer have now been recreated and packaged successfully.
 
-The packaged object will contain the fitted median imputer, fitted Random Forest, fitted isotonic calibrator, ordered feature contract, training/calibration dates, model parameters, and version metadata. The binary artefact stays local under `models/`; GitHub keeps only the privacy-safe metadata needed to identify and verify it.
+The packaging run used **101,241 training rows** and **20,878 calibration rows**. The final 14-23 July holdout was not used for fitting, which keeps the packaged artefact aligned with the modelling chronology documented earlier.
+
+The local binary artefact is:
+
+`models/selected_random_forest_isotonic.joblib`
+
+The metadata file is:
+
+`models/selected_model_metadata.json`
+
+The generated SHA-256 fingerprint is:
+
+`b70912867f0838f1e020a973ba5aa3f69e601a1dfce681dbe7d8b84e934dab9e`
+
+This fingerprint gives us a direct integrity link between the metadata and the exact binary model file. If the binary changes, the hash changes as well.
 
 ```mermaid
 flowchart LR
@@ -1144,26 +1158,32 @@ flowchart LR
     C --> D[Raw delinquency probability]
     D --> E[Isotonic calibrator]
     E --> F[Calibrated 5-day delinquency probability]
+    F --> G[Version + metadata + SHA-256]
 ```
 
-The frozen chronology remains unchanged:
+The inference-contract tests also pass after fixing the repository import path:
 
-- model training through 6 July 2016;
-- isotonic calibration on 7-13 July;
-- final holdout excluded from fitting.
+```text
+collected 2 items
+tests/unit/test_inference_contract.py .. [100%]
+```
 
-The inference contract is deliberately narrow. A batch input must contain the 12 required features, and the output contains the raw and calibrated delinquency probabilities plus model name and artefact version. No approval or decline decision is produced by the inference layer.
+Those tests confirm two basic safeguards:
 
-The package will also write a SHA-256 hash into the metadata file. That gives us a simple integrity check linking the metadata to the exact local binary artefact.
+- inference fails when a required feature is missing;
+- successful inference returns the expected raw probability, calibrated probability, model name, and artefact version fields.
 
-Unit tests have been added for the inference contract, including rejection of missing required columns and verification of the expected prediction output schema.
+The inference layer does not make an approval or decline decision. It produces risk probabilities only.
 
-**Expected local artefact:**
+The binary `.joblib` artefact remains local and ignored by Git. The metadata JSON is intentionally repository-safe and should be committed so that the exact packaged model version can be identified later without exposing or versioning the binary itself.
+
+**Local artefact:**
 - `models/selected_random_forest_isotonic.joblib`
 
-**Expected repository-safe metadata:**
+**Repository-safe metadata:**
 - `models/selected_model_metadata.json`
 
 **Supporting files:**
 - `models/README.md`
 - `tests/unit/test_inference_contract.py`
+- `pytest.ini`
