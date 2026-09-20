@@ -1188,23 +1188,45 @@ No demographic bias-mitigation algorithm was applied because there is no defensi
 
 **Script:** `src/models/generate_module4_counterfactuals.py`
 
-**Status:** **Pending local execution**
+**Status:** **Completed**
 
-The assignment asks for an explanation of what would need to change for a different model outcome. The project therefore adds a constrained counterfactual-style analysis around the frozen classification threshold.
+The counterfactual exercise was kept deliberately more rigorous than the minimum assignment requirement. Rather than manually changing a feature until a different label appeared, the script searches for small threshold-crossing changes using values observed in the training population.
 
-The analysis is deliberately framed as **contrastive model behaviour**, not as a causal or behavioural recommendation. A result such as “changing feature X from A to B would move the fitted score below the threshold” does not mean that a customer should change that behaviour, or that doing so would cause repayment.
+The operating threshold remained the previously frozen development-selected value of **0.175141**. It was not selected or adjusted using the final holdout.
 
-Three holdout cases are examined:
+Three holdout cases were examined.
 
-- the closest score just below the frozen threshold;
-- the closest score just above the frozen threshold;
-- a representative high-risk case near the 90th percentile.
+| Case | Original score | Counterfactual score | Change found |
+|---|---:|---:|---|
+| Closest case below threshold | 0.166667 | 0.184862 | `sumamnt_ma_rech30`: 3079 → 3078 |
+| Closest case above threshold | 0.176140 | 0.143245 | `aon`: 516 → 526 |
+| Representative high-risk case | 0.470588 | — | No threshold-crossing result within constrained search |
 
-The search first tests one-feature changes. Candidate values are drawn from values actually observed in the training population near empirical quantiles. If no single-feature change crosses the threshold, a two-feature fallback is tested among the five strongest global SHAP features.
+The first result is striking because a one-unit movement in 30-day recharge amount is enough to cross the operating threshold. This should not be read as an economically meaningful behavioural recommendation. It is evidence of the piecewise nature of a tree model: an observation can sit very close to a learned split, so a numerically tiny change can move it onto a different path through the forest and then through the isotonic mapping.
 
-Distance is measured relative to each feature's training interquartile range so that changes on very different numerical scales can be compared.
+The second case is easier to interpret numerically. Increasing the observed account-tenure measure from 516 to 526 moved the calibrated score from just above the threshold to clearly below it. Again, this is a description of fitted model behaviour rather than a causal claim.
 
-**Expected outputs:**
+The high-risk case did not cross the threshold under the constrained search. That is useful evidence in its own right. It shows that the search is not guaranteed to manufacture a counterfactual for every case, and that strongly elevated predictions may require changes outside the deliberately narrow search space.
+
+```text
+near_boundary_predicted_on_time:
+  0.166667 -> 0.184862
+  sumamnt_ma_rech30: 3079 -> 3078
+
+near_boundary_predicted_delinquent:
+  0.176140 -> 0.143245
+  aon: 516 -> 526
+
+representative_high_risk:
+  0.470588
+  no constrained threshold-crossing counterfactual found
+```
+
+![Counterfactual-style risk changes](../../reports/figures/module4/counterfactual_risk_changes.png)
+
+The exercise is explicitly contrastive. It answers, “what small observed-range change would alter the fitted model's classification?” It does **not** answer, “what should a customer do?” or “what would cause repayment behaviour to change?”
+
+**Outputs:**
 - `reports/tables/module4_counterfactual_explanations.csv`
 - `reports/tables/module4_counterfactual_summary.json`
 - `reports/figures/module4/counterfactual_risk_changes.png`
