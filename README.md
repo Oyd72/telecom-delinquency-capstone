@@ -28,6 +28,7 @@ Raw validation is diagnostic: it is meant to show the defects present in the unt
 - `src/features/` – model-dataset construction, temporal diagnostics, and feature-selection work
 - `src/models/` – model development, calibration, explainability, robustness, feature-sensitivity experiments, and selected-model packaging; see `src/models/README.md` for an index
 - `src/inference/` – stable batch inference contract for the packaged selected model
+- `src/api/` – FastAPI `/predict` endpoint for single-record scoring
 - `src/pipeline/` – Prefect orchestration
 - `src/privacy/` – privacy-safe pipeline audit logging
 - `src/monitoring/` – representation and operational slice diagnostics
