@@ -1275,21 +1275,32 @@ The assignment screenshot is now captured from the `module4_model_tuning` experi
 
 **Script:** `src/models/register_module4_model.py`
 
-**Status:** **Pending local execution**
+**Status:** **Completed**
 
-The selected model is now prepared for registration in the local MLflow Model Registry rather than being represented only by project-specific metadata.
-
-The registry workflow logs the packaged model as an MLflow pyfunc artefact, creates a registered-model version, assigns the alias `champion`, and records `Production` as the assignment-stage tag. The script also attempts the legacy MLflow `Production` stage where supported by the installed MLflow version.
-
-The registered model name is:
+The selected Module 4 model is now registered in the local MLflow Model Registry as:
 
 `telecom_delinquency_random_forest_isotonic`
 
-The MLflow wrapper preserves the same 12-feature input contract and returns raw and isotonic-calibrated delinquency probabilities.
+Registration created **version 1** and logged the selected packaged model as an MLflow pyfunc artefact. The registry entry is linked back to the same serialized package through the model metadata and SHA-256 fingerprint.
 
-The registration run also records the packaged artefact SHA-256 so that the MLflow registry entry can be reconciled with the serialized `.joblib` submitted with the assignment.
+The registered version has:
 
-**Expected output:**
+- **version:** 1
+- **alias:** `champion`
+- **assignment-stage tag:** `Production`
+- **legacy MLflow stage:** `Production`
+- **model artefact logged:** yes
+- **run ID:** `9fac248f0ca743a890937687805af2b2`
+- **model URI:** `models:/m-9d4edf7b68ea4ef8bbe7c25306a3064f`
+
+The local run also records the selected model family, feature count, calibration method, fitting chronology, final-holdout exclusion from fitting, intended use, and the packaged artefact SHA-256.
+
+The installed MLflow version emitted a deprecation warning for legacy model stages. This does not affect the completed registration. The project therefore keeps both the modern `champion` alias and the explicit `Production` assignment-stage tag, while also recording the legacy Production stage because the current assignment wording asks for a model version and stage.
+
+MLflow also warned that the Python model wrapper is serialized with CloudPickle. That warning is expected for this local pyfunc wrapper and is relevant mainly to trust boundaries when loading Python objects. The submitted model artefact remains the separately packaged and fingerprinted `.joblib`.
+
+**Output:**
 - `reports/tables/module4_model_registry.json`
 
-The assignment-required serialized binary is also being made repository-visible as `models/selected_random_forest_isotonic.joblib`.
+The assignment-required serialized binary is repository-visible as:
+- `models/selected_random_forest_isotonic.joblib`
