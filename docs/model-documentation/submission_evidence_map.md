@@ -10,7 +10,7 @@ This page is a navigation aid for the final Module 4 submission. It points to th
 | Final holdout metrics | `reports/tables/module4_final_holdout_metrics.csv` |
 | Precision, recall, F1, accuracy and threshold | `reports/tables/module4_classification_metrics.csv`, `reports/tables/module4_classification_threshold.json` |
 | Confusion matrix and ROC curve | `reports/figures/module4/final_holdout_confusion_matrix.png`, `reports/figures/module4/final_holdout_roc_curve.png` |
-| Global and local SHAP | `reports/tables/module4_shap_summary.json`, `reports/figures/module4/shap_global_importance.png`, local SHAP figures under `reports/figures/module4/` |
+| SHAP analysis notebook, global and local SHAP | `notebooks/module4_shap_analysis.ipynb`, `reports/tables/module4_shap_summary.json`, `reports/figures/module4/shap_global_importance.png`, local SHAP figures under `reports/figures/module4/` |
 | Counterfactual-style explanations | `reports/tables/module4_counterfactual_summary.json`, `reports/figures/module4/counterfactual_risk_changes.png` |
 | Fairness feasibility and robustness | `reports/module4_fairness_report.md` |
 | Model card | `docs/model-documentation/model_card.md` |
