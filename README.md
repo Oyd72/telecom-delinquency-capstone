@@ -32,7 +32,7 @@ Raw validation is diagnostic: it is meant to show the defects present in the unt
 - `src/pipeline/` – Prefect orchestration
 - `src/privacy/` – privacy-safe pipeline audit logging
 - `src/monitoring/` – representation and operational slice diagnostics
-- `tests/unit/` – tests for transformations, privacy controls, and representation checks
+- `tests/unit/` – tests for transformations, privacy controls, representation checks, packaged inference, and the FastAPI endpoint
 - `tests/validation/` – pipeline and validation contract tests
 - `reports/` – reproducible aggregate outputs for analysis, validation, privacy, and presentation; row-level generated data stay local
 - `docs/` – data dictionary, methodology, decision records, governance material, and the Module 4 experiment record
@@ -92,7 +92,7 @@ Keeping the pipeline dependencies separate avoids putting the full analytical en
 
 ## Report evidence
 
-Row-level generated data are not committed. This includes synthetic scenario rows. `reports/README.md` explains which aggregate outputs are suitable for repository or assignment evidence and which should remain local. Figures used by the Module 4 experiment record live under `reports/figures/module4/`.
+Row-level generated data are not committed. This includes synthetic scenario rows. `reports/README.md` explains which aggregate outputs are suitable for repository or assignment evidence and which should remain local. Figures used by the Module 4 experiment record live under `reports/figures/module4/`. The final Module 4 evidence also includes a formal fairness report, MLflow evidence, conventional classification artefacts, constrained counterfactual explanations, a packaged model metadata record, and a tested FastAPI `/predict` endpoint.
 
 ## Delivery approach
 
