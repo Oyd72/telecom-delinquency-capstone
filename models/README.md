@@ -22,3 +22,22 @@ Batch inference is provided by:
 `src/inference/predict_selected_model.py`
 
 The inference script returns raw and calibrated delinquency probabilities only. It does not make lending or approval decisions.
+
+## API inference
+
+A single-record FastAPI endpoint is available at:
+
+`src/api/app.py`
+
+Run it locally with:
+
+```powershell
+uvicorn src.api.app:app --reload
+```
+
+The service exposes:
+
+- `GET /health` — basic availability check;
+- `POST /predict` — accepts the 12 model features and returns raw and calibrated five-day delinquency probabilities.
+
+The endpoint does not make an approval or decline decision.
