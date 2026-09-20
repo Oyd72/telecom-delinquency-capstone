@@ -1123,3 +1123,47 @@ That is a more useful conclusion than declaring one model universally better.
 - `reports/figures/module4/model_8_vs_12_development.png`
 - `reports/figures/module4/model_8_vs_12_holdout.png`
 - `reports/figures/module4/model_8_vs_12_tradeoff.png`
+
+
+---
+
+## 18. Packaging the selected model
+
+**Scripts:** `src/models/package_selected_model.py`, `src/inference/predict_selected_model.py`
+
+**Status:** **Pending local execution**
+
+The modelling work is now stable enough to package the selected 12-feature Random Forest and its isotonic calibration layer as one reproducible artefact.
+
+The packaged object will contain the fitted median imputer, fitted Random Forest, fitted isotonic calibrator, ordered feature contract, training/calibration dates, model parameters, and version metadata. The binary artefact stays local under `models/`; GitHub keeps only the privacy-safe metadata needed to identify and verify it.
+
+```mermaid
+flowchart LR
+    A[12 required input features] --> B[Median imputer]
+    B --> C[Selected Random Forest]
+    C --> D[Raw delinquency probability]
+    D --> E[Isotonic calibrator]
+    E --> F[Calibrated 5-day delinquency probability]
+```
+
+The frozen chronology remains unchanged:
+
+- model training through 6 July 2016;
+- isotonic calibration on 7-13 July;
+- final holdout excluded from fitting.
+
+The inference contract is deliberately narrow. A batch input must contain the 12 required features, and the output contains the raw and calibrated delinquency probabilities plus model name and artefact version. No approval or decline decision is produced by the inference layer.
+
+The package will also write a SHA-256 hash into the metadata file. That gives us a simple integrity check linking the metadata to the exact local binary artefact.
+
+Unit tests have been added for the inference contract, including rejection of missing required columns and verification of the expected prediction output schema.
+
+**Expected local artefact:**
+- `models/selected_random_forest_isotonic.joblib`
+
+**Expected repository-safe metadata:**
+- `models/selected_model_metadata.json`
+
+**Supporting files:**
+- `models/README.md`
+- `tests/unit/test_inference_contract.py`
