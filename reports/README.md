@@ -38,3 +38,7 @@ For Module 4, the main interpretive record is:
 `docs/model-documentation/module4_experiment_record.md`
 
 This file links the experiments to the relevant tables and figures and should be treated as the first navigation point for modelling evidence.
+
+## Module 4 fairness assessment
+
+The formal Module 4 fairness artefact is `reports/module4_fairness_report.md`. It records why demographic fairness metrics cannot be validly calculated from the available data, separates fairness from operational robustness, and links to the supporting segment and sensitivity outputs.
