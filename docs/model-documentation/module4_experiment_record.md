@@ -1127,13 +1127,13 @@ That is a more useful conclusion than declaring one model universally better.
 
 ---
 
-## 18. Packaging the selected model
+## 18. Packaging and testing the selected model
 
 **Scripts:** `src/models/package_selected_model.py`, `src/inference/predict_selected_model.py`
 
-**Status:** **Completed locally; metadata pending GitHub commit**
+**Status:** **Completed**
 
-The selected 12-feature Random Forest and its isotonic calibration layer have now been recreated and packaged successfully.
+The selected 12-feature Random Forest and its isotonic calibration layer have now been recreated, packaged, and tested end to end.
 
 The packaging run used **101,241 training rows** and **20,878 calibration rows**. The final 14-23 July holdout was not used for fitting, which keeps the packaged artefact aligned with the modelling chronology documented earlier.
 
@@ -1141,7 +1141,7 @@ The local binary artefact is:
 
 `models/selected_random_forest_isotonic.joblib`
 
-The metadata file is:
+The repository-safe metadata file is:
 
 `models/selected_model_metadata.json`
 
@@ -1149,7 +1149,7 @@ The generated SHA-256 fingerprint is:
 
 `b70912867f0838f1e020a973ba5aa3f69e601a1dfce681dbe7d8b84e934dab9e`
 
-This fingerprint gives us a direct integrity link between the metadata and the exact binary model file. If the binary changes, the hash changes as well.
+This fingerprint gives a direct integrity link between the metadata and the exact binary model file. If the binary changes, the hash changes as well.
 
 ```mermaid
 flowchart LR
@@ -1161,7 +1161,7 @@ flowchart LR
     F --> G[Version + metadata + SHA-256]
 ```
 
-The inference-contract tests also pass after fixing the repository import path:
+The inference-contract tests pass:
 
 ```text
 collected 2 items
@@ -1173,9 +1173,19 @@ Those tests confirm two basic safeguards:
 - inference fails when a required feature is missing;
 - successful inference returns the expected raw probability, calibrated probability, model name, and artefact version fields.
 
+A real batch inference run was then performed against **10 rows from the actual model-ready dataset**. The packaged model scored all 10 rows successfully and returned a mean calibrated delinquency probability of **0.117993**.
+
+```text
+Inference completed.
+Rows scored: 10
+Mean calibrated delinquency probability: 0.117993
+```
+
+This is a functional test rather than a new model-performance evaluation. Its purpose is to show that the persisted artefact can be loaded and used on real project-shaped inputs through the defined inference contract.
+
 The inference layer does not make an approval or decline decision. It produces risk probabilities only.
 
-The binary `.joblib` artefact remains local and ignored by Git. The metadata JSON is intentionally repository-safe and should be committed so that the exact packaged model version can be identified later without exposing or versioning the binary itself.
+The temporary inference input and prediction output contain row-level data and therefore remain local; they are not repository evidence. The committed metadata, tests, and documented run result are sufficient to demonstrate the packaging and inference path.
 
 **Local artefact:**
 - `models/selected_random_forest_isotonic.joblib`
