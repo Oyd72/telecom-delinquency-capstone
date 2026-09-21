@@ -187,7 +187,7 @@ with tabs[1]:
                     labels={"abs_risk_change": "Change in predicted risk", "label": ""},
                     title="Local sensitivity compared with the model's training median",
                 )
-                st.plotly_chart(chart, use_container_width=True)
+                st.plotly_chart(chart, width="stretch")
                 for _, item in sensitivity.iterrows():
                     st.write(
                         f"- **{item['label']}** {item['direction']} when compared with "
@@ -213,7 +213,7 @@ with tabs[2]:
         labels={"mean_abs_shap": "Relative contribution", "label": ""},
         title="Strongest global model drivers",
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     st.caption(
         "SHAP shows how the fitted model uses features. It does not establish that a "
@@ -270,7 +270,7 @@ with tabs[3]:
         labels={"segment": "", "roc_auc": "ROC-AUC"},
         title="Model discrimination across account-tenure segments",
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     st.write(
         "The model remained discriminative in every account-tenure quartile, with ROC-AUC "
