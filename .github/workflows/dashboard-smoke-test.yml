@@ -1,0 +1,37 @@
+name: Dashboard smoke test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "dashboards/**"
+      - "models/selected_model_metadata.json"
+      - "models/selected_random_forest_isotonic.joblib"
+      - "reports/tables/module4_classification_metrics.csv"
+      - "reports/tables/module4_shap_summary.json"
+      - "reports/tables/module4_counterfactual_summary.json"
+      - "reports/tables/module4_fairness_robustness_summary.json"
+      - "reports/tables/module4_operational_robustness_segments.csv"
+      - "src/inference/predict_selected_model.py"
+      - ".github/workflows/dashboard-smoke-test.yml"
+  workflow_dispatch:
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dashboard dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r dashboards/requirements.txt
+
+      - name: Run dashboard smoke test
+        run: python dashboards/smoke_test.py
