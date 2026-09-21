@@ -31,6 +31,12 @@ The smoke test verifies:
 
 GitHub Actions repeats these checks and also starts Streamlit headlessly and checks its health endpoint.
 
+## Live deployment
+
+Public URL:
+
+https://telecom-delinquency-capstone-3zecwziyb4rhssv8uavlm2.streamlit.app/
+
 ## Streamlit Community Cloud settings
 
 Create a new app from the GitHub repository using:
