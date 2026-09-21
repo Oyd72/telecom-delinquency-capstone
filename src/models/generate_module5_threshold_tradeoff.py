@@ -10,10 +10,15 @@ Run locally from the repository root:
 from __future__ import annotations
 
 from pathlib import Path
+import sys
 
 import numpy as np
 import pandas as pd
 from sklearn.metrics import precision_score, recall_score, f1_score
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.models.generate_module4_classification_artifacts import (
     DATA_PATH,
@@ -25,7 +30,6 @@ from src.models.generate_module4_classification_artifacts import (
     fit_predict_calibrated,
 )
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_PATH = PROJECT_ROOT / "reports" / "tables" / "module5_threshold_tradeoff.csv"
 
 TRAIN_END = pd.Timestamp("2016-07-06")
