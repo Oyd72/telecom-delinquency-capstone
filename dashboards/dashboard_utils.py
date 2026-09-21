@@ -21,6 +21,7 @@ SHAP_SUMMARY_PATH = PROJECT_ROOT / "reports" / "tables" / "module4_shap_summary.
 COUNTERFACTUAL_SUMMARY_PATH = PROJECT_ROOT / "reports" / "tables" / "module4_counterfactual_summary.json"
 FAIRNESS_SUMMARY_PATH = PROJECT_ROOT / "reports" / "tables" / "module4_fairness_robustness_summary.json"
 ROBUSTNESS_SEGMENTS_PATH = PROJECT_ROOT / "reports" / "tables" / "module4_operational_robustness_segments.csv"
+THRESHOLD_TRADEOFF_PATH = PROJECT_ROOT / "reports" / "tables" / "module5_threshold_tradeoff.csv"
 
 FEATURE_LABELS = {
     "cnt_ma_rech90": "Recharge count — 90 days",
@@ -54,6 +55,7 @@ def load_evidence() -> dict:
         "counterfactual": read_json(COUNTERFACTUAL_SUMMARY_PATH),
         "fairness": read_json(FAIRNESS_SUMMARY_PATH),
         "robustness": pd.read_csv(ROBUSTNESS_SEGMENTS_PATH),
+        "threshold_tradeoff": pd.read_csv(THRESHOLD_TRADEOFF_PATH),
     }
 
 
