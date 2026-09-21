@@ -61,17 +61,31 @@ with tabs[0]:
         "risk prioritisation and repayment follow-up, not to approve or decline credit."
     )
 
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3, c4, c5 = st.columns(5)
     c1.metric("ROC-AUC", f"{float(metrics['roc_auc']):.3f}")
     overall_robustness = robustness.loc[robustness["group_type"] == "overall"].iloc[0]
     c2.metric("Top-20% capture", f"{float(overall_robustness['top20_capture']):.1%}")
     c3.metric("Recall at threshold", f"{float(metrics['recall']):.1%}")
-    c4.metric("Observed delinquency", f"{float(metrics['observed_positive_rate']):.1%}")
+    c4.metric("Precision at threshold", f"{float(metrics['precision']):.1%}")
+    c5.metric("Observed delinquency", f"{float(metrics['observed_positive_rate']):.1%}")
 
     st.info(
         "**Business interpretation:** if the team reviews the 20% of cases with the "
         "highest predicted risk, that group contains about 54% of delinquent cases "
         "in the final test period."
+    )
+
+    st.markdown("#### Precision and recall trade-off")
+    st.write(
+        f"At the current operating threshold, the model identifies about "
+        f"{float(metrics['recall']):.1%} of delinquent cases, while about "
+        f"{float(metrics['precision']):.1%} of flagged cases are actually delinquent. "
+        "This means the current threshold favours catching more delinquent cases at the "
+        "cost of more unnecessary follow-up flags."
+    )
+    st.caption(
+        "That trade-off supports using the model for prioritisation and review rather "
+        "than for automatic credit decisions."
     )
 
     st.markdown("#### Model boundary")
@@ -166,6 +180,12 @@ with tabs[1]:
                 "17.51% value was selected during development and frozen before the final "
                 "holdout was evaluated; it is not a point at which a customer suddenly "
                 "becomes objectively high risk."
+            )
+            st.caption(
+                "A lower threshold would generally flag more delinquent cases but also "
+                "create more false alarms; a higher threshold would usually improve "
+                "precision while missing more delinquent cases. The current threshold "
+                "therefore reflects a recall–precision trade-off."
             )
 
             sensitivity = local_median_sensitivity(frame, package).head(5)
