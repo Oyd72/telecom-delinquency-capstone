@@ -78,7 +78,7 @@ with tabs[0]:
 
     st.markdown("#### Precision and recall trade-off")
     st.write(
-        f"At the current operating threshold, the model identifies about "
+        f"At the current operating threshold of {threshold:.2%}, the model identifies about "
         f"{float(metrics['recall']):.1%} of delinquent cases, while about "
         f"{float(metrics['precision']):.1%} of flagged cases are actually delinquent. "
         "This means the current threshold favours catching more delinquent cases at the "
@@ -91,9 +91,10 @@ with tabs[0]:
 
     st.markdown("#### Explore the threshold trade-off")
     st.write(
-        "Move the cut-off to see how precision, recall and the share of flagged cases "
-        "would have changed on the final holdout. This is a stakeholder scenario view, "
-        "not a re-selection of the operating threshold."
+        f"The current operating threshold is {threshold:.2%}. Move the illustrative cut-off "
+        "to see how precision, recall and the share of flagged cases would have changed "
+        "on the final holdout. This is a stakeholder scenario view, not a re-selection "
+        "of the operating threshold."
     )
 
     scenario_threshold = st.slider(
