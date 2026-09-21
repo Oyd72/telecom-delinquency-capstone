@@ -36,6 +36,7 @@ shap_summary = evidence["shap"]
 counterfactual = evidence["counterfactual"]
 fairness = evidence["fairness"]
 robustness = evidence["robustness"]
+threshold_tradeoff = evidence["threshold_tradeoff"]
 
 threshold = float(counterfactual["classification_threshold"])
 
@@ -86,6 +87,62 @@ with tabs[0]:
     st.caption(
         "That trade-off supports using the model for prioritisation and review rather "
         "than for automatic credit decisions."
+    )
+
+    st.markdown("#### Explore the threshold trade-off")
+    st.write(
+        "Move the cut-off to see how precision, recall and the share of flagged cases "
+        "would have changed on the final holdout. This is a stakeholder scenario view, "
+        "not a re-selection of the operating threshold."
+    )
+
+    scenario_threshold = st.slider(
+        "Illustrative threshold",
+        min_value=float(threshold_tradeoff["threshold"].min()),
+        max_value=float(threshold_tradeoff["threshold"].max()),
+        value=0.18,
+        step=0.01,
+        format="%.2f",
+    )
+    scenario_row = threshold_tradeoff.iloc[
+        (threshold_tradeoff["threshold"] - scenario_threshold).abs().argsort()[:1]
+    ].iloc[0]
+
+    t1, t2, t3, t4 = st.columns(4)
+    t1.metric("Illustrative cut-off", f"{float(scenario_row['threshold']):.0%}")
+    t2.metric("Precision", f"{float(scenario_row['precision']):.1%}")
+    t3.metric("Recall", f"{float(scenario_row['recall']):.1%}")
+    t4.metric("Cases flagged", f"{float(scenario_row['flagged_rate']):.1%}")
+
+    tradeoff_long = threshold_tradeoff.melt(
+        id_vars="threshold",
+        value_vars=["precision", "recall"],
+        var_name="Metric",
+        value_name="Value",
+    )
+    tradeoff_long["Metric"] = tradeoff_long["Metric"].str.title()
+    tradeoff_fig = px.line(
+        tradeoff_long,
+        x="threshold",
+        y="Value",
+        color="Metric",
+        labels={"threshold": "Illustrative threshold", "Value": "Rate"},
+        title="Precision and recall across alternative thresholds",
+    )
+    tradeoff_fig.add_vline(
+        x=threshold,
+        line_dash="dash",
+        annotation_text="Frozen operating threshold 17.51%",
+        annotation_position="top left",
+    )
+    tradeoff_fig.update_yaxes(tickformat=".0%")
+    tradeoff_fig.update_xaxes(tickformat=".0%")
+    st.plotly_chart(tradeoff_fig, width="stretch")
+
+    st.caption(
+        "The 17.51% operating threshold remains frozen because it was selected on "
+        "development-only chronological predictions before the final holdout was opened. "
+        "The alternatives above are descriptive holdout scenarios only."
     )
 
     st.markdown("#### Model boundary")
