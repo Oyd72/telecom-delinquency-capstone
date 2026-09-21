@@ -371,6 +371,49 @@ with tabs[3]:
         "history. These are operational robustness results, not demographic fairness results."
     )
 
+    recharge = robustness.loc[
+        robustness["group_type"] == "recharge90_quartile"
+    ].copy()
+    recharge = recharge.sort_values("delinquency_rate", ascending=False)
+    recharge["segment"] = ["0–2 recharges", "2–5 recharges", "5–10 recharges", "10–132 recharges"]
+
+    recharge_fig = px.bar(
+        recharge,
+        x="segment",
+        y="roc_auc",
+        range_y=[0.60, 0.75],
+        labels={"segment": "", "roc_auc": "ROC-AUC"},
+        title="Model discrimination within 90-day recharge-frequency segments",
+    )
+    st.plotly_chart(recharge_fig, width="stretch")
+    st.write(
+        "Within narrower recharge-frequency bands, ROC-AUC falls to roughly 0.67–0.69. "
+        "This is expected because recharge behaviour is one of the model's main sources "
+        "of separation; stratifying on it removes much of that variation. This is a "
+        "robustness finding, not evidence of demographic unfairness."
+    )
+
+    st.markdown("#### Fairness feasibility and residual risk")
+    f1, f2, f3 = st.columns(3)
+    with f1:
+        st.markdown("**Protected-group metrics**")
+        st.write(
+            "Not supportable from the available dataset. No protected groups are inferred "
+            "or fabricated."
+        )
+    with f2:
+        st.markdown("**Proxy and representation risk**")
+        st.write(
+            "Behavioural variables may correlate with unobserved characteristics, and "
+            "returning customers are under-represented in the short historical window."
+        )
+    with f3:
+        st.markdown("**Operational-use risk**")
+        st.write(
+            "Thresholds and follow-up actions can still create unfair outcomes if staff "
+            "treat the score as determinative rather than as decision support."
+        )
+
     left, right = st.columns(2)
     with left:
         st.markdown("#### What this can tell us")
