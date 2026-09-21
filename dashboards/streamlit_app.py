@@ -169,7 +169,13 @@ with tabs[1]:
             )
 
             sensitivity = local_median_sensitivity(frame, package).head(5)
-            if not sensitivity.empty:
+            if sensitivity.empty:
+                st.caption(
+                    "No case-specific sensitivity is shown because no explicit input values "
+                    "were entered. The prediction above was produced from the model's fitted "
+                    "median imputation values."
+                )
+            else:
                 st.markdown("#### Which entered values matter most for this prediction?")
                 sensitivity["label"] = (
                     sensitivity["feature"].map(FEATURE_LABELS).fillna(sensitivity["feature"])
