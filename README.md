@@ -94,6 +94,12 @@ Keeping the pipeline dependencies separate avoids putting the full analytical en
 
 Row-level generated data are not committed. This includes synthetic scenario rows. `reports/README.md` explains which aggregate outputs are suitable for repository or assignment evidence and which should remain local. Figures used by the Module 4 experiment record live under `reports/figures/module4/`. The final Module 4 evidence also includes a formal fairness report, MLflow evidence, conventional classification artefacts, constrained counterfactual explanations, a packaged model metadata record, and a tested FastAPI `/predict` endpoint.
 
+## Live dashboard
+
+The Module 5 stakeholder dashboard is deployed on Streamlit Community Cloud:
+
+https://telecom-delinquency-capstone-3zecwziyb4rhssv8uavlm2.streamlit.app/
+
 ## Module 5 stakeholder dashboard
 
 The Module 5 dashboard is implemented in `dashboards/streamlit_app.py`. It reuses the frozen Module 4 evidence and inference contract rather than changing the submitted Module 4 artefacts or their paths.
