@@ -75,3 +75,42 @@ def case_feature_values(shap_summary: dict, case_name: str) -> dict[str, float]:
         contributor["feature"]: float(contributor["feature_value"])
         for contributor in case["top_contributors"]
     }
+
+
+def local_median_sensitivity(df: pd.DataFrame, package: dict) -> pd.DataFrame:
+    """Measure one-feature-at-a-time sensitivity against the fitted imputer median.
+
+    This is a contrastive diagnostic, not a causal explanation and not a SHAP value.
+    """
+    from src.inference.predict_selected_model import predict_frame
+
+    features = package["features"]
+    baseline = float(
+        predict_frame(df[features], package).iloc[0]["calibrated_delinquency_probability"]
+    )
+    medians = package["imputer"].statistics_
+    rows = []
+
+    for idx, feature in enumerate(features):
+        original = df.iloc[0][feature]
+        if pd.isna(original):
+            continue
+
+        changed = df[features].copy()
+        changed.loc[changed.index[0], feature] = float(medians[idx])
+        changed_score = float(
+            predict_frame(changed, package).iloc[0]["calibrated_delinquency_probability"]
+        )
+        rows.append(
+            {
+                "feature": feature,
+                "original_value": float(original),
+                "reference_value": float(medians[idx]),
+                "baseline_risk": baseline,
+                "reference_risk": changed_score,
+                "risk_change": baseline - changed_score,
+                "abs_risk_change": abs(baseline - changed_score),
+            }
+        )
+
+    return pd.DataFrame(rows).sort_values("abs_risk_change", ascending=False)
