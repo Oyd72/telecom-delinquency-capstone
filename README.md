@@ -42,7 +42,7 @@ Raw validation is diagnostic: it is meant to show the defects present in the unt
 
 - `notebooks/` – exploratory notebooks if needed; reusable logic belongs in `src/`
 - `models/` – local persisted model binary plus committed privacy-safe metadata and artefact documentation
-- `dashboards/` – Power BI deliverables
+- `dashboards/` – Module 5 Streamlit stakeholder dashboard and deployment dependencies
 - `config/` – shared configuration if project parameters are externalised
 - `.github/workflows/` – CI automation if introduced later
 
@@ -93,6 +93,26 @@ Keeping the pipeline dependencies separate avoids putting the full analytical en
 ## Report evidence
 
 Row-level generated data are not committed. This includes synthetic scenario rows. `reports/README.md` explains which aggregate outputs are suitable for repository or assignment evidence and which should remain local. Figures used by the Module 4 experiment record live under `reports/figures/module4/`. The final Module 4 evidence also includes a formal fairness report, MLflow evidence, conventional classification artefacts, constrained counterfactual explanations, a packaged model metadata record, and a tested FastAPI `/predict` endpoint.
+
+## Module 5 stakeholder dashboard
+
+The Module 5 dashboard is implemented in `dashboards/streamlit_app.py`. It reuses the frozen Module 4 evidence and inference contract rather than changing the submitted Module 4 artefacts or their paths.
+
+Dashboard sections:
+
+- Overview – business purpose, final-holdout performance and responsible-use boundary
+- Prediction explorer – calibrated five-day delinquency probability and the frozen 17.51% operating threshold
+- Explainability & what-if – simplified SHAP drivers and constrained counterfactual examples
+- Fairness & limits – demographic fairness feasibility, operational robustness and model limitations
+
+For local use:
+
+```powershell
+pip install -r dashboards/requirements.txt
+streamlit run dashboards/streamlit_app.py
+```
+
+Live scoring requires the frozen Module 4 artefact at `models/selected_random_forest_isotonic.joblib`. The dashboard does not retrain or recalibrate the model.
 
 ## Delivery approach
 
