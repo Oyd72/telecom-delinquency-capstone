@@ -113,4 +113,17 @@ def local_median_sensitivity(df: pd.DataFrame, package: dict) -> pd.DataFrame:
             }
         )
 
-    return pd.DataFrame(rows).sort_values("abs_risk_change", ascending=False)
+    columns = [
+        "feature",
+        "original_value",
+        "reference_value",
+        "baseline_risk",
+        "reference_risk",
+        "risk_change",
+        "abs_risk_change",
+    ]
+    if not rows:
+        return pd.DataFrame(columns=columns)
+    return pd.DataFrame(rows, columns=columns).sort_values(
+        "abs_risk_change", ascending=False
+    )
