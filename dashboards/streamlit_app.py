@@ -19,6 +19,7 @@ from dashboards.dashboard_utils import (  # noqa: E402
     case_feature_values,
     load_evidence,
     load_model_package,
+    local_median_sensitivity,
 )
 from src.inference.predict_selected_model import predict_frame  # noqa: E402
 
@@ -62,7 +63,8 @@ with tabs[0]:
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("ROC-AUC", f"{float(metrics['roc_auc']):.3f}")
-    c2.metric("Top-20% capture", "54.0%")
+    overall_robustness = robustness.loc[robustness["group_type"] == "overall"].iloc[0]
+    c2.metric("Top-20% capture", f"{float(overall_robustness['top20_capture']):.1%}")
     c3.metric("Recall at threshold", f"{float(metrics['recall']):.1%}")
     c4.metric("Observed delinquency", f"{float(metrics['observed_positive_rate']):.1%}")
 
@@ -165,6 +167,36 @@ with tabs[1]:
                 "holdout was evaluated; it is not a point at which a customer suddenly "
                 "becomes objectively high risk."
             )
+
+            sensitivity = local_median_sensitivity(frame, package).head(5)
+            if not sensitivity.empty:
+                st.markdown("#### Which entered values matter most for this prediction?")
+                sensitivity["label"] = (
+                    sensitivity["feature"].map(FEATURE_LABELS).fillna(sensitivity["feature"])
+                )
+                sensitivity["direction"] = np.where(
+                    sensitivity["risk_change"] >= 0,
+                    "pushes this prediction higher",
+                    "pushes this prediction lower",
+                )
+                chart = px.bar(
+                    sensitivity.sort_values("abs_risk_change"),
+                    x="abs_risk_change",
+                    y="label",
+                    orientation="h",
+                    labels={"abs_risk_change": "Change in predicted risk", "label": ""},
+                    title="Local sensitivity compared with the model's training median",
+                )
+                st.plotly_chart(chart, use_container_width=True)
+                for _, item in sensitivity.iterrows():
+                    st.write(
+                        f"- **{item['label']}** {item['direction']} when compared with "
+                        f"the model's median reference value."
+                    )
+                st.caption(
+                    "This is a one-feature-at-a-time sensitivity check. It is not a causal "
+                    "explanation and should not be interpreted as advice to change customer behaviour."
+                )
         except FileNotFoundError as exc:
             st.error(str(exc))
 
