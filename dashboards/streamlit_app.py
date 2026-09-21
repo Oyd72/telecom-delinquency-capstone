@@ -36,7 +36,11 @@ shap_summary = evidence["shap"]
 counterfactual = evidence["counterfactual"]
 fairness = evidence["fairness"]
 robustness = evidence["robustness"]
-threshold_tradeoff = evidence["threshold_tradeoff"]
+threshold_tradeoff = evidence.get("threshold_tradeoff")
+if threshold_tradeoff is None:
+    threshold_tradeoff = pd.read_csv(
+        PROJECT_ROOT / "reports" / "tables" / "module5_threshold_tradeoff.csv"
+    )
 
 threshold = float(counterfactual["classification_threshold"])
 
