@@ -55,6 +55,11 @@ def main() -> None:
     if robustness.empty:
         raise RuntimeError("Operational robustness evidence is empty.")
 
+    threshold_tradeoff = evidence["threshold_tradeoff"]
+    required_tradeoff_columns = {"threshold", "precision", "recall", "f1", "flagged_rate"}
+    if threshold_tradeoff.empty or not required_tradeoff_columns.issubset(threshold_tradeoff.columns):
+        raise RuntimeError("Module 5 threshold trade-off evidence is missing or incomplete.")
+
     from dashboards.dashboard_utils import local_median_sensitivity
 
     sensitivity = local_median_sensitivity(row, package)
@@ -68,6 +73,7 @@ def main() -> None:
     print(f"Required features: {len(features)}")
     print(f"Test calibrated probability: {probability:.6f}")
     print("Module 4 evidence files loaded successfully.")
+    print(f"Threshold trade-off rows: {len(threshold_tradeoff)}")
 
 
 if __name__ == "__main__":
