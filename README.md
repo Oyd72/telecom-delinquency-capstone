@@ -112,6 +112,12 @@ pip install -r dashboards/requirements.txt
 streamlit run dashboards/streamlit_app.py
 ```
 
+Before deployment, the dashboard-specific smoke test verifies that the frozen model loads, its SHA-256 matches the committed Module 4 metadata, a calibrated prediction can be produced, and the committed evidence files can be read:
+
+```powershell
+python dashboards/smoke_test.py
+```
+
 Live scoring requires the frozen Module 4 artefact at `models/selected_random_forest_isotonic.joblib`. The dashboard does not retrain or recalibrate the model.
 
 ## Delivery approach
