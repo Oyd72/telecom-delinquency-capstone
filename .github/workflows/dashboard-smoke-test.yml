@@ -33,5 +33,24 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r dashboards/requirements.txt
 
+      - name: Compile dashboard Python files
+        run: python -m py_compile dashboards/streamlit_app.py dashboards/dashboard_utils.py dashboards/smoke_test.py
+
       - name: Run dashboard smoke test
         run: python dashboards/smoke_test.py
+
+      - name: Start Streamlit and check health
+        run: |
+          streamlit run dashboards/streamlit_app.py --server.headless true --server.port 8501 > /tmp/streamlit.log 2>&1 &
+          APP_PID=$!
+          for i in {1..30}; do
+            if curl --fail --silent http://localhost:8501/_stcore/health; then
+              kill $APP_PID
+              wait $APP_PID || true
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/streamlit.log
+          kill $APP_PID || true
+          exit 1
