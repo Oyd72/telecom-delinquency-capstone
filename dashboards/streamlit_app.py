@@ -146,6 +146,15 @@ with tabs[0]:
         "The alternatives above are descriptive holdout scenarios only."
     )
 
+    st.info(
+        "**Where the precision and recall lines cross:** this is the point where the two "
+        "rates are approximately equal. In practical terms, the model is balancing the "
+        "share of flagged cases that are truly delinquent against the share of all "
+        "delinquent cases that it successfully catches. Around this point, false positives "
+        "and false negatives are also roughly similar in number. This is a balance point, "
+        "not automatically the best operating threshold."
+    )
+
     st.markdown("#### Model boundary")
     st.write(
         "The target is five-day delinquency, not permanent default. The dashboard "
