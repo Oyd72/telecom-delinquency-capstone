@@ -55,7 +55,14 @@ def main() -> None:
     if robustness.empty:
         raise RuntimeError("Operational robustness evidence is empty.")
 
+    from dashboards.dashboard_utils import local_median_sensitivity
+
+    sensitivity = local_median_sensitivity(row, package)
+    if not sensitivity.empty:
+        raise RuntimeError("Blank-input sensitivity helper should return an empty frame.")
+
     print("Dashboard smoke test passed.")
+    print("Blank-input sensitivity helper: passed")
     print(f"Model artefact: {model_path}")
     print(f"SHA-256 verified: {actual_hash}")
     print(f"Required features: {len(features)}")
