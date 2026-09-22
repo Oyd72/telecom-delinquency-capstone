@@ -30,6 +30,44 @@ st.set_page_config(
     layout="wide",
 )
 
+st.markdown(
+    """
+    <style>
+    /* Make the main dashboard navigation read as selectable controls, not inline text. */
+    div[data-baseweb="tab-list"] {
+        gap: 0.55rem;
+        border-bottom: none;
+        margin-bottom: 0.7rem;
+    }
+
+    button[data-baseweb="tab"] {
+        background: rgba(255, 255, 255, 0.045);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 0.55rem 0.55rem 0 0;
+        padding: 0.55rem 0.95rem;
+        font-weight: 600;
+        transition: background 120ms ease, border-color 120ms ease;
+    }
+
+    button[data-baseweb="tab"]:hover {
+        background: rgba(255, 255, 255, 0.09);
+        border-color: rgba(255, 255, 255, 0.32);
+    }
+
+    button[data-baseweb="tab"][aria-selected="true"] {
+        background: rgba(255, 75, 75, 0.12);
+        border-color: #ff4b4b;
+        color: #ff6b6b;
+    }
+
+    button[data-baseweb="tab"] > div[data-testid="stMarkdownContainer"] p {
+        font-weight: 600;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 evidence = load_evidence()
 metadata = evidence["metadata"]
 metrics = evidence["classification"]
