@@ -23,6 +23,24 @@ FAIRNESS_SUMMARY_PATH = PROJECT_ROOT / "reports" / "tables" / "module4_fairness_
 ROBUSTNESS_SEGMENTS_PATH = PROJECT_ROOT / "reports" / "tables" / "module4_operational_robustness_segments.csv"
 THRESHOLD_TRADEOFF_PATH = PROJECT_ROOT / "reports" / "tables" / "module5_threshold_tradeoff.csv"
 
+FEATURE_HELP = {
+    "cnt_ma_rech90": "Number of main-account recharges in the last 90 days.",
+    "daily_decr30": "Daily amount spent from the main account, averaged over the last 30 days.",
+    "last_rech_date_ma": (
+        "Number of days associated with the last main-account recharge. "
+        "The source wording is not precise enough to confirm the exact operational calculation."
+    ),
+    "sumamnt_ma_rech90": "Total main-account recharge amount over the last 90 days.",
+    "aon": "Age on the cellular network in days — effectively the customer's network tenure.",
+    "last_rech_amt_ma": "Amount of the most recent main-account recharge.",
+    "daily_decr90": "Daily amount spent from the main account, averaged over the last 90 days.",
+    "sumamnt_ma_rech30": "Total main-account recharge amount over the last 30 days.",
+    "medianamnt_ma_rech30": "Median main-account recharge amount over the last 30 days.",
+    "medianmarechprebal90": "Median main-account balance immediately before recharge over the last 90 days.",
+    "rental30": "Average main-account balance over the last 30 days.",
+    "cnt_ma_rech30": "Number of main-account recharges in the last 30 days.",
+}
+
 FEATURE_LABELS = {
     "cnt_ma_rech90": "Recharge count — 90 days",
     "daily_decr30": "Daily decrement measure — 30 days",
