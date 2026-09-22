@@ -141,13 +141,10 @@ with tabs[0]:
     st.plotly_chart(tradeoff_fig, width="stretch")
 
     st.info(
-        "**How to read this chart**  
-"
+        "**How to read this chart**  \n"
         f"**Frozen threshold:** {threshold:.2%}. It was selected using development-only "
         "chronological predictions before the final holdout was opened; the alternatives "
-        "shown here are descriptive scenarios only.  
-
-"
+        "shown here are descriptive scenarios only.  \n\n"
         "**Where precision and recall cross:** the two rates are approximately equal, so "
         "false positives and false negatives are also roughly similar in number. This is "
         "a balance point, not automatically the best operating threshold."
