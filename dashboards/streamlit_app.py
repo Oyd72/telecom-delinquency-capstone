@@ -74,10 +74,9 @@ with tabs[0]:
     c4.metric("Precision at threshold", f"{float(metrics['precision']):.1%}")
     c5.metric("Observed delinquency", f"{float(metrics['observed_positive_rate']):.1%}")
 
-    st.info(
-        "**Business interpretation:** if the team reviews the 20% of cases with the "
-        "highest predicted risk, that group contains about 54% of delinquent cases "
-        "in the final test period."
+    st.caption(
+        "**Business interpretation:** reviewing the 20% of cases with the highest "
+        "predicted risk captures about 54% of delinquent cases in the final test period."
     )
 
     st.markdown("#### Precision and recall trade-off")
@@ -86,11 +85,8 @@ with tabs[0]:
         f"{float(metrics['recall']):.1%} of delinquent cases, while about "
         f"{float(metrics['precision']):.1%} of flagged cases are actually delinquent. "
         "This means the current threshold favours catching more delinquent cases at the "
-        "cost of more unnecessary follow-up flags."
-    )
-    st.caption(
-        "That trade-off supports using the model for prioritisation and review rather "
-        "than for automatic credit decisions."
+        "cost of more unnecessary follow-up flags, which supports prioritisation and "
+        "review rather than automatic credit decisions."
     )
 
     st.markdown("#### Explore the threshold trade-off")
@@ -144,25 +140,17 @@ with tabs[0]:
     tradeoff_fig.update_xaxes(tickformat=".0%")
     st.plotly_chart(tradeoff_fig, width="stretch")
 
-    st.caption(
-        "The 17.51% operating threshold remains frozen because it was selected on "
-        "development-only chronological predictions before the final holdout was opened. "
-        "The alternatives above are descriptive holdout scenarios only."
-    )
-
     st.info(
-        "**Where the precision and recall lines cross:** this is the point where the two "
-        "rates are approximately equal. In practical terms, the model is balancing the "
-        "share of flagged cases that are truly delinquent against the share of all "
-        "delinquent cases that it successfully catches. Around this point, false positives "
-        "and false negatives are also roughly similar in number. This is a balance point, "
-        "not automatically the best operating threshold."
-    )
+        "**How to read this chart**  
+"
+        f"**Frozen threshold:** {threshold:.2%}. It was selected using development-only "
+        "chronological predictions before the final holdout was opened; the alternatives "
+        "shown here are descriptive scenarios only.  
 
-    st.markdown("#### Model boundary")
-    st.write(
-        "The target is five-day delinquency, not permanent default. The dashboard "
-        "does not convert model output into an approval or decline decision."
+"
+        "**Where precision and recall cross:** the two rates are approximately equal, so "
+        "false positives and false negatives are also roughly similar in number. This is "
+        "a balance point, not automatically the best operating threshold."
     )
 
     with st.expander("Model identity and traceability"):
