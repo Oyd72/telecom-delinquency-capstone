@@ -106,8 +106,8 @@ if threshold_tradeoff is None:
 
 threshold = float(counterfactual["classification_threshold"])
 
-st.title("Five-day telecom delinquency")
-st.caption("Stakeholder dashboard · Nexford Data Analytics Capstone")
+st.title("Five-Day Telecom Delinquency")
+st.caption("Stakeholder Dashboard")
 
 st.warning(
     "**Model status:** validated for academic demonstration, not production-ready. "
