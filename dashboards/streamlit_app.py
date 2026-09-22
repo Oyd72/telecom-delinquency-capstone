@@ -277,27 +277,42 @@ with tabs[1]:
         "training-time median imputer contained in the model package."
     )
 
-    def reset_prediction_inputs() -> None:
-        """Clear persisted widget values when the selected example changes."""
-        for feature_name in metadata["features"]:
-            st.session_state.pop(f"feature_{feature_name}", None)
-
-    case_option = st.selectbox(
-        "Optional starting point",
-        ["Blank form", "Low-risk example", "Typical-risk example", "High-risk example"],
-        key="prediction_starting_point",
-        on_change=reset_prediction_inputs,
-        help=(
-            "The example values come from the Module 4 SHAP analysis. Only the listed "
-            "top contributing fields are prefilled; other fields remain blank."
-        ),
-    )
-
     case_map = {
         "Low-risk example": "low_risk",
         "Typical-risk example": "typical_risk",
         "High-risk example": "high_risk",
     }
+
+    def load_selected_example() -> None:
+        """Populate all 12 model inputs for the selected representative case."""
+        selected_option = st.session_state.get("prediction_starting_point", "Blank form")
+        selected_values = (
+            case_feature_values(shap_summary, case_map[selected_option])
+            if selected_option in case_map
+            else {}
+        )
+        for feature_name in metadata["features"]:
+            value = selected_values.get(feature_name)
+            st.session_state[f"feature_{feature_name}"] = (
+                "" if value is None else str(value)
+            )
+
+    case_option = st.selectbox(
+        "Optional starting point",
+        ["Blank form", "Low-risk example", "Typical-risk example", "High-risk example"],
+        key="prediction_starting_point",
+        on_change=load_selected_example,
+        help=(
+            "The example values come from the Module 4 SHAP analysis. Selecting an example "
+            "loads the full 12-field feature vector for that representative holdout case."
+        ),
+    )
+
+    # One-time migration for sessions created before full preset loading was introduced.
+    if st.session_state.get("_prediction_preset_version") != 2:
+        load_selected_example()
+        st.session_state["_prediction_preset_version"] = 2
+
     defaults = (
         case_feature_values(shap_summary, case_map[case_option])
         if case_option in case_map
