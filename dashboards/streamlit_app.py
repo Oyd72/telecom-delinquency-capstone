@@ -385,43 +385,45 @@ with tabs[3]:
         "robustness finding, not evidence of demographic unfairness."
     )
 
-    st.markdown("#### Fairness feasibility and residual risk")
-    f1, f2, f3 = st.columns(3)
-    with f1:
-        st.markdown("**Protected-group metrics**")
-        st.write(
-            "Not supportable from the available dataset. No protected groups are inferred "
-            "or fabricated."
-        )
-    with f2:
-        st.markdown("**Proxy and representation risk**")
-        st.write(
-            "Behavioural variables may correlate with unobserved characteristics, and "
-            "returning customers are under-represented in the short historical window."
-        )
-    with f3:
-        st.markdown("**Operational-use risk**")
-        st.write(
-            "Thresholds and follow-up actions can still create unfair outcomes if staff "
-            "treat the score as determinative rather than as decision support."
-        )
+    with st.container(border=True):
+        st.markdown("#### Fairness feasibility and residual risk")
+        f1, f2, f3 = st.columns(3)
+        with f1:
+            st.markdown("**Protected-group metrics**")
+            st.write(
+                "Not supportable from the available dataset. No protected groups are inferred "
+                "or fabricated."
+            )
+        with f2:
+            st.markdown("**Proxy and representation risk**")
+            st.write(
+                "Behavioural variables may correlate with unobserved characteristics, and "
+                "returning customers are under-represented in the short historical window."
+            )
+        with f3:
+            st.markdown("**Operational-use risk**")
+            st.write(
+                "Thresholds and follow-up actions can still create unfair outcomes if staff "
+                "treat the score as determinative rather than as decision support."
+            )
 
-    left, right = st.columns(2)
-    with left:
-        st.markdown("#### What this can tell us")
-        st.write(
-            "Whether performance is concentrated in observable operational segments and "
-            "whether modest input changes produce unstable scores."
-        )
-    with right:
-        st.markdown("#### What this cannot tell us")
-        st.write(
-            "Whether outcomes are equitable across sex, age, ethnicity or other protected "
-            "demographic groups."
-        )
+    with st.container(border=True):
+        st.markdown("#### What this analysis can and cannot tell us")
+        left, right = st.columns(2)
+        with left:
+            st.markdown("**Can tell us**")
+            st.write(
+                "Whether performance is concentrated in observable operational segments and "
+                "whether modest input changes produce unstable scores."
+            )
+        with right:
+            st.markdown("**Cannot tell us**")
+            st.write(
+                "Whether outcomes are equitable across sex, age, ethnicity or other protected "
+                "demographic groups."
+            )
 
-    st.markdown("#### Key limitations")
-    for limitation in metadata["known_limitations"]:
-        st.write(f"- {limitation}")
-
-    st.caption(fairness["interpretation_caution"])
+    with st.expander("Key limitations"):
+        for limitation in metadata["known_limitations"]:
+            st.write(f"- {limitation}")
+        st.caption(fairness["interpretation_caution"])
