@@ -179,12 +179,6 @@ with tabs[0]:
         "**Business interpretation:** reviewing the 20% of cases with the highest "
         "predicted risk captures about 54% of delinquent cases in the final test period."
     )
-    st.caption(
-        f"**ROC-AUC in plain language:** if we randomly pick one delinquent case and one "
-        f"non-delinquent case, the model will assign the delinquent case the higher risk "
-        f"score about {float(metrics['roc_auc']):.0%} of the time. ROC-AUC measures ranking "
-        "ability; it is not the percentage of predictions that are correct."
-    )
 
     st.markdown("#### Precision and recall trade-off")
     st.write(
