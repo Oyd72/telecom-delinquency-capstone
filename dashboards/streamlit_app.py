@@ -157,7 +157,15 @@ with tabs[0]:
             "delinquent. Higher precision means fewer unnecessary follow-up flags."
         ),
     )
-    c5.metric("Observed delinquency", f"{float(metrics['observed_positive_rate']):.1%}")
+    c5.metric(
+        "Observed delinquency",
+        f"{float(metrics['observed_positive_rate']):.1%}",
+        help=(
+            "Observed delinquency tells us what share of cases in the final test period "
+            "were actually delinquent. It describes the underlying delinquency rate in "
+            "the data and helps put model results into context; it is not a measure of model accuracy."
+        ),
+    )
 
     st.caption(
         "**Business interpretation:** reviewing the 20% of cases with the highest "
