@@ -55,6 +55,27 @@ def main() -> None:
             f"{api_response.status_code} {api_response.text}"
         )
     probability = float(api_response.json()["calibrated_delinquency_probability"])
+
+    from dashboards.dashboard_utils import case_feature_values
+    high_risk_values = case_feature_values(evidence["shap"], "high_risk")
+    high_risk_payload = {
+        feature: float(high_risk_values[feature]) for feature in features
+    }
+    high_risk_response = client.post("/predict", json=high_risk_payload)
+    if high_risk_response.status_code != 200:
+        raise RuntimeError(
+            f"Representative high-risk API preset failed: "
+            f"{high_risk_response.status_code} {high_risk_response.text}"
+        )
+    high_risk_probability = float(
+        high_risk_response.json()["calibrated_delinquency_probability"]
+    )
+    expected_high_risk = 0.47058823529411764
+    if abs(high_risk_probability - expected_high_risk) > 1e-9:
+        raise RuntimeError(
+            "Representative high-risk preset does not reproduce the committed Module 4 "
+            f"risk: expected {expected_high_risk:.12f}, got {high_risk_probability:.12f}"
+        )
     if not 0.0 <= probability <= 1.0:
         raise RuntimeError(f"Prediction is outside [0, 1]: {probability}")
 
@@ -75,6 +96,7 @@ def main() -> None:
 
     print("Dashboard smoke test passed.")
     print("Module 4 prediction API: passed")
+    print(f"Representative high-risk API preset: {high_risk_probability:.6f}")
     print("Blank-input sensitivity helper: passed")
     print(f"Model artefact: {model_path}")
     print(f"SHA-256 verified: {actual_hash}")
