@@ -18,7 +18,8 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from dashboards.dashboard_utils import load_evidence, load_model_package  # noqa: E402
-from src.inference.predict_selected_model import predict_frame  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+from src.api.app import app as prediction_api  # noqa: E402
 
 
 def sha256(path: Path) -> str:
@@ -45,9 +46,15 @@ def main() -> None:
 
     features = metadata["features"]
     row = pd.DataFrame([{feature: np.nan for feature in features}], columns=features)
-    result = predict_frame(row, package)
 
-    probability = float(result.iloc[0]["calibrated_delinquency_probability"])
+    client = TestClient(prediction_api)
+    api_response = client.post("/predict", json={feature: None for feature in features})
+    if api_response.status_code != 200:
+        raise RuntimeError(
+            f"Module 4 prediction API smoke test failed: "
+            f"{api_response.status_code} {api_response.text}"
+        )
+    probability = float(api_response.json()["calibrated_delinquency_probability"])
     if not 0.0 <= probability <= 1.0:
         raise RuntimeError(f"Prediction is outside [0, 1]: {probability}")
 
@@ -67,6 +74,7 @@ def main() -> None:
         raise RuntimeError("Blank-input sensitivity helper should return an empty frame.")
 
     print("Dashboard smoke test passed.")
+    print("Module 4 prediction API: passed")
     print("Blank-input sensitivity helper: passed")
     print(f"Model artefact: {model_path}")
     print(f"SHA-256 verified: {actual_hash}")
