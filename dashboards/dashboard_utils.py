@@ -18,6 +18,7 @@ MODEL_PATH = PROJECT_ROOT / "models" / "selected_random_forest_isotonic.joblib"
 MODEL_METADATA_PATH = PROJECT_ROOT / "models" / "selected_model_metadata.json"
 CLASSIFICATION_METRICS_PATH = PROJECT_ROOT / "reports" / "tables" / "module4_classification_metrics.csv"
 SHAP_SUMMARY_PATH = PROJECT_ROOT / "reports" / "tables" / "module4_shap_summary.json"
+SHAP_LOCAL_CASES_PATH = PROJECT_ROOT / "reports" / "tables" / "module4_shap_local_cases.csv"
 COUNTERFACTUAL_SUMMARY_PATH = PROJECT_ROOT / "reports" / "tables" / "module4_counterfactual_summary.json"
 FAIRNESS_SUMMARY_PATH = PROJECT_ROOT / "reports" / "tables" / "module4_fairness_robustness_summary.json"
 ROBUSTNESS_SEGMENTS_PATH = PROJECT_ROOT / "reports" / "tables" / "module4_operational_robustness_segments.csv"
@@ -88,12 +89,14 @@ def load_model_package() -> dict:
 
 
 def case_feature_values(shap_summary: dict, case_name: str) -> dict[str, float]:
-    case = next(
-        item for item in shap_summary["representative_cases"] if item["case"] == case_name
-    )
+    """Return the full committed feature vector for a representative SHAP case."""
+    cases = pd.read_csv(SHAP_LOCAL_CASES_PATH)
+    selected = cases.loc[cases["case"] == case_name, ["feature", "feature_value"]]
+    if selected.empty:
+        raise KeyError(f"Representative case not found: {case_name}")
     return {
-        contributor["feature"]: float(contributor["feature_value"])
-        for contributor in case["top_contributors"]
+        str(row["feature"]): float(row["feature_value"])
+        for _, row in selected.iterrows()
     }
 
 
