@@ -67,7 +67,15 @@ with tabs[0]:
     )
 
     c1, c2, c3, c4, c5 = st.columns(5)
-    c1.metric("ROC-AUC", f"{float(metrics['roc_auc']):.3f}")
+    c1.metric(
+        "ROC-AUC",
+        f"{float(metrics['roc_auc']):.3f}",
+        help=(
+            "ROC-AUC measures how well the model ranks delinquent cases above "
+            "non-delinquent cases across all possible thresholds. A value of 0.5 "
+            "is no better than random ranking; 1.0 is perfect discrimination."
+        ),
+    )
     overall_robustness = robustness.loc[robustness["group_type"] == "overall"].iloc[0]
     c2.metric("Top-20% capture", f"{float(overall_robustness['top20_capture']):.1%}")
     c3.metric("Recall at threshold", f"{float(metrics['recall']):.1%}")
@@ -77,6 +85,12 @@ with tabs[0]:
     st.caption(
         "**Business interpretation:** reviewing the 20% of cases with the highest "
         "predicted risk captures about 54% of delinquent cases in the final test period."
+    )
+    st.caption(
+        f"**ROC-AUC in plain language:** if we randomly pick one delinquent case and one "
+        f"non-delinquent case, the model will assign the delinquent case the higher risk "
+        f"score about {float(metrics['roc_auc']):.0%} of the time. ROC-AUC measures ranking "
+        "ability; it is not the percentage of predictions that are correct."
     )
 
     st.markdown("#### Precision and recall trade-off")
@@ -349,7 +363,7 @@ with tabs[3]:
         x="segment",
         y="roc_auc",
         range_y=[0.75, 0.88],
-        labels={"segment": "", "roc_auc": "ROC-AUC"},
+        labels={"segment": "", "roc_auc": "ROC-AUC — ability to rank higher-risk cases"},
         title="Model discrimination across account-tenure segments",
     )
     st.plotly_chart(fig, width="stretch")
@@ -358,6 +372,11 @@ with tabs[3]:
         "The model remained discriminative in every account-tenure quartile, with ROC-AUC "
         "ranging from about 0.81 to 0.85. Performance improved with longer observed account "
         "history. These are operational robustness results, not demographic fairness results."
+    )
+    st.caption(
+        "Higher ROC-AUC means the model is better at ranking higher-risk cases above "
+        "lower-risk cases within that segment. It does not mean that the same percentage "
+        "of individual predictions is correct."
     )
 
     recharge = robustness.loc[
@@ -371,7 +390,7 @@ with tabs[3]:
         x="segment",
         y="roc_auc",
         range_y=[0.60, 0.75],
-        labels={"segment": "", "roc_auc": "ROC-AUC"},
+        labels={"segment": "", "roc_auc": "ROC-AUC — ability to rank higher-risk cases"},
         title="Model discrimination within 90-day recharge-frequency segments",
     )
     st.plotly_chart(recharge_fig, width="stretch")
