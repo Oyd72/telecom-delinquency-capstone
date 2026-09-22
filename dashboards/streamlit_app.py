@@ -34,34 +34,40 @@ st.markdown(
     """
     <style>
     /* Make the main dashboard navigation read as selectable controls, not inline text. */
-    div[data-baseweb="tab-list"] {
-        gap: 0.55rem;
-        border-bottom: none;
-        margin-bottom: 0.7rem;
+    div[data-testid="stTabs"] [role="tablist"] {
+        gap: 0.6rem !important;
+        border-bottom: none !important;
+        margin-bottom: 0.8rem !important;
     }
 
-    button[data-baseweb="tab"] {
-        background: rgba(255, 255, 255, 0.045);
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        border-radius: 0.55rem 0.55rem 0 0;
-        padding: 0.55rem 0.95rem;
-        font-weight: 600;
-        transition: background 120ms ease, border-color 120ms ease;
+    div[data-testid="stTabs"] button[role="tab"] {
+        background: rgba(255, 255, 255, 0.06) !important;
+        border: 1px solid rgba(255, 255, 255, 0.24) !important;
+        border-radius: 0.65rem !important;
+        padding: 0.6rem 1rem !important;
+        min-height: 2.6rem !important;
+        font-weight: 650 !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.18);
     }
 
-    button[data-baseweb="tab"]:hover {
-        background: rgba(255, 255, 255, 0.09);
-        border-color: rgba(255, 255, 255, 0.32);
+    div[data-testid="stTabs"] button[role="tab"]:hover {
+        background: rgba(255, 255, 255, 0.11) !important;
+        border-color: rgba(255, 255, 255, 0.40) !important;
     }
 
-    button[data-baseweb="tab"][aria-selected="true"] {
-        background: rgba(255, 75, 75, 0.12);
-        border-color: #ff4b4b;
-        color: #ff6b6b;
+    div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+        background: rgba(255, 75, 75, 0.16) !important;
+        border-color: #ff4b4b !important;
+        color: #ff6b6b !important;
+        box-shadow: 0 0 0 1px rgba(255, 75, 75, 0.18);
     }
 
-    button[data-baseweb="tab"] > div[data-testid="stMarkdownContainer"] p {
-        font-weight: 600;
+    div[data-testid="stTabs"] button[role="tab"] p {
+        font-weight: 650 !important;
+    }
+
+    div[data-testid="stTabs"] div[data-baseweb="tab-highlight"] {
+        display: none !important;
     }
     </style>
     """,
