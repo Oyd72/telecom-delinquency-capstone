@@ -277,9 +277,16 @@ with tabs[1]:
         "training-time median imputer contained in the model package."
     )
 
+    def reset_prediction_inputs() -> None:
+        """Clear persisted widget values when the selected example changes."""
+        for feature_name in metadata["features"]:
+            st.session_state.pop(f"feature_{feature_name}", None)
+
     case_option = st.selectbox(
         "Optional starting point",
         ["Blank form", "Low-risk example", "Typical-risk example", "High-risk example"],
+        key="prediction_starting_point",
+        on_change=reset_prediction_inputs,
         help=(
             "The example values come from the Module 4 SHAP analysis. Only the listed "
             "top contributing fields are prefilled; other fields remain blank."
