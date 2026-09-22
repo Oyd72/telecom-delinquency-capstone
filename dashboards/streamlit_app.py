@@ -15,6 +15,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from dashboards.dashboard_utils import (  # noqa: E402
+    FEATURE_HELP,
     FEATURE_LABELS,
     case_feature_values,
     load_evidence,
@@ -215,7 +216,10 @@ with tabs[1]:
             FEATURE_LABELS.get(feature, feature),
             value=default_text,
             key=f"feature_{feature}",
-            help=f"Model field: {feature}",
+            help=(
+                f"{FEATURE_HELP.get(feature, 'Model input used for prediction')} "
+                f"Model field: {feature}"
+            ),
         )
         try:
             feature_values[feature] = float(raw) if raw.strip() else np.nan
