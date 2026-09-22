@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+from fastapi.testclient import TestClient
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -21,7 +22,13 @@ from dashboards.dashboard_utils import (  # noqa: E402
     load_model_package,
     local_median_sensitivity,
 )
-from src.inference.predict_selected_model import predict_frame  # noqa: E402
+from src.api.app import app as prediction_api  # noqa: E402
+
+@st.cache_resource
+def get_prediction_api_client() -> TestClient:
+    """Use the Module 4 FastAPI application in-process on Streamlit Cloud."""
+    return TestClient(prediction_api)
+
 
 FEATURE_HELP = {
     "cnt_ma_rech90": "Number of main-account recharges in the last 90 days.",
@@ -317,11 +324,24 @@ with tabs[1]:
         try:
             package = load_model_package()
             frame = pd.DataFrame([feature_values], columns=features)
-            result = predict_frame(frame, package).iloc[0]
-            calibrated = float(result["calibrated_delinquency_probability"])
+
+            api_payload = {
+                feature: None if pd.isna(value) else float(value)
+                for feature, value in feature_values.items()
+            }
+            api_response = get_prediction_api_client().post("/predict", json=api_payload)
+            if api_response.status_code != 200:
+                detail = api_response.json().get("detail", api_response.text)
+                raise ValueError(f"Prediction API returned {api_response.status_code}: {detail}")
+
+            api_result = api_response.json()
+            calibrated = float(api_result["calibrated_delinquency_probability"])
 
             st.metric("Predicted five-day delinquency risk", f"{calibrated:.1%}")
-            st.caption(f"Operating threshold: {threshold:.2%}")
+            st.caption(
+                f"Operating threshold: {threshold:.2%} · "
+                "Prediction generated through the Module 4 API"
+            )
 
             if calibrated >= threshold:
                 st.warning(
@@ -383,7 +403,7 @@ with tabs[1]:
                     "This is a one-feature-at-a-time sensitivity check. It is not a causal "
                     "explanation and should not be interpreted as advice to change customer behaviour."
                 )
-        except FileNotFoundError as exc:
+        except (FileNotFoundError, ValueError) as exc:
             st.error(str(exc))
 
 with tabs[2]:
