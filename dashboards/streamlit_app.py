@@ -139,7 +139,15 @@ with tabs[0]:
         ),
     )
     overall_robustness = robustness.loc[robustness["group_type"] == "overall"].iloc[0]
-    c2.metric("Top-20% capture", f"{float(overall_robustness['top20_capture']):.1%}")
+    c2.metric(
+        "Top-20% capture",
+        f"{float(overall_robustness['top20_capture']):.1%}",
+        help=(
+            "Top-20% capture tells us what share of all genuinely delinquent cases are found "
+            "within the 20% of cases that the model ranks as highest risk. A higher value means "
+            "the highest-risk group concentrates more of the delinquent cases."
+        ),
+    )
     c3.metric(
         "Recall at threshold",
         f"{float(metrics['recall']):.1%}",
