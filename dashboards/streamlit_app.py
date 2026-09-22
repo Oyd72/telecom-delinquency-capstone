@@ -140,8 +140,23 @@ with tabs[0]:
     )
     overall_robustness = robustness.loc[robustness["group_type"] == "overall"].iloc[0]
     c2.metric("Top-20% capture", f"{float(overall_robustness['top20_capture']):.1%}")
-    c3.metric("Recall at threshold", f"{float(metrics['recall']):.1%}")
-    c4.metric("Precision at threshold", f"{float(metrics['precision']):.1%}")
+    c3.metric(
+        "Recall at threshold",
+        f"{float(metrics['recall']):.1%}",
+        help=(
+            "Recall tells us what share of all genuinely delinquent cases the model "
+            "successfully flags at the current operating threshold. Higher recall means "
+            "fewer delinquent cases are missed."
+        ),
+    )
+    c4.metric(
+        "Precision at threshold",
+        f"{float(metrics['precision']):.1%}",
+        help=(
+            "Precision tells us what share of the cases flagged by the model are actually "
+            "delinquent. Higher precision means fewer unnecessary follow-up flags."
+        ),
+    )
     c5.metric("Observed delinquency", f"{float(metrics['observed_positive_rate']):.1%}")
 
     st.caption(
