@@ -15,7 +15,6 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from dashboards.dashboard_utils import (  # noqa: E402
-    FEATURE_HELP,
     FEATURE_LABELS,
     case_feature_values,
     load_evidence,
@@ -23,6 +22,24 @@ from dashboards.dashboard_utils import (  # noqa: E402
     local_median_sensitivity,
 )
 from src.inference.predict_selected_model import predict_frame  # noqa: E402
+
+FEATURE_HELP = {
+    "cnt_ma_rech90": "Number of main-account recharges in the last 90 days.",
+    "daily_decr30": "Daily amount spent from the main account, averaged over the last 30 days.",
+    "last_rech_date_ma": (
+        "Number of days associated with the last main-account recharge. "
+        "The source wording is not precise enough to confirm the exact operational calculation."
+    ),
+    "sumamnt_ma_rech90": "Total main-account recharge amount over the last 90 days.",
+    "aon": "Age on the cellular network in days — effectively the customer's network tenure.",
+    "last_rech_amt_ma": "Amount of the most recent main-account recharge.",
+    "daily_decr90": "Daily amount spent from the main account, averaged over the last 90 days.",
+    "sumamnt_ma_rech30": "Total main-account recharge amount over the last 30 days.",
+    "medianamnt_ma_rech30": "Median main-account recharge amount over the last 30 days.",
+    "medianmarechprebal90": "Median main-account balance immediately before recharge over the last 90 days.",
+    "rental30": "Average main-account balance over the last 30 days.",
+    "cnt_ma_rech30": "Number of main-account recharges in the last 30 days.",
+}
 
 st.set_page_config(
     page_title="Telecom delinquency stakeholder dashboard",
@@ -33,40 +50,40 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    /* Make the main dashboard navigation read as selectable controls, not inline text. */
-    div[data-testid="stTabs"] [role="tablist"] {
-        gap: 0.6rem !important;
-        border-bottom: none !important;
-        margin-bottom: 0.8rem !important;
+    /* Main dashboard navigation: visually distinct selectable controls. */
+    [role="tablist"] {
+        gap: 0.65rem !important;
+        border-bottom: 0 !important;
+        margin-bottom: 0.85rem !important;
     }
 
-    div[data-testid="stTabs"] button[role="tab"] {
-        background: rgba(255, 255, 255, 0.06) !important;
-        border: 1px solid rgba(255, 255, 255, 0.24) !important;
+    [role="tab"] {
+        background-color: #20242c !important;
+        border: 1px solid #4a5160 !important;
         border-radius: 0.65rem !important;
-        padding: 0.6rem 1rem !important;
-        min-height: 2.6rem !important;
-        font-weight: 650 !important;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.18);
+        padding: 0.55rem 1rem !important;
+        min-height: 2.55rem !important;
+        font-weight: 700 !important;
     }
 
-    div[data-testid="stTabs"] button[role="tab"]:hover {
-        background: rgba(255, 255, 255, 0.11) !important;
-        border-color: rgba(255, 255, 255, 0.40) !important;
+    [role="tab"]:hover {
+        background-color: #2b303a !important;
+        border-color: #717989 !important;
     }
 
-    div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
-        background: rgba(255, 75, 75, 0.16) !important;
+    [role="tab"][aria-selected="true"] {
+        background-color: #472323 !important;
         border-color: #ff4b4b !important;
-        color: #ff6b6b !important;
-        box-shadow: 0 0 0 1px rgba(255, 75, 75, 0.18);
+        color: #ff7373 !important;
+        box-shadow: inset 0 0 0 1px #ff4b4b !important;
     }
 
-    div[data-testid="stTabs"] button[role="tab"] p {
-        font-weight: 650 !important;
+    [role="tab"] p,
+    [role="tab"] span {
+        font-weight: 700 !important;
     }
 
-    div[data-testid="stTabs"] div[data-baseweb="tab-highlight"] {
+    [data-baseweb="tab-highlight"] {
         display: none !important;
     }
     </style>
