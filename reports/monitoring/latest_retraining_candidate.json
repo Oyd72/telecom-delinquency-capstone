@@ -1,0 +1,29 @@
+{
+  "candidate_created": true,
+  "candidate_only": true,
+  "automatic_promotion": false,
+  "human_approval_required": true,
+  "new_data_rows": 28648,
+  "update_rows": 20053,
+  "validation_rows": 8595,
+  "validation_period": {
+    "start": "2016-07-20",
+    "end": "2016-07-23"
+  },
+  "metrics": {
+    "roc_auc": 0.8176818559141128,
+    "average_precision": 0.5377458634386056,
+    "brier_score": 0.1262670321585023,
+    "top20_capture": 0.5070185289163391
+  },
+  "quality_gates": {
+    "roc_auc": true,
+    "top20_capture": true,
+    "brier_score": true
+  },
+  "all_quality_gates_passed": true,
+  "candidate_artifact": "models\\candidates\\retrained_candidate.joblib",
+  "candidate_sha256": "8e3fcd4e52fd308b74e727ca86f83597bf9cadb038366b6fb8ddd0b20e769c5e",
+  "mlflow_run_id": "0d1348894dad45ca8ee95f22a5353679",
+  "promotion_decision": "requires human review; deployed model remains unchanged"
+}
