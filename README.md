@@ -186,6 +186,12 @@ docker compose ps
 
 The full Compose setup has been locally verified. The Prefect ETL pipeline builds and completes end to end inside its container, while the API and both dashboard services run successfully. The stack therefore satisfies the final-project requirement for a multi-container pipeline + API + monitoring setup.
 
+## CI/CD
+
+GitHub Actions provides automated validation and deployment through `.github/workflows/final-project-ci-cd.yml`.
+
+The workflow runs automated tests, deployment-entry-point compilation, dashboard smoke checks, Docker Compose validation, and a monitoring-dashboard health check. After successful validation on the deployment branches, it triggers the Render API deployment through a protected repository secret. The Streamlit applications remain linked to their repository branches and redeploy through Streamlit Community Cloud.
+
 ## Delivery approach
 
 The work is organised into four Scrum-style two-week sprints: data understanding and setup; data preparation and EDA; modelling and evaluation; fairness, explainability, governance, and reporting. GitHub issue status shows where the work stands now. Sprint labels show the iteration to which each item belongs.
