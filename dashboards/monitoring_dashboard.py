@@ -586,8 +586,8 @@ with tabs[2]:
     )
 
     st.caption(
-        "The final holdout has trustworthy project labels, so it can demonstrate both "
-        "performance/calibration monitoring and distribution drift."
+        "Performance and calibration metrics shown below are calculated on the final "
+        "holdout using the frozen operating threshold."
     )
 
     st.info(status["future_monitoring_note"])
