@@ -31,20 +31,22 @@ Raw validation is diagnostic: it is meant to show the defects present in the unt
 - `src/api/` – FastAPI `/predict` endpoint for single-record scoring
 - `src/pipeline/` – Prefect orchestration
 - `src/privacy/` – privacy-safe pipeline audit logging
-- `src/monitoring/` – representation and operational slice diagnostics
+- `src/monitoring/` – model monitoring, drift metrics, Evidently integration, performance monitoring, and representation/operational diagnostics
 - `tests/unit/` – tests for transformations, privacy controls, representation checks, packaged inference, and the FastAPI endpoint
 - `tests/validation/` – pipeline and validation contract tests
 - `reports/` – reproducible aggregate outputs for analysis, validation, privacy, and presentation; row-level generated data stay local
 - `docs/` – data dictionary, methodology, decision records, governance material, and the Module 4 experiment record
 - `Dockerfile` – container build for the ETL pipeline
+- `Dockerfile.api`, `Dockerfile.stakeholder`, `Dockerfile.monitoring` – service-specific container builds
+- `docker-compose.yml` – local multi-container stack for the API, stakeholder dashboard, and monitoring dashboard
 
 ### Reserved areas
 
 - `notebooks/` – exploratory notebooks if needed; reusable logic belongs in `src/`
 - `models/` – local persisted model binary plus committed privacy-safe metadata and artefact documentation
-- `dashboards/` – Module 5 Streamlit stakeholder dashboard and deployment dependencies
-- `config/` – shared configuration if project parameters are externalised
-- `.github/workflows/` – CI automation if introduced later
+- `dashboards/` – Module 5 stakeholder dashboard, final-project monitoring dashboard, and deployment dependencies
+- `config/` – shared configuration, including monitoring thresholds
+- `.github/workflows/` – CI automation, including the dashboard smoke-test workflow
 
 Empty reserved directories remain visible through `.gitkeep` files.
 
@@ -83,12 +85,15 @@ Pytest checks reusable transformation and control logic. The Prefect flow and th
 
 ## Dependencies
 
-The two requirements files serve different purposes:
+The requirements files serve different runtime scopes:
 
-- `requirements.txt` – the wider analytical and development environment
-- `requirements-pipeline.txt` – the smaller set needed for the containerised ETL and Module 3 control path
+- `requirements.txt` – wider analytical and development environment
+- `requirements-pipeline.txt` – containerised ETL and Module 3 control path
+- `requirements-api.txt` – FastAPI inference service
+- `requirements-monitoring.txt` – monitoring calculations, Evidently AI, Fairlearn and monitoring dashboard
+- `dashboards/requirements.txt` – stakeholder dashboard
 
-Keeping the pipeline dependencies separate avoids putting the full analytical environment into the Docker image.
+Keeping runtime dependencies separate avoids putting the full analytical environment into every container.
 
 ## Report evidence
 
@@ -125,6 +130,38 @@ python dashboards/smoke_test.py
 ```
 
 Live scoring requires the frozen Module 4 artefact at `models/selected_random_forest_isotonic.joblib`. The dashboard does not retrain or recalibrate the model.
+
+## Final-project monitoring dashboard
+
+The governance-facing monitoring dashboard is implemented in `dashboards/monitoring_dashboard.py`. It is intentionally separate from the stakeholder/XAI dashboard.
+
+The monitoring demonstration compares the development reference period (1 June–13 July 2016) with the chronologically later final holdout (14–23 July 2016). It presents:
+
+- custom Python PSI, KS and missingness monitoring;
+- Evidently AI drift results as separate independent evidence;
+- final-holdout performance and calibration metrics;
+- model version, operating threshold and SHA-256 traceability;
+- fairness-feasibility and operational-robustness limitations.
+
+Monitoring evidence is versioned under `reports/monitoring/`.
+
+## Docker Compose
+
+The local multi-container stack is defined in `docker-compose.yml`:
+
+- FastAPI prediction service: port 8000
+- stakeholder dashboard: port 8501
+- monitoring dashboard: port 8502
+
+Run locally with:
+
+```powershell
+docker compose build
+docker compose up -d
+docker compose ps
+```
+
+The stack has been locally verified with all three services running successfully.
 
 ## Delivery approach
 
