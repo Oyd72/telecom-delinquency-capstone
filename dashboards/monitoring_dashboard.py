@@ -116,13 +116,6 @@ with tabs[0]:
     )
     st.dataframe(period_table, width="stretch", hide_index=True)
 
-    st.info(
-        "**Why these periods?** The final project demonstrates monitoring using data already "
-        "established in the model-development workflow. It does not assume that a separate "
-        "untouched future dataset must exist. In operational use, the same monitoring logic "
-        "would be applied to future scored batches as they arrive."
-    )
-
     st.markdown("#### Model traceability")
     st.code(
         f"Model: {status['model_name']}\n"
