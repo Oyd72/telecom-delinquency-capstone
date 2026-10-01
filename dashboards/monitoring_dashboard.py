@@ -268,11 +268,34 @@ with tabs[1]:
         title="Project PSI by monitored variable",
         labels={"feature": "", "psi": "PSI"},
     )
-    project_x = project_plot["feature"].tolist()
+    # Draw threshold lines as plot-area shapes so they span the full width of the
+    # first and last bars. Add invisible dummy traces only to provide legend entries.
+    fig_project.add_shape(
+        type="line",
+        xref="paper",
+        x0=0,
+        x1=1,
+        yref="y",
+        y0=0.10,
+        y1=0.10,
+        line=dict(color="#FFB000", dash="dash", width=3),
+        layer="above",
+    )
+    fig_project.add_shape(
+        type="line",
+        xref="paper",
+        x0=0,
+        x1=1,
+        yref="y",
+        y0=0.25,
+        y1=0.25,
+        line=dict(color="#FF4B4B", dash="dot", width=3),
+        layer="above",
+    )
     fig_project.add_trace(
         go.Scatter(
-            x=project_x,
-            y=[0.10] * len(project_x),
+            x=[None],
+            y=[None],
             mode="lines",
             name="WATCH threshold (PSI = 0.10)",
             line=dict(color="#FFB000", dash="dash", width=3),
@@ -281,8 +304,8 @@ with tabs[1]:
     )
     fig_project.add_trace(
         go.Scatter(
-            x=project_x,
-            y=[0.25] * len(project_x),
+            x=[None],
+            y=[None],
             mode="lines",
             name="ESCALATE threshold (PSI = 0.25)",
             line=dict(color="#FF4B4B", dash="dot", width=3),
@@ -383,11 +406,21 @@ with tabs[1]:
             title="Evidently AI PSI by monitored variable",
             labels={"column": "", "evidently_psi": "PSI"},
         )
-        evidently_x = evidently_drift["column"].tolist()
+        fig_evidently.add_shape(
+            type="line",
+            xref="paper",
+            x0=0,
+            x1=1,
+            yref="y",
+            y0=DRIFT_THRESHOLD,
+            y1=DRIFT_THRESHOLD,
+            line=dict(color="#FFB000", dash="dash", width=3),
+            layer="above",
+        )
         fig_evidently.add_trace(
             go.Scatter(
-                x=evidently_x,
-                y=[DRIFT_THRESHOLD] * len(evidently_x),
+                x=[None],
+                y=[None],
                 mode="lines",
                 name="DRIFT threshold (PSI = 0.10)",
                 line=dict(color="#FFB000", dash="dash", width=3),
