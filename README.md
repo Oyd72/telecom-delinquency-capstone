@@ -184,7 +184,7 @@ docker compose up -d
 docker compose ps
 ```
 
-The API and both dashboard services have been locally verified. The Compose definition now also includes the Prefect ETL pipeline as a batch service, matching the final-project requirement for a multi-container pipeline + API + monitoring setup.
+The full Compose setup has been locally verified. The Prefect ETL pipeline builds and completes end to end inside its container, while the API and both dashboard services run successfully. The stack therefore satisfies the final-project requirement for a multi-container pipeline + API + monitoring setup.
 
 ## Delivery approach
 
