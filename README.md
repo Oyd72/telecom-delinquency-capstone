@@ -38,7 +38,7 @@ Raw validation is diagnostic: it is meant to show the defects present in the unt
 - `docs/` – data dictionary, methodology, decision records, governance material, and the Module 4 experiment record
 - `Dockerfile` – container build for the ETL pipeline
 - `Dockerfile.api`, `Dockerfile.stakeholder`, `Dockerfile.monitoring` – service-specific container builds
-- `docker-compose.yml` – local multi-container stack for the API, stakeholder dashboard, and monitoring dashboard
+- `docker-compose.yml` – local multi-container stack for the data pipeline, API, stakeholder dashboard, and monitoring dashboard
 
 ### Reserved areas
 
@@ -163,10 +163,15 @@ The monitoring demonstration compares the development reference period (1 June�
 
 Monitoring evidence is versioned under `reports/monitoring/`.
 
+Live monitoring dashboard:
+
+https://telecom-delinquency-monitoring.streamlit.app/
+
 ## Docker Compose
 
 The local multi-container stack is defined in `docker-compose.yml`:
 
+- Prefect ETL/data pipeline: batch service using the root `Dockerfile`
 - FastAPI prediction service: port 8000
 - stakeholder dashboard: port 8501
 - monitoring dashboard: port 8502
@@ -179,7 +184,7 @@ docker compose up -d
 docker compose ps
 ```
 
-The stack has been locally verified with all three services running successfully.
+The API and both dashboard services have been locally verified. The Compose definition now also includes the Prefect ETL pipeline as a batch service, matching the final-project requirement for a multi-container pipeline + API + monitoring setup.
 
 ## Delivery approach
 
