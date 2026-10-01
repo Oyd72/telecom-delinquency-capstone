@@ -1,0 +1,33 @@
+{
+  "source": "data/processed/telecom_delinquency_model_ready.csv",
+  "source_rows": 150767,
+  "source_date_min": "2016-06-01",
+  "source_date_max": "2016-07-23",
+  "feature_count": 12,
+  "features": [
+    "cnt_ma_rech90",
+    "daily_decr30",
+    "last_rech_date_ma",
+    "sumamnt_ma_rech90",
+    "aon",
+    "last_rech_amt_ma",
+    "daily_decr90",
+    "sumamnt_ma_rech30",
+    "medianamnt_ma_rech30",
+    "medianmarechprebal90",
+    "rental30",
+    "cnt_ma_rech30"
+  ],
+  "development_reference": {
+    "period": "2016-06-01 through 2016-07-13",
+    "rows": 122119,
+    "purpose": "Reference distribution for monitoring demonstration"
+  },
+  "final_holdout": {
+    "period": "2016-07-14 through 2016-07-23",
+    "rows": 28648,
+    "purpose": "Chronologically later comparison population and trusted labelled evaluation period"
+  },
+  "post_23_july_data_used": false,
+  "monitoring_design_note": "The final project demonstrates monitoring on the existing development reference and final holdout. In operational use the same monitoring logic would be applied to future batches as they arrive."
+}
