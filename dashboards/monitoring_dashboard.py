@@ -1,8 +1,8 @@
 """Final-project monitoring dashboard for the telecom delinquency prototype.
 
 This application is intentionally separate from the stakeholder/XAI dashboard.
-It presents governance-facing monitoring evidence and keeps labelled performance
-monitoring distinct from the post-23-July 2016 label-free diagnostic period.
+It presents governance-facing monitoring evidence using the development reference and
+the chronologically later final holdout. No post-23-July records are used.
 """
 
 from __future__ import annotations
@@ -19,11 +19,11 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MONITORING_DIR = PROJECT_ROOT / "reports" / "monitoring"
 
 STATUS_PATH = MONITORING_DIR / "latest_monitoring_status.json"
-FEATURE_DRIFT_PATH = MONITORING_DIR / "feature_drift_post_23_july.csv"
+FEATURE_DRIFT_PATH = MONITORING_DIR / "feature_drift_final_holdout.csv"
 RECONCILED_PATH = MONITORING_DIR / "reconciled_drift_evidence.csv"
 RECONCILED_SUMMARY_PATH = MONITORING_DIR / "reconciled_drift_summary.json"
 POPULATION_SUMMARY_PATH = MONITORING_DIR / "monitoring_population_summary.json"
-EVIDENTLY_HTML_PATH = MONITORING_DIR / "evidently_post_23_july_drift.html"
+EVIDENTLY_HTML_PATH = MONITORING_DIR / "evidently_final_holdout_drift.html"
 
 
 def read_json(path: Path) -> dict:
@@ -76,10 +76,8 @@ except FileNotFoundError as exc:
     st.stop()
 
 status = evidence["status"]
-feature_drift = evidence["feature_drift"]
 reconciled = evidence["reconciled"]
 reconciled_summary = evidence["reconciled_summary"]
-population = evidence["population"]
 
 tabs = st.tabs(
     [
@@ -96,38 +94,33 @@ with tabs[0]:
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Model version", str(status["artifact_version"]))
     c2.metric("Operating threshold", f"{float(status['operating_threshold']):.2%}")
-    c3.metric("Monitoring mode", status["monitoring_mode"].replace("_", " ").title())
+    c3.metric("Monitoring mode", "Historical demonstration")
     c4.metric("Overall drift status", str(status["overall_drift_status"]).upper())
 
-    st.markdown("#### Monitoring periods")
+    st.markdown("#### Monitoring demonstration")
     period_table = pd.DataFrame(
         [
             {
                 "Period": "Development reference",
                 "Dates": status["reference_period"],
                 "Rows": status["reference_rows"],
-                "Outcome labels": "Used as development reference",
+                "Role": "Reference distribution",
             },
             {
-                "Period": "Final labelled evaluation",
-                "Dates": status["labelled_evaluation_period"],
-                "Rows": status["labelled_holdout_rows"],
-                "Outcome labels": "Trusted for project evaluation",
-            },
-            {
-                "Period": "Post-23-July diagnostic",
-                "Dates": status["monitoring_period"],
-                "Rows": status["diagnostic_rows"],
-                "Outcome labels": "Not treated as ground truth",
+                "Period": "Final holdout",
+                "Dates": status["comparison_period"],
+                "Rows": status["comparison_rows"],
+                "Role": "Later comparison + labelled evaluation",
             },
         ]
     )
     st.dataframe(period_table, width="stretch", hide_index=True)
 
-    st.warning(
-        "**Post-23-July boundary.** The later all-successful outcome regime is unexplained. "
-        "Those labels are not treated as ground truth. This period is used only for "
-        "feature, population, missingness and prediction-score drift diagnostics."
+    st.info(
+        "**Why these periods?** The final project demonstrates monitoring using data already "
+        "established in the model-development workflow. It does not assume that a separate "
+        "untouched future dataset must exist. In operational use, the same monitoring logic "
+        "would be applied to future scored batches as they arrive."
     )
 
     st.markdown("#### Model traceability")
@@ -142,8 +135,8 @@ with tabs[1]:
     st.subheader("Data and prediction drift")
     st.write(
         "The project compares its own PSI implementation with Evidently AI on the same "
-        "reference and diagnostic populations. Agreement is treated as convergent evidence; "
-        "disagreement remains visible as method-sensitive evidence."
+        "development-reference and final-holdout populations. Agreement is treated as "
+        "convergent evidence; disagreement remains visible as method-sensitive evidence."
     )
 
     counts = reconciled_summary["counts"]
@@ -154,9 +147,6 @@ with tabs[1]:
     c4.metric("No drift", counts["no_drift"])
 
     display = reconciled.copy()
-    display["project_psi"] = display["project_psi"].astype(float)
-    display["evidently_psi"] = display["evidently_psi"].astype(float)
-
     fig = px.bar(
         display.melt(
             id_vars=["column", "evidence_classification"],
@@ -194,29 +184,33 @@ with tabs[1]:
     confirmed = reconciled_summary["confirmed_columns"]
     method_sensitive = reconciled_summary["method_sensitive_columns"]
 
-    st.success(
-        "**Confirmed drift:** "
-        + ", ".join(confirmed)
-        + ". These columns cross the PSI threshold in both implementations."
-    )
-    st.info(
-        "**Method-sensitive signals:** "
-        + ", ".join(method_sensitive)
-        + ". These cross the threshold only in the project implementation and are "
-        "therefore not presented as independently confirmed drift."
-    )
+    if confirmed:
+        st.success(
+            "**Confirmed drift:** "
+            + ", ".join(confirmed)
+            + ". These cross the PSI threshold in both implementations."
+        )
+    else:
+        st.success("No columns cross the PSI threshold in both implementations.")
+
+    if method_sensitive:
+        st.info(
+            "**Method-sensitive signals:** "
+            + ", ".join(method_sensitive)
+            + ". These cross the threshold in only one implementation."
+        )
 
     prediction_row = display.loc[
         display["column"] == "calibrated_delinquency_probability"
     ].iloc[0]
-    st.markdown("#### Prediction-score shift")
+    st.markdown("#### Prediction-score comparison")
     p1, p2, p3 = st.columns(3)
     p1.metric(
         "Reference mean risk",
         f"{float(status['prediction_drift']['reference_mean']):.2%}",
     )
     p2.metric(
-        "Diagnostic mean risk",
+        "Final-holdout mean risk",
         f"{float(status['prediction_drift']['current_mean']):.2%}",
     )
     p3.metric(
@@ -227,13 +221,13 @@ with tabs[1]:
     if EVIDENTLY_HTML_PATH.exists():
         st.caption(
             "A standalone Evidently AI HTML report is also generated in "
-            "reports/monitoring/evidently_post_23_july_drift.html."
+            "reports/monitoring/evidently_final_holdout_drift.html."
         )
 
 with tabs[2]:
     st.subheader("Performance and calibration")
 
-    perf = status["final_labelled_holdout_performance"]
+    perf = status["final_holdout_performance"]
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("ROC-AUC", f"{float(perf['roc_auc']):.3f}")
     c2.metric("Recall", f"{float(perf['recall']):.1%}")
@@ -246,16 +240,11 @@ with tabs[2]:
     c7.metric("F1", f"{float(perf['f1']):.3f}")
 
     st.caption(
-        "These performance metrics are calculated only on the labelled final holdout "
-        "(14–23 July 2016) using the frozen operating threshold."
+        "The final holdout has trustworthy project labels, so it can demonstrate both "
+        "performance/calibration monitoring and distribution drift."
     )
 
-    st.error(
-        "**Performance monitoring after 23 July is not available.** "
-        "The later outcome labels are not treated as reliable ground truth. "
-        "Accordingly, no accuracy, precision, recall, calibration, top-risk capture or "
-        "outcome-based fairness metric is reported for that period."
-    )
+    st.info(status["future_monitoring_note"])
 
 with tabs[3]:
     st.subheader("Fairness feasibility and operational robustness")
@@ -269,6 +258,7 @@ with tabs[3]:
     st.markdown("#### What the monitoring evidence can support")
     st.write(
         "- Drift in observed model features and prediction scores.\n"
+        "- Performance and calibration on the trusted final holdout.\n"
         "- Representation and performance checks across defensible operational segments.\n"
         "- Ongoing visibility of proxy, representation and operational-use risks."
     )
@@ -277,7 +267,7 @@ with tabs[3]:
     st.write(
         "- Demographic parity, Equalized Odds or disparate-impact claims for protected groups.\n"
         "- A conclusion that the model is fair simply because protected attributes are absent.\n"
-        "- Post-23-July outcome-based fairness comparisons, because those labels are not trusted."
+        "- Future production performance before trustworthy outcome labels have matured."
     )
 
     st.markdown("#### Monitoring governance")
