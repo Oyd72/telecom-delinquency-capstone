@@ -1,9 +1,10 @@
 """Outcome-based monitoring metrics.
 
-Performance metrics are only valid when reliable outcome labels exist. The post-23-July
-2016 diagnostic block is explicitly excluded from outcome-based evaluation because its
-all-successful label regime is unexplained and is not treated as ground truth.
+Performance metrics are calculated only when the caller explicitly confirms that outcome
+labels are reliable. This keeps the monitoring component reusable for future batches where
+labels may not yet have matured, without tying the logic to any particular date period.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -16,8 +17,6 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
-
-POST_23_JULY_DIAGNOSTIC = "post_23_july_2016_diagnostic"
 
 
 def expected_calibration_error(y_true, probabilities, bins: int = 10) -> float:
@@ -49,12 +48,12 @@ def top20_capture(y_true, probabilities) -> float:
     return float(y[order[:n]].sum() / positives)
 
 
-def assert_labels_permitted(period_name: str, labels_reliable: bool) -> None:
-    if period_name == POST_23_JULY_DIAGNOSTIC or not labels_reliable:
+def assert_labels_permitted(labels_reliable: bool) -> None:
+    if not labels_reliable:
         raise ValueError(
-            "Outcome-based monitoring is not permitted for this period. "
-            "Post-23-July 2016 outcomes are not treated as reliable ground truth; "
-            "use label-free drift monitoring only."
+            "Outcome-based monitoring is not permitted when labels are not reliable "
+            "or have not yet matured. Use label-free monitoring until trustworthy "
+            "outcomes are available."
         )
 
 
@@ -67,7 +66,7 @@ def evaluate_labelled_period(
     labels_reliable: bool,
 ) -> dict:
     """Calculate performance only for periods with reliable matured labels."""
-    assert_labels_permitted(period_name, labels_reliable)
+    assert_labels_permitted(labels_reliable)
 
     y = pd.Series(y_true).astype(int).to_numpy()
     p = pd.Series(probabilities).astype(float).to_numpy()
