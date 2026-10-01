@@ -1,10 +1,7 @@
 import pandas as pd
 import pytest
 
-from src.monitoring.performance_monitoring import (
-    POST_23_JULY_DIAGNOSTIC,
-    evaluate_labelled_period,
-)
+from src.monitoring.performance_monitoring import evaluate_labelled_period
 
 
 def test_labelled_period_returns_expected_keys():
@@ -22,12 +19,12 @@ def test_labelled_period_returns_expected_keys():
     assert result["labels_reliable"] is True
 
 
-def test_post_23_july_outcomes_are_blocked():
+def test_unreliable_or_unmatured_labels_are_blocked():
     with pytest.raises(ValueError, match="not permitted"):
         evaluate_labelled_period(
-            pd.Series([0, 0, 0]),
-            pd.Series([0.1, 0.2, 0.3]),
+            pd.Series([0, 1, 0]),
+            pd.Series([0.1, 0.8, 0.3]),
             0.1751,
-            period_name=POST_23_JULY_DIAGNOSTIC,
+            period_name="future_batch_labels_pending",
             labels_reliable=False,
         )
