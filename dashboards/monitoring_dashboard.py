@@ -132,13 +132,44 @@ tabs = st.tabs(
 )
 
 with tabs[0]:
-    st.subheader("Model and monitoring status")
+    st.subheader(
+        "Model and monitoring status",
+        help=(
+            "Identifies the exact model artefact being monitored and the historical "
+            "periods used to demonstrate the monitoring process."
+        ),
+    )
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Model version", str(status["artifact_version"]))
-    c2.metric("Operating threshold", f"{float(status['operating_threshold']):.2%}")
-    c3.metric("Monitoring mode", "Historical demonstration")
-    c4.metric("Overall drift status", str(status["overall_drift_status"]).upper())
+    c1.metric(
+        "Model version",
+        str(status["artifact_version"]),
+        help="Version identifier of the frozen model package used for scoring and monitoring.",
+    )
+    c2.metric(
+        "Operating threshold",
+        f"{float(status['operating_threshold']):.2%}",
+        help=(
+            "The probability cut-off used to turn a calibrated risk score into a higher-risk "
+            "follow-up flag. It was frozen before the final holdout was evaluated."
+        ),
+    )
+    c3.metric(
+        "Monitoring mode",
+        "Historical demonstration",
+        help=(
+            "The monitoring mechanism is demonstrated on historical data. "
+            "This does not imply that the model was live in production during this period."
+        ),
+    )
+    c4.metric(
+        "Overall drift status",
+        str(status["overall_drift_status"]).upper(),
+        help=(
+            "Project-level alert status derived from the custom PSI and missingness thresholds. "
+            "It is a monitoring signal for investigation, not a conclusion that the model has failed."
+        ),
+    )
 
     st.markdown("#### Monitoring demonstration")
     period_table = pd.DataFrame(
@@ -168,7 +199,13 @@ with tabs[0]:
     )
 
 with tabs[1]:
-    st.subheader("Data and prediction drift")
+    st.subheader(
+        "Data and prediction drift",
+        help=(
+            "Drift means that the statistical distribution of model inputs or model "
+            "outputs has changed between the reference population and the later comparison population."
+        ),
+    )
     st.write(
         "Two monitoring approaches are shown separately. The project implementation uses "
         "custom PSI, KS and missingness checks with project-specific severity thresholds. "
@@ -176,7 +213,13 @@ with tabs[1]:
         "populations."
     )
 
-    st.markdown("### Project Python monitoring")
+    st.subheader(
+        "Project Python monitoring",
+        help=(
+            "The project's own monitoring code calculates Population Stability Index (PSI), "
+            "Kolmogorov-Smirnov (KS) statistics and missingness changes for each monitored column."
+        ),
+    )
     st.caption(
         "Custom monitoring logic implemented in src/monitoring/drift_metrics.py. "
         "Project severity thresholds are design choices for this academic prototype."
@@ -186,14 +229,34 @@ with tabs[1]:
     p1.metric(
         "Features at escalate",
         int((project_drift["severity"] == "escalate").sum()),
+        help=(
+            "Number of model features whose custom PSI is at least 0.25 or whose missingness "
+            "change crosses the project's escalation threshold."
+        ),
     )
     p2.metric(
         "Features at watch",
         int((project_drift["severity"] == "watch").sum()),
+        help=(
+            "Number of model features that cross the project's watch threshold but not "
+            "the escalation threshold."
+        ),
     )
     p3.metric(
         "Prediction-score PSI",
         f"{float(status['prediction_drift']['psi']):.3f}",
+        help=(
+            "Population Stability Index for the distribution of calibrated model risk scores "
+            "between the development reference and final holdout."
+        ),
+    )
+
+    st.info(
+        "**How to read the project PSI thresholds:** "
+        "PSI below 0.10 = **OK**; 0.10 to below 0.25 = **WATCH**; "
+        "0.25 or above = **ESCALATE**. The dashed line marks the watch threshold; "
+        "the dotted line marks the escalation threshold. These are project-specific "
+        "monitoring thresholds, not universal standards."
     )
 
     project_plot = project_all.copy()
@@ -207,12 +270,14 @@ with tabs[1]:
     fig_project.add_hline(
         y=0.10,
         line_dash="dash",
-        annotation_text="0.10 watch threshold",
+        annotation_text="WATCH ≥ 0.10",
+        annotation_position="bottom left",
     )
     fig_project.add_hline(
         y=0.25,
         line_dash="dot",
-        annotation_text="0.25 escalate threshold",
+        annotation_text="ESCALATE ≥ 0.25",
+        annotation_position="top left",
     )
     st.plotly_chart(fig_project, width="stretch")
 
@@ -239,7 +304,13 @@ with tabs[1]:
         hide_index=True,
     )
 
-    st.markdown("### Evidently AI monitoring")
+    st.subheader(
+        "Evidently AI monitoring",
+        help=(
+            "Evidently AI is an independent open-source model-monitoring framework. "
+            "Here it calculates PSI on the same reference and final-holdout populations."
+        ),
+    )
     st.caption(
         "Independent PSI-based drift evaluation using Evidently AI on the same 13 monitored "
         "columns: 12 model features plus the calibrated prediction score."
@@ -252,10 +323,15 @@ with tabs[1]:
         e1.metric(
             "Columns Evidently flags as drifted",
             int(evidently_drift["evidently_drift"].sum()),
+            help=(
+                "Number of monitored columns for which Evidently AI reports PSI at or above "
+                "its configured drift threshold of 0.10."
+            ),
         )
         e2.metric(
             "Columns not flagged",
             int((~evidently_drift["evidently_drift"]).sum()),
+            help="Number of monitored columns whose Evidently AI PSI remains below 0.10.",
         )
         score_match = evidently_drift.loc[
             evidently_drift["column"] == PREDICTION_COLUMN
@@ -265,7 +341,19 @@ with tabs[1]:
             if not score_match.empty
             else float("nan")
         )
-        e3.metric("Prediction-score PSI", f"{score_value:.3f}")
+        e3.metric(
+            "Prediction-score PSI",
+            f"{score_value:.3f}",
+            help=(
+                "Evidently AI's PSI for the calibrated prediction-score distribution "
+                "between the same reference and final-holdout populations."
+            ),
+        )
+
+        st.info(
+            "**How to read Evidently AI:** a column is flagged as drifted when Evidently's "
+            "PSI is 0.10 or higher in this report. The dashed line marks that threshold."
+        )
 
         fig_evidently = px.bar(
             evidently_drift,
@@ -277,7 +365,8 @@ with tabs[1]:
         fig_evidently.add_hline(
             y=DRIFT_THRESHOLD,
             line_dash="dash",
-            annotation_text="0.10 Evidently drift threshold",
+            annotation_text="DRIFT ≥ 0.10",
+            annotation_position="top left",
         )
         st.plotly_chart(fig_evidently, width="stretch")
 
@@ -298,7 +387,13 @@ with tabs[1]:
             hide_index=True,
         )
 
-    st.markdown("### Interpretation")
+    st.subheader(
+        "Interpretation",
+        help=(
+            "This section explains where the two monitoring approaches agree and where "
+            "their results differ. Differences are kept visible rather than forced into one result."
+        ),
+    )
     comparison = project_table.merge(
         evidently_drift[["column", "evidently_psi", "evidently_drift"]],
         on="column",
@@ -334,15 +429,23 @@ with tabs[1]:
             "These cross the threshold only in Evidently AI."
         )
 
-    st.markdown("#### Prediction-score comparison")
+    st.subheader(
+        "Prediction-score comparison",
+        help=(
+            "Compares the average calibrated delinquency probability produced by the model "
+            "for the reference population and the final holdout."
+        ),
+    )
     p1, p2 = st.columns(2)
     p1.metric(
         "Reference mean risk",
         f"{float(status['prediction_drift']['reference_mean']):.2%}",
+        help="Average calibrated delinquency probability in the development reference population.",
     )
     p2.metric(
         "Final-holdout mean risk",
         f"{float(status['prediction_drift']['current_mean']):.2%}",
+        help="Average calibrated delinquency probability in the chronologically later final holdout.",
     )
 
     if EVIDENTLY_HTML_PATH.exists():
@@ -352,19 +455,65 @@ with tabs[1]:
         )
 
 with tabs[2]:
-    st.subheader("Performance and calibration")
+    st.subheader(
+        "Performance and calibration",
+        help=(
+            "Performance measures how well the model separates and identifies delinquent cases. "
+            "Calibration measures how closely predicted probabilities correspond to observed outcomes."
+        ),
+    )
 
     perf = status["final_holdout_performance"]
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("ROC-AUC", f"{float(perf['roc_auc']):.3f}")
-    c2.metric("Recall", f"{float(perf['recall']):.1%}")
-    c3.metric("Precision", f"{float(perf['precision']):.1%}")
-    c4.metric("Top-20% capture", f"{float(perf['top20_capture']):.1%}")
+    c1.metric(
+        "ROC-AUC",
+        f"{float(perf['roc_auc']):.3f}",
+        help=(
+            "Measures how well the model ranks delinquent cases above non-delinquent cases "
+            "across all possible thresholds. 0.5 is random ranking; 1.0 is perfect."
+        ),
+    )
+    c2.metric(
+        "Recall",
+        f"{float(perf['recall']):.1%}",
+        help="Share of all genuinely delinquent cases that the model flags at the frozen threshold.",
+    )
+    c3.metric(
+        "Precision",
+        f"{float(perf['precision']):.1%}",
+        help="Share of model-flagged cases that actually became delinquent.",
+    )
+    c4.metric(
+        "Top-20% capture",
+        f"{float(perf['top20_capture']):.1%}",
+        help=(
+            "Share of all delinquent cases contained within the 20% of cases that the model "
+            "ranks as highest risk."
+        ),
+    )
 
     c5, c6, c7 = st.columns(3)
-    c5.metric("Brier score", f"{float(perf['brier_score']):.3f}")
-    c6.metric("ECE (10 bins)", f"{float(perf['ece_10bin']):.3f}")
-    c7.metric("F1", f"{float(perf['f1']):.3f}")
+    c5.metric(
+        "Brier score",
+        f"{float(perf['brier_score']):.3f}",
+        help=(
+            "Measures the squared error of predicted probabilities. Lower is better; "
+            "0 would mean perfectly accurate probability forecasts."
+        ),
+    )
+    c6.metric(
+        "ECE (10 bins)",
+        f"{float(perf['ece_10bin']):.3f}",
+        help=(
+            "Expected Calibration Error compares predicted probabilities with observed "
+            "outcomes across 10 probability groups. Lower is better."
+        ),
+    )
+    c7.metric(
+        "F1",
+        f"{float(perf['f1']):.3f}",
+        help="Harmonic mean of precision and recall, balancing the two measures in one score.",
+    )
 
     st.caption(
         "The final holdout has trustworthy project labels, so it can demonstrate both "
@@ -374,7 +523,13 @@ with tabs[2]:
     st.info(status["future_monitoring_note"])
 
 with tabs[3]:
-    st.subheader("Fairness feasibility and operational robustness")
+    st.subheader(
+        "Fairness feasibility and operational robustness",
+        help=(
+            "Fairness feasibility asks which fairness claims the available data can support. "
+            "Operational robustness checks whether performance is stable across defensible non-demographic segments."
+        ),
+    )
 
     st.error(
         "**Demographic fairness cannot be demonstrated from this dataset.** "
