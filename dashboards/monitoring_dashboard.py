@@ -3,6 +3,10 @@
 This application is intentionally separate from the stakeholder/XAI dashboard.
 It presents governance-facing monitoring evidence using the development reference and
 the chronologically later final holdout. No post-23-July records are used.
+
+The drift view keeps the project's custom monitoring evidence and Evidently AI evidence
+separate. Agreement and disagreement are interpreted transparently rather than collapsed
+into a single combined drift classification.
 """
 
 from __future__ import annotations
@@ -20,10 +24,12 @@ MONITORING_DIR = PROJECT_ROOT / "reports" / "monitoring"
 
 STATUS_PATH = MONITORING_DIR / "latest_monitoring_status.json"
 FEATURE_DRIFT_PATH = MONITORING_DIR / "feature_drift_final_holdout.csv"
-RECONCILED_PATH = MONITORING_DIR / "reconciled_drift_evidence.csv"
-RECONCILED_SUMMARY_PATH = MONITORING_DIR / "reconciled_drift_summary.json"
 POPULATION_SUMMARY_PATH = MONITORING_DIR / "monitoring_population_summary.json"
+EVIDENTLY_JSON_PATH = MONITORING_DIR / "evidently_final_holdout_drift.json"
 EVIDENTLY_HTML_PATH = MONITORING_DIR / "evidently_final_holdout_drift.html"
+
+DRIFT_THRESHOLD = 0.10
+PREDICTION_COLUMN = "calibrated_delinquency_probability"
 
 
 def read_json(path: Path) -> dict:
@@ -32,14 +38,35 @@ def read_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def extract_evidently_drift(payload: dict) -> pd.DataFrame:
+    rows = []
+    for metric in payload.get("metrics", []):
+        config = metric.get("config") or {}
+        if config.get("type") != "evidently:metric_v2:ValueDrift":
+            continue
+        column = config.get("column")
+        value = metric.get("value")
+        threshold = float(config.get("threshold", DRIFT_THRESHOLD))
+        if column is None or not isinstance(value, (int, float)):
+            continue
+        rows.append(
+            {
+                "column": str(column),
+                "evidently_psi": float(value),
+                "evidently_threshold": threshold,
+                "evidently_drift": float(value) >= threshold,
+            }
+        )
+    return pd.DataFrame(rows)
+
+
 @st.cache_data
 def load_monitoring_evidence() -> dict:
     required = [
         STATUS_PATH,
         FEATURE_DRIFT_PATH,
-        RECONCILED_PATH,
-        RECONCILED_SUMMARY_PATH,
         POPULATION_SUMMARY_PATH,
+        EVIDENTLY_JSON_PATH,
     ]
     missing = [str(path.relative_to(PROJECT_ROOT)) for path in required if not path.exists()]
     if missing:
@@ -50,10 +77,9 @@ def load_monitoring_evidence() -> dict:
 
     return {
         "status": read_json(STATUS_PATH),
-        "feature_drift": pd.read_csv(FEATURE_DRIFT_PATH),
-        "reconciled": pd.read_csv(RECONCILED_PATH),
-        "reconciled_summary": read_json(RECONCILED_SUMMARY_PATH),
+        "project_drift": pd.read_csv(FEATURE_DRIFT_PATH),
         "population": read_json(POPULATION_SUMMARY_PATH),
+        "evidently_raw": read_json(EVIDENTLY_JSON_PATH),
     }
 
 
@@ -76,8 +102,25 @@ except FileNotFoundError as exc:
     st.stop()
 
 status = evidence["status"]
-reconciled = evidence["reconciled"]
-reconciled_summary = evidence["reconciled_summary"]
+project_drift = evidence["project_drift"].copy()
+evidently_drift = extract_evidently_drift(evidence["evidently_raw"])
+
+# Add the model-output row to the custom project evidence so the two approaches can be
+# compared over the same 13 monitored columns without merging their conclusions.
+prediction_row = pd.DataFrame(
+    [
+        {
+            "feature": PREDICTION_COLUMN,
+            "psi": float(status["prediction_drift"]["psi"]),
+            "ks_statistic": float(status["prediction_drift"]["ks_statistic"]),
+            "missingness_change_pp": float(
+                status["prediction_drift"]["missingness_change_pp"]
+            ),
+            "severity": str(status["prediction_drift"]["severity"]),
+        }
+    ]
+)
+project_all = pd.concat([project_drift, prediction_row], ignore_index=True)
 
 tabs = st.tabs(
     [
@@ -127,77 +170,172 @@ with tabs[0]:
 with tabs[1]:
     st.subheader("Data and prediction drift")
     st.write(
-        "The project compares its own PSI implementation with Evidently AI on the same "
-        "development-reference and final-holdout populations. Agreement is treated as "
-        "convergent evidence; disagreement remains visible as method-sensitive evidence."
+        "Two monitoring approaches are shown separately. The project implementation uses "
+        "custom PSI, KS and missingness checks with project-specific severity thresholds. "
+        "Evidently AI independently evaluates PSI on the same reference and final-holdout "
+        "populations."
     )
 
-    counts = reconciled_summary["counts"]
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Confirmed drift", counts["confirmed"])
-    c2.metric("Project-only signals", counts["project_only"])
-    c3.metric("Evidently-only signals", counts["evidently_only"])
-    c4.metric("No drift", counts["no_drift"])
+    st.markdown("### Project Python monitoring")
+    st.caption(
+        "Custom monitoring logic implemented in src/monitoring/drift_metrics.py. "
+        "Project severity thresholds are design choices for this academic prototype."
+    )
 
-    display = reconciled.copy()
-    fig = px.bar(
-        display.melt(
-            id_vars=["column", "evidence_classification"],
-            value_vars=["project_psi", "evidently_psi"],
-            var_name="method",
-            value_name="psi",
-        ),
-        x="column",
+    p1, p2, p3 = st.columns(3)
+    p1.metric(
+        "Features at escalate",
+        int((project_drift["severity"] == "escalate").sum()),
+    )
+    p2.metric(
+        "Features at watch",
+        int((project_drift["severity"] == "watch").sum()),
+    )
+    p3.metric(
+        "Prediction-score PSI",
+        f"{float(status['prediction_drift']['psi']):.3f}",
+    )
+
+    project_plot = project_all.copy()
+    fig_project = px.bar(
+        project_plot,
+        x="feature",
         y="psi",
-        color="method",
-        barmode="group",
-        title="PSI by monitored feature and prediction score",
-        labels={"column": "", "psi": "PSI", "method": "Method"},
+        title="Project PSI by monitored feature and prediction score",
+        labels={"feature": "", "psi": "PSI"},
     )
-    fig.add_hline(y=0.10, line_dash="dash", annotation_text="0.10 drift threshold")
-    st.plotly_chart(fig, width="stretch")
+    fig_project.add_hline(
+        y=0.10,
+        line_dash="dash",
+        annotation_text="0.10 watch threshold",
+    )
+    fig_project.add_hline(
+        y=0.25,
+        line_dash="dot",
+        annotation_text="0.25 escalate threshold",
+    )
+    st.plotly_chart(fig_project, width="stretch")
 
+    project_table = project_all.rename(
+        columns={
+            "feature": "column",
+            "psi": "project_psi",
+            "ks_statistic": "ks_statistic",
+            "missingness_change_pp": "missingness_change_pp",
+            "severity": "project_severity",
+        }
+    )
     st.dataframe(
-        display[
+        project_table[
             [
                 "column",
-                "column_type",
                 "project_psi",
-                "evidently_psi",
-                "evidence_classification",
+                "ks_statistic",
+                "missingness_change_pp",
+                "project_severity",
             ]
-        ].sort_values(
-            ["evidence_classification", "project_psi"],
-            ascending=[True, False],
-        ),
+        ].sort_values("project_psi", ascending=False),
         width="stretch",
         hide_index=True,
     )
 
-    confirmed = reconciled_summary["confirmed_columns"]
-    method_sensitive = reconciled_summary["method_sensitive_columns"]
+    st.markdown("### Evidently AI monitoring")
+    st.caption(
+        "Independent PSI-based drift evaluation using Evidently AI on the same 13 monitored "
+        "columns: 12 model features plus the calibrated prediction score."
+    )
 
-    if confirmed:
-        st.success(
-            "**Confirmed drift:** "
-            + ", ".join(confirmed)
-            + ". These cross the PSI threshold in both implementations."
-        )
+    if evidently_drift.empty:
+        st.warning("No Evidently ValueDrift metrics were found in the generated report.")
     else:
-        st.success("No columns cross the PSI threshold in both implementations.")
+        e1, e2, e3 = st.columns(3)
+        e1.metric(
+            "Columns Evidently flags as drifted",
+            int(evidently_drift["evidently_drift"].sum()),
+        )
+        e2.metric(
+            "Columns not flagged",
+            int((~evidently_drift["evidently_drift"]).sum()),
+        )
+        score_match = evidently_drift.loc[
+            evidently_drift["column"] == PREDICTION_COLUMN
+        ]
+        score_value = (
+            float(score_match.iloc[0]["evidently_psi"])
+            if not score_match.empty
+            else float("nan")
+        )
+        e3.metric("Prediction-score PSI", f"{score_value:.3f}")
 
-    if method_sensitive:
-        st.info(
-            "**Method-sensitive signals:** "
-            + ", ".join(method_sensitive)
-            + ". These cross the threshold in only one implementation."
+        fig_evidently = px.bar(
+            evidently_drift,
+            x="column",
+            y="evidently_psi",
+            title="Evidently AI PSI by monitored feature and prediction score",
+            labels={"column": "", "evidently_psi": "PSI"},
+        )
+        fig_evidently.add_hline(
+            y=DRIFT_THRESHOLD,
+            line_dash="dash",
+            annotation_text="0.10 Evidently drift threshold",
+        )
+        st.plotly_chart(fig_evidently, width="stretch")
+
+        evidently_table = evidently_drift.copy()
+        evidently_table["evidently_result"] = evidently_table["evidently_drift"].map(
+            {True: "drift", False: "no drift"}
+        )
+        st.dataframe(
+            evidently_table[
+                [
+                    "column",
+                    "evidently_psi",
+                    "evidently_threshold",
+                    "evidently_result",
+                ]
+            ].sort_values("evidently_psi", ascending=False),
+            width="stretch",
+            hide_index=True,
         )
 
-    prediction_row = display.loc[
-        display["column"] == "calibrated_delinquency_probability"
-    ].iloc[0]
+    st.markdown("### Interpretation")
+    comparison = project_table.merge(
+        evidently_drift[["column", "evidently_psi", "evidently_drift"]],
+        on="column",
+        how="inner",
+    )
+    comparison["project_drift_at_0_10"] = comparison["project_psi"] >= DRIFT_THRESHOLD
+
+    agreed_drift = comparison.loc[
+        comparison["project_drift_at_0_10"] & comparison["evidently_drift"], "column"
+    ].tolist()
+    project_only = comparison.loc[
+        comparison["project_drift_at_0_10"] & ~comparison["evidently_drift"], "column"
+    ].tolist()
+    evidently_only = comparison.loc[
+        ~comparison["project_drift_at_0_10"] & comparison["evidently_drift"], "column"
+    ].tolist()
+
+    if agreed_drift:
+        st.success(
+            "**Agreement on drift:** " + ", ".join(agreed_drift) + ". "
+            "Both approaches cross the 0.10 PSI threshold for these columns."
+        )
+    if project_only:
+        st.info(
+            "**Project-only signals:** " + ", ".join(project_only) + ". "
+            "These cross the 0.10 PSI threshold only in the custom implementation. "
+            "The difference is retained visibly because PSI implementations can differ in "
+            "binning and edge handling."
+        )
+    if evidently_only:
+        st.info(
+            "**Evidently-only signals:** " + ", ".join(evidently_only) + ". "
+            "These cross the threshold only in Evidently AI."
+        )
+
     st.markdown("#### Prediction-score comparison")
-    p1, p2, p3 = st.columns(3)
+    p1, p2 = st.columns(2)
     p1.metric(
         "Reference mean risk",
         f"{float(status['prediction_drift']['reference_mean']):.2%}",
@@ -206,14 +344,10 @@ with tabs[1]:
         "Final-holdout mean risk",
         f"{float(status['prediction_drift']['current_mean']):.2%}",
     )
-    p3.metric(
-        "Confirmed score drift",
-        "Yes" if prediction_row["evidence_classification"] == "confirmed" else "No",
-    )
 
     if EVIDENTLY_HTML_PATH.exists():
         st.caption(
-            "A standalone Evidently AI HTML report is also generated in "
+            "The standalone Evidently AI report is generated at "
             "reports/monitoring/evidently_final_holdout_drift.html."
         )
 
