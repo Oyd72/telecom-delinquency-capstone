@@ -1,30 +1,42 @@
 # Monitoring evidence
 
-This directory is reserved for final-project model-monitoring evidence.
+This directory contains final-project model-monitoring evidence.
 
-## Monitoring periods
+## Monitoring demonstration
+
+The final project does **not** require an untouched future dataset. Monitoring is therefore
+demonstrated using populations already established in the model-development workflow:
 
 - **Development reference:** 1 June–13 July 2016.
-- **Final labelled evaluation:** 14–23 July 2016.
-- **Post-23-July diagnostic period:** feature and prediction distributions may be used for
-  label-free drift analysis only.
+- **Final holdout:** 14–23 July 2016.
 
-The post-23-July outcomes are all labelled as successful repayment. Because this abrupt
-label regime change is unexplained, those labels are **not treated as ground truth**.
-Accordingly, the project does not calculate accuracy, precision, recall, calibration,
-outcome-based fairness, or other supervised performance measures from that period.
+The final holdout is chronologically later than the development reference and has trusted
+labels. It therefore supports both:
+- label-free feature and prediction-score drift monitoring; and
+- outcome-based performance and calibration monitoring.
 
-## Planned outputs
+No post-23-July records are used in the final-project monitoring solution.
 
-- `latest_monitoring_status.json` — machine-readable current status and triggered metrics.
-- `historical_monitoring_metrics.csv` — compact audit trail across monitoring runs.
-- Evidently AI monitoring artefacts will be added after the core calculations are verified.
-- The separate Streamlit monitoring dashboard will consume these outputs but will remain
-  distinct from the existing stakeholder/XAI dashboard.
+## Operational interpretation
+
+In a real deployment, the same monitoring components would compare future scored batches
+with an approved reference population. Label-free drift checks could run immediately.
+Performance, calibration and outcome-based error analysis would run only after trustworthy
+outcomes had matured.
+
+## Outputs
+
+- `latest_monitoring_status.json` — machine-readable status and triggered metrics.
+- `historical_monitoring_metrics.csv` — compact audit trail.
+- `feature_drift_final_holdout.csv` — project PSI and distribution-shift evidence.
+- `evidently_final_holdout_drift.html/json` — Evidently AI cross-check.
+- `reconciled_drift_evidence.csv` — project/Evidently comparison.
+- The separate Streamlit monitoring dashboard consumes these outputs and remains distinct
+  from the stakeholder/XAI dashboard.
 
 ## Fairness boundary
 
 Protected demographic attributes are not available in the dataset. Operational segment
 monitoring must not be presented as demographic fairness evidence. Fairlearn and Evidently
-AI will be used only for analyses supported by the available data, with this limitation
-displayed explicitly.
+AI are used only for analyses supported by the available data, with this limitation shown
+explicitly.
