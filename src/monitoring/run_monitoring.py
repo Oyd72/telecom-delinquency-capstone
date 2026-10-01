@@ -13,7 +13,12 @@ supervised performance or outcome-based fairness metrics.
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 import joblib
 import pandas as pd
@@ -23,7 +28,6 @@ from src.monitoring.drift_metrics import numeric_feature_drift, prediction_drift
 from src.monitoring.performance_monitoring import evaluate_labelled_period
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
 MODEL_PATH = PROJECT_ROOT / "models/selected_random_forest_isotonic.joblib"
 METADATA_PATH = PROJECT_ROOT / "models/selected_model_metadata.json"
 
