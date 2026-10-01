@@ -16,6 +16,7 @@ from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 
 
@@ -106,7 +107,7 @@ project_drift = evidence["project_drift"].copy()
 evidently_drift = extract_evidently_drift(evidence["evidently_raw"])
 
 # Add the model-output row to the custom project evidence so the two approaches can be
-# compared over the same 13 monitored columns without merging their conclusions.
+# compared over the same 13 monitored variables without merging their conclusions.
 prediction_row = pd.DataFrame(
     [
         {
@@ -227,19 +228,19 @@ with tabs[1]:
 
     p1, p2, p3 = st.columns(3)
     p1.metric(
-        "Features at escalate",
-        int((project_drift["severity"] == "escalate").sum()),
+        "Variables at escalate",
+        int((project_all["severity"] == "escalate").sum()),
         help=(
-            "Number of model features whose custom PSI is at least 0.25 or whose missingness "
-            "change crosses the project's escalation threshold."
+            "Number of monitored variables, including the calibrated prediction score, whose "
+            "custom PSI or missingness change crosses the project's escalation threshold."
         ),
     )
     p2.metric(
-        "Features at watch",
-        int((project_drift["severity"] == "watch").sum()),
+        "Variables at watch",
+        int((project_all["severity"] == "watch").sum()),
         help=(
-            "Number of model features that cross the project's watch threshold but not "
-            "the escalation threshold."
+            "Number of monitored variables, including the calibrated prediction score, that "
+            "cross the project's watch threshold but not the escalation threshold."
         ),
     )
     p3.metric(
@@ -264,20 +265,40 @@ with tabs[1]:
         project_plot,
         x="feature",
         y="psi",
-        title="Project PSI by monitored feature and prediction score",
+        title="Project PSI by monitored variable",
         labels={"feature": "", "psi": "PSI"},
     )
-    fig_project.add_hline(
-        y=0.10,
-        line_dash="dash",
-        annotation_text="WATCH ≥ 0.10",
-        annotation_position="bottom left",
+    project_x = project_plot["feature"].tolist()
+    fig_project.add_trace(
+        go.Scatter(
+            x=project_x,
+            y=[0.10] * len(project_x),
+            mode="lines",
+            name="WATCH threshold (PSI = 0.10)",
+            line=dict(color="#FFB000", dash="dash", width=3),
+            hoverinfo="skip",
+        )
     )
-    fig_project.add_hline(
-        y=0.25,
-        line_dash="dot",
-        annotation_text="ESCALATE ≥ 0.25",
-        annotation_position="top left",
+    fig_project.add_trace(
+        go.Scatter(
+            x=project_x,
+            y=[0.25] * len(project_x),
+            mode="lines",
+            name="ESCALATE threshold (PSI = 0.25)",
+            line=dict(color="#FF4B4B", dash="dot", width=3),
+            hoverinfo="skip",
+        )
+    )
+    fig_project.update_layout(
+        legend=dict(
+            orientation="v",
+            yanchor="top",
+            y=1.0,
+            xanchor="right",
+            x=-0.04,
+            title_text="Thresholds",
+        ),
+        margin=dict(l=230, r=40, t=80, b=90),
     )
     st.plotly_chart(fig_project, width="stretch")
 
@@ -313,7 +334,7 @@ with tabs[1]:
     )
     st.caption(
         "Independent PSI-based drift evaluation using Evidently AI on the same 13 monitored "
-        "columns: 12 model features plus the calibrated prediction score."
+        "columns: 12 model inputs plus the calibrated prediction score."
     )
 
     if evidently_drift.empty:
@@ -321,17 +342,17 @@ with tabs[1]:
     else:
         e1, e2, e3 = st.columns(3)
         e1.metric(
-            "Columns Evidently flags as drifted",
+            "Variables Evidently flags as drifted",
             int(evidently_drift["evidently_drift"].sum()),
             help=(
-                "Number of monitored columns for which Evidently AI reports PSI at or above "
+                "Number of monitored variables for which Evidently AI reports PSI at or above "
                 "its configured drift threshold of 0.10."
             ),
         )
         e2.metric(
-            "Columns not flagged",
+            "Variables not flagged",
             int((~evidently_drift["evidently_drift"]).sum()),
-            help="Number of monitored columns whose Evidently AI PSI remains below 0.10.",
+            help="Number of monitored variables whose Evidently AI PSI remains below 0.10.",
         )
         score_match = evidently_drift.loc[
             evidently_drift["column"] == PREDICTION_COLUMN
@@ -351,7 +372,7 @@ with tabs[1]:
         )
 
         st.info(
-            "**How to read Evidently AI:** a column is flagged as drifted when Evidently's "
+            "**How to read Evidently AI:** a variable is flagged as drifted when Evidently's "
             "PSI is 0.10 or higher in this report. The dashed line marks that threshold."
         )
 
@@ -359,14 +380,30 @@ with tabs[1]:
             evidently_drift,
             x="column",
             y="evidently_psi",
-            title="Evidently AI PSI by monitored feature and prediction score",
+            title="Evidently AI PSI by monitored variable",
             labels={"column": "", "evidently_psi": "PSI"},
         )
-        fig_evidently.add_hline(
-            y=DRIFT_THRESHOLD,
-            line_dash="dash",
-            annotation_text="DRIFT ≥ 0.10",
-            annotation_position="top left",
+        evidently_x = evidently_drift["column"].tolist()
+        fig_evidently.add_trace(
+            go.Scatter(
+                x=evidently_x,
+                y=[DRIFT_THRESHOLD] * len(evidently_x),
+                mode="lines",
+                name="DRIFT threshold (PSI = 0.10)",
+                line=dict(color="#FFB000", dash="dash", width=3),
+                hoverinfo="skip",
+            )
+        )
+        fig_evidently.update_layout(
+            legend=dict(
+                orientation="v",
+                yanchor="top",
+                y=1.0,
+                xanchor="right",
+                x=-0.04,
+                title_text="Threshold",
+            ),
+            margin=dict(l=230, r=40, t=80, b=90),
         )
         st.plotly_chart(fig_evidently, width="stretch")
 
@@ -414,7 +451,7 @@ with tabs[1]:
     if agreed_drift:
         st.success(
             "**Agreement on drift:** " + ", ".join(agreed_drift) + ". "
-            "Both approaches cross the 0.10 PSI threshold for these columns."
+            "Both approaches cross the 0.10 PSI threshold for these monitored variables."
         )
     if project_only:
         st.info(
