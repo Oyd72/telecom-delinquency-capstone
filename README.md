@@ -105,6 +105,24 @@ The Module 5 stakeholder dashboard is deployed on Streamlit Community Cloud:
 
 https://telecom-delinquency-capstone-3zecwziyb4rhssv8uavlm2.streamlit.app/
 
+## Public prediction API
+
+The packaged FastAPI inference service is deployed publicly on Render:
+
+- API base URL: `https://telecom-delinquency-capstone-api.onrender.com`
+- Health check: `https://telecom-delinquency-capstone-api.onrender.com/health`
+- Interactive API documentation: `https://telecom-delinquency-capstone-api.onrender.com/docs`
+- Prediction endpoint: `POST https://telecom-delinquency-capstone-api.onrender.com/predict`
+
+The public endpoint was verified against the representative Module 4/5 typical-risk case. It returned the expected frozen-model values:
+
+- raw delinquency probability: `0.26910022741067435`
+- calibrated delinquency probability: `0.10013440860215053`
+- model: `telecom_delinquency_random_forest_isotonic`
+- artefact version: `1.0.0`
+
+The service returns model probabilities only. It does not make approval or decline decisions.
+
 ## Module 5 stakeholder dashboard
 
 The Module 5 dashboard is implemented in `dashboards/streamlit_app.py`. It reuses the frozen Module 4 evidence and inference contract rather than changing the submitted Module 4 artefacts or their paths.
