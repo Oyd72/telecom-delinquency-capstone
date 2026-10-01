@@ -586,7 +586,7 @@ with tabs[2]:
     )
 
     st.caption(
-        "Performance and calibration metrics shown below are calculated on the final "
+        "Performance and calibration metrics shown above are calculated on the final "
         "holdout using the frozen operating threshold."
     )
 
