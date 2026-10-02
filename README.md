@@ -8,6 +8,8 @@ The project uses historical telecom microcredit data for academic work. The aim 
 
 The modelling population ends on 23 July 2016. Records after that date are kept outside ordinary supervised modelling because every later outcome is successful repayment and the source material does not explain whether the change comes from sampling, labelling, extraction, or the business process itself.
 
+Post-23-July artefacts are retained solely as historical Module 4 exploratory evidence and are not part of the final-project monitoring implementation.
+
 ## Current pipeline
 
 The Prefect flow in `src/pipeline/prefect_etl.py` runs the Module 3 data path in this order:
@@ -40,15 +42,14 @@ Raw validation is diagnostic: it is meant to show the defects present in the unt
 - `Dockerfile.api`, `Dockerfile.stakeholder`, `Dockerfile.monitoring` – service-specific container builds
 - `docker-compose.yml` – local multi-container stack for the data pipeline, API, stakeholder dashboard, and monitoring dashboard
 
-### Reserved areas
+### Additional project areas
 
 - `notebooks/` – exploratory notebooks if needed; reusable logic belongs in `src/`
-- `models/` – local persisted model binary plus committed privacy-safe metadata and artefact documentation
+- `models/` – committed selected model binary, privacy-safe metadata, and artefact documentation
 - `dashboards/` – Module 5 stakeholder dashboard, final-project monitoring dashboard, and deployment dependencies
 - `config/` – shared configuration, including monitoring thresholds
-- `.github/workflows/` – CI automation, including the dashboard smoke-test workflow
+- `.github/workflows/` – final-project CI/CD automation
 
-Empty reserved directories remain visible through `.gitkeep` files.
 
 ## Data and privacy position
 
@@ -105,12 +106,6 @@ Keeping runtime dependencies separate avoids putting the full analytical environ
 
 Row-level generated data are not committed. This includes synthetic scenario rows. `reports/README.md` explains which aggregate outputs are suitable for repository or assignment evidence and which should remain local. Figures used by the Module 4 experiment record live under `reports/figures/module4/`. The final Module 4 evidence also includes a formal fairness report, MLflow evidence, conventional classification artefacts, constrained counterfactual explanations, a packaged model metadata record, and a tested FastAPI `/predict` endpoint.
 
-## Live dashboard
-
-The Module 5 stakeholder dashboard is deployed on Streamlit Community Cloud:
-
-https://telecom-delinquency-capstone-3zecwziyb4rhssv8uavlm2.streamlit.app/
-
 ## Public prediction API
 
 The packaged FastAPI inference service is deployed publicly on Render:
@@ -132,6 +127,10 @@ The service returns model probabilities only. It does not make approval or decli
 ## Module 5 stakeholder dashboard
 
 The Module 5 dashboard is implemented in `dashboards/streamlit_app.py`. It reuses the frozen Module 4 evidence and inference contract rather than changing the submitted Module 4 artefacts or their paths.
+
+Live stakeholder dashboard:
+
+https://telecom-delinquency-capstone-3zecwziyb4rhssv8uavlm2.streamlit.app/
 
 Dashboard sections:
 
