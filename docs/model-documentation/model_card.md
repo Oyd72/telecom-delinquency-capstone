@@ -14,11 +14,11 @@ The packaged Module 4 model is a 12-feature Random Forest with isotonic calibrat
 | Calibration | Isotonic regression |
 | Feature count | 12 |
 | Random seed | 42 |
-| Binary artefact | `models/selected_random_forest_isotonic.joblib` — local only |
+| Binary artefact | `models/selected_random_forest_isotonic.joblib` — committed for reproducible deployment |
 | Metadata | `models/selected_model_metadata.json` |
 | Artefact SHA-256 | `b70912867f0838f1e020a973ba5aa3f69e601a1dfce681dbe7d8b84e934dab9e` |
 
-The hash is there for a simple reason: the binary itself is not stored in GitHub. The SHA-256 value lets us confirm that the metadata still refers to the exact local artefact that was packaged and tested.
+The SHA-256 value lets us confirm that the committed binary, deployment artefacts, and metadata all refer to the exact model package that was frozen and tested.
 
 ## How the final artefact was fitted
 
@@ -126,7 +126,7 @@ Batch inference is implemented in:
 
 The inference contract has two unit tests, both passing. A real batch run also scored 10 rows from the model-ready dataset successfully. That run was a functional check of the persisted artefact, not a new performance test.
 
-The binary remains local. GitHub stores the metadata and its SHA-256 fingerprint so the exact artefact can still be identified later.
+The selected binary is committed alongside its metadata so the FastAPI service, Streamlit applications, and Docker builds can reproduce the frozen model. The SHA-256 fingerprint provides an integrity check for that exact artefact.
 
 ## Where this model can and cannot be used
 
