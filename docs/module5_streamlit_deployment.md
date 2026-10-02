@@ -29,7 +29,7 @@ The smoke test verifies:
 - a calibrated prediction can be produced;
 - the committed Module 4 dashboard evidence files can be loaded.
 
-GitHub Actions repeats these checks and also starts Streamlit headlessly and checks its health endpoint.
+The final-project GitHub Actions workflow runs the stakeholder dashboard smoke test as part of the wider automated validation suite. The monitoring dashboard has a separate headless health check in the same workflow.
 
 ## Live deployment
 
