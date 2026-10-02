@@ -15,7 +15,8 @@ This page is a navigation aid for the final Module 4 submission. It points to th
 | Counterfactual-style explanations | `reports/tables/module4_counterfactual_summary.json`, `reports/figures/module4/counterfactual_risk_changes.png` |
 | Fairness feasibility and robustness | `reports/module4_fairness_report.md` |
 | Model card | `docs/model-documentation/model_card.md` |
-| Serialized selected model | `models/selected_random_forest_isotonic.joblib` |\n| Packaged-model metadata and integrity hash | `models/selected_model_metadata.json` |
+| Serialized selected model | `models/selected_random_forest_isotonic.joblib` |
+| Packaged-model metadata and integrity hash | `models/selected_model_metadata.json` |
 | Batch inference | `src/inference/predict_selected_model.py` |
 | FastAPI `/predict` endpoint | `src/api/app.py`, `tests/unit/test_api.py` |
 | Full experiment history | `docs/model-documentation/module4_experiment_record.md` |
