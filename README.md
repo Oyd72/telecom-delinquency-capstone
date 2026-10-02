@@ -65,6 +65,10 @@ The main governance documents are:
 - `docs/governance/representation_bias_assessment.md` – scope and limits of representation/bias checks
 - `docs/governance/continuous_fairness_monitoring_plan.md` – continuous fairness-monitoring design, escalation logic, and protected-group data contingency
 - `docs/governance/ethical_incident_response_plan.md` – detection, severity, containment, investigation, escalation, remediation, and resumption criteria for responsible-AI incidents
+- `docs/governance/ethical_decommissioning_plan.md` – governed retirement, evidence preservation, access revocation, and closure controls
+- `docs/governance/algorithmic_impact_assessment.md` – consolidated impact assessment covering purpose, stakeholders, benefits, risks, oversight, redress, and lifecycle controls
+- `docs/governance/regulatory_compliance_assessment.md` – applicability-oriented GDPR, EU AI Act, CCPA/CPRA, and HIPAA assessment
+- `docs/governance/public_trust_statement.md` – plain-language public explanation of model purpose, limits, fairness, privacy, monitoring, and challenge rights
 - `docs/governance/feature_selection.md` – feature eligibility and selection method
 - `docs/governance/model_development_narrative.md` – modelling decisions and results
 - `docs/governance/model_decision_log.md` – compact decision record and current model position
