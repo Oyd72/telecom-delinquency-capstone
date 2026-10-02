@@ -35,7 +35,7 @@ flowchart LR
 
 The Random Forest was fitted on **101,241 rows** through 6 July 2016. Isotonic calibration used a later **20,878-row** window from 7-13 July. The final 14-23 July holdout remained outside fitting and calibration.
 
-The labelled modelling population itself ends on 23 July. The later records show an unexplained all-success outcome pattern, so those labels are not treated as supervised ground truth. The later feature values were still useful for drift and scenario analysis.
+The labelled modelling population itself ends on 23 July. The later records show an unexplained all-success outcome pattern, so those labels are not treated as supervised ground truth. Within Module 4, the later feature values were retained only for exploratory drift and scenario analysis; they are not part of the final-project monitoring implementation.
 
 ## What the model expects
 
