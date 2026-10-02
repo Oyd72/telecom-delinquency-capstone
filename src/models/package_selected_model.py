@@ -7,7 +7,7 @@ in Module 4:
 - Isotonic calibration: 7-13 July 2016
 - Final holdout: not used for fitting
 
-The resulting local artefact contains:
+The resulting artefact contains:
 - fitted median imputer;
 - fitted Random Forest;
 - fitted isotonic calibrator;
