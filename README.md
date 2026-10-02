@@ -63,6 +63,7 @@ The main governance documents are:
 - `docs/governance/data_cleaning_policy.md` – standing cleaning rules
 - `docs/governance/data_cleaning_narrative.md` – what the cleaning and validation work found in this dataset
 - `docs/governance/representation_bias_assessment.md` – scope and limits of representation/bias checks
+- `docs/governance/continuous_fairness_monitoring_plan.md` – continuous fairness-monitoring design, escalation logic, and protected-group data contingency
 - `docs/governance/feature_selection.md` – feature eligibility and selection method
 - `docs/governance/model_development_narrative.md` – modelling decisions and results
 - `docs/governance/model_decision_log.md` – compact decision record and current model position
