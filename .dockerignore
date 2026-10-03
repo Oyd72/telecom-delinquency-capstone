@@ -9,7 +9,6 @@ __pycache__
 .idea
 .env
 notebooks
-models
 data/raw/*
 data/interim/*
 data/processed/*

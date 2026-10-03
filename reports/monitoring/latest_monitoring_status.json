@@ -1,0 +1,52 @@
+{
+  "model_name": "telecom_delinquency_random_forest_isotonic",
+  "artifact_version": "1.0.0",
+  "artifact_sha256": "b70912867f0838f1e020a973ba5aa3f69e601a1dfce681dbe7d8b84e934dab9e",
+  "operating_threshold": 0.175141,
+  "reference_period": "2016-06-01 through 2016-07-13",
+  "comparison_period": "2016-07-14 through 2016-07-23",
+  "monitoring_mode": "historical_demonstration",
+  "reference_rows": 122119,
+  "comparison_rows": 28648,
+  "overall_drift_status": "escalate",
+  "features_escalate": [
+    "cnt_ma_rech90",
+    "daily_decr30",
+    "sumamnt_ma_rech90",
+    "last_rech_amt_ma",
+    "daily_decr90",
+    "rental30"
+  ],
+  "features_watch": [
+    "last_rech_date_ma",
+    "medianamnt_ma_rech30"
+  ],
+  "prediction_drift": {
+    "psi": 0.1691613181171588,
+    "ks_statistic": 0.07696459057900132,
+    "reference_mean": 0.18424358130290483,
+    "current_mean": 0.17852108667152497,
+    "reference_median": 0.10013440860215053,
+    "current_median": 0.10013440860215053,
+    "missingness_change_pp": 0.0,
+    "severity": "watch"
+  },
+  "final_holdout_performance": {
+    "period_name": "final_holdout_2016_07_14_to_2016_07_23",
+    "rows": 28648,
+    "observed_delinquency_rate": 0.20779810108908126,
+    "roc_auc": 0.8287232694884992,
+    "average_precision": 0.5666773831673494,
+    "precision": 0.4257571573230231,
+    "recall": 0.7769192004031581,
+    "f1": 0.5500713606089439,
+    "brier_score": 0.12295620178706719,
+    "ece_10bin": 0.029277014417556296,
+    "top20_capture": 0.5403997984209642,
+    "operating_threshold": 0.175141,
+    "labels_reliable": true
+  },
+  "future_monitoring_note": "In operational use the same monitoring logic would compare future scored batches with the approved reference population. Performance metrics would be calculated only after trustworthy outcome labels mature.",
+  "fairness_note": "Protected demographic attributes are unavailable. Operational drift and robustness monitoring must not be presented as demographic fairness evidence.",
+  "post_23_july_data_used": false
+}

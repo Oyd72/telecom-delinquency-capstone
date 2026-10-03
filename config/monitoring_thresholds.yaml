@@ -1,0 +1,21 @@
+# Project monitoring thresholds for the academic prototype.
+# These are project design choices, not universal statistical standards.
+drift:
+  psi_watch: 0.10
+  psi_escalate: 0.25
+  missingness_watch_pp: 2.0
+  missingness_escalate_pp: 5.0
+
+performance:
+  roc_auc_decline_watch: 0.03
+  roc_auc_decline_escalate: 0.05
+  recall_decline_watch_pp: 5.0
+  recall_decline_escalate_pp: 10.0
+  brier_increase_watch: 0.02
+  brier_increase_escalate: 0.04
+
+governance:
+  demonstration_reference: "2016-06-01 through 2016-07-13"
+  demonstration_comparison: "2016-07-14 through 2016-07-23"
+  future_performance_requires_mature_trustworthy_labels: true
+  post_23_july_data_used: false

@@ -8,6 +8,8 @@ The project uses historical telecom microcredit data for academic work. The aim 
 
 The modelling population ends on 23 July 2016. Records after that date are kept outside ordinary supervised modelling because every later outcome is successful repayment and the source material does not explain whether the change comes from sampling, labelling, extraction, or the business process itself.
 
+Post-23-July artefacts are retained solely as historical Module 4 exploratory evidence and are not part of the final-project monitoring implementation.
+
 ## Current pipeline
 
 The Prefect flow in `src/pipeline/prefect_etl.py` runs the Module 3 data path in this order:
@@ -31,22 +33,23 @@ Raw validation is diagnostic: it is meant to show the defects present in the unt
 - `src/api/` – FastAPI `/predict` endpoint for single-record scoring
 - `src/pipeline/` – Prefect orchestration
 - `src/privacy/` – privacy-safe pipeline audit logging
-- `src/monitoring/` – representation and operational slice diagnostics
+- `src/monitoring/` – model monitoring, drift metrics, Evidently integration, performance monitoring, and representation/operational diagnostics
 - `tests/unit/` – tests for transformations, privacy controls, representation checks, packaged inference, and the FastAPI endpoint
 - `tests/validation/` – pipeline and validation contract tests
 - `reports/` – reproducible aggregate outputs for analysis, validation, privacy, and presentation; row-level generated data stay local
 - `docs/` – data dictionary, methodology, decision records, governance material, and the Module 4 experiment record
 - `Dockerfile` – container build for the ETL pipeline
+- `Dockerfile.api`, `Dockerfile.stakeholder`, `Dockerfile.monitoring` – service-specific container builds
+- `docker-compose.yml` – local multi-container stack for the data pipeline, API, stakeholder dashboard, and monitoring dashboard
 
-### Reserved areas
+### Additional project areas
 
 - `notebooks/` – exploratory notebooks if needed; reusable logic belongs in `src/`
-- `models/` – local persisted model binary plus committed privacy-safe metadata and artefact documentation
-- `dashboards/` – Module 5 Streamlit stakeholder dashboard and deployment dependencies
-- `config/` – shared configuration if project parameters are externalised
-- `.github/workflows/` – CI automation if introduced later
+- `models/` – committed selected model binary, privacy-safe metadata, and artefact documentation
+- `dashboards/` – Module 5 stakeholder dashboard, final-project monitoring dashboard, and deployment dependencies
+- `config/` – shared configuration, including monitoring thresholds
+- `.github/workflows/` – final-project CI/CD automation
 
-Empty reserved directories remain visible through `.gitkeep` files.
 
 ## Data and privacy position
 
@@ -61,6 +64,12 @@ The main governance documents are:
 - `docs/governance/data_cleaning_policy.md` – standing cleaning rules
 - `docs/governance/data_cleaning_narrative.md` – what the cleaning and validation work found in this dataset
 - `docs/governance/representation_bias_assessment.md` – scope and limits of representation/bias checks
+- `docs/governance/continuous_fairness_monitoring_plan.md` – continuous fairness-monitoring design, escalation logic, and protected-group data contingency
+- `docs/governance/ethical_incident_response_plan.md` – detection, severity, containment, investigation, escalation, remediation, and resumption criteria for responsible-AI incidents
+- `docs/governance/ethical_decommissioning_plan.md` – governed retirement, evidence preservation, access revocation, and closure controls
+- `docs/governance/algorithmic_impact_assessment.md` – consolidated impact assessment covering purpose, stakeholders, benefits, risks, oversight, redress, and lifecycle controls
+- `docs/governance/regulatory_compliance_assessment.md` – applicability-oriented GDPR, EU AI Act, CCPA/CPRA, and HIPAA assessment
+- `docs/governance/public_trust_statement.md` – plain-language public explanation of model purpose, limits, fairness, privacy, monitoring, and challenge rights
 - `docs/governance/feature_selection.md` – feature eligibility and selection method
 - `docs/governance/model_development_narrative.md` – modelling decisions and results
 - `docs/governance/model_decision_log.md` – compact decision record and current model position
@@ -83,26 +92,45 @@ Pytest checks reusable transformation and control logic. The Prefect flow and th
 
 ## Dependencies
 
-The two requirements files serve different purposes:
+The requirements files serve different runtime scopes:
 
-- `requirements.txt` – the wider analytical and development environment
-- `requirements-pipeline.txt` – the smaller set needed for the containerised ETL and Module 3 control path
+- `requirements.txt` – wider analytical and development environment
+- `requirements-pipeline.txt` – containerised ETL and Module 3 control path
+- `requirements-api.txt` – FastAPI inference service
+- `requirements-monitoring.txt` – monitoring calculations, Evidently AI, Fairlearn and monitoring dashboard
+- `dashboards/requirements.txt` – stakeholder dashboard
 
-Keeping the pipeline dependencies separate avoids putting the full analytical environment into the Docker image.
+Keeping runtime dependencies separate avoids putting the full analytical environment into every container.
 
 ## Report evidence
 
 Row-level generated data are not committed. This includes synthetic scenario rows. `reports/README.md` explains which aggregate outputs are suitable for repository or assignment evidence and which should remain local. Figures used by the Module 4 experiment record live under `reports/figures/module4/`. The final Module 4 evidence also includes a formal fairness report, MLflow evidence, conventional classification artefacts, constrained counterfactual explanations, a packaged model metadata record, and a tested FastAPI `/predict` endpoint.
 
-## Live dashboard
+## Public prediction API
 
-The Module 5 stakeholder dashboard is deployed on Streamlit Community Cloud:
+The packaged FastAPI inference service is deployed publicly on Render:
 
-https://telecom-delinquency-capstone-3zecwziyb4rhssv8uavlm2.streamlit.app/
+- API base URL: `https://telecom-delinquency-capstone-api.onrender.com`
+- Health check: `https://telecom-delinquency-capstone-api.onrender.com/health`
+- Interactive API documentation: `https://telecom-delinquency-capstone-api.onrender.com/docs`
+- Prediction endpoint: `POST https://telecom-delinquency-capstone-api.onrender.com/predict`
+
+The public endpoint was verified against the representative Module 4/5 typical-risk case. It returned the expected frozen-model values:
+
+- raw delinquency probability: `0.26910022741067435`
+- calibrated delinquency probability: `0.10013440860215053`
+- model: `telecom_delinquency_random_forest_isotonic`
+- artefact version: `1.0.0`
+
+The service returns model probabilities only. It does not make approval or decline decisions.
 
 ## Module 5 stakeholder dashboard
 
 The Module 5 dashboard is implemented in `dashboards/streamlit_app.py`. It reuses the frozen Module 4 evidence and inference contract rather than changing the submitted Module 4 artefacts or their paths.
+
+Live stakeholder dashboard:
+
+https://telecom-delinquency-capstone-3zecwziyb4rhssv8uavlm2.streamlit.app/
 
 Dashboard sections:
 
@@ -125,6 +153,49 @@ python dashboards/smoke_test.py
 ```
 
 Live scoring requires the frozen Module 4 artefact at `models/selected_random_forest_isotonic.joblib`. The dashboard does not retrain or recalibrate the model.
+
+## Final-project monitoring dashboard
+
+The governance-facing monitoring dashboard is implemented in `dashboards/monitoring_dashboard.py`. It is intentionally separate from the stakeholder/XAI dashboard.
+
+The monitoring demonstration compares the development reference period (1 June–13 July 2016) with the chronologically later final holdout (14–23 July 2016). It presents:
+
+- custom Python PSI, KS and missingness monitoring;
+- Evidently AI drift results as separate independent evidence;
+- final-holdout performance and calibration metrics;
+- model version, operating threshold and SHA-256 traceability;
+- fairness-feasibility and operational-robustness limitations.
+
+Monitoring evidence is versioned under `reports/monitoring/`.
+
+Live monitoring dashboard:
+
+https://telecom-delinquency-monitoring.streamlit.app/
+
+## Docker Compose
+
+The local multi-container stack is defined in `docker-compose.yml`:
+
+- Prefect ETL/data pipeline: batch service using the root `Dockerfile`
+- FastAPI prediction service: port 8000
+- stakeholder dashboard: port 8501
+- monitoring dashboard: port 8502
+
+Run locally with:
+
+```powershell
+docker compose build
+docker compose up -d
+docker compose ps
+```
+
+The full Compose setup has been locally verified. The Prefect ETL pipeline builds and completes end to end inside its container, while the API and both dashboard services run successfully. The stack therefore satisfies the final-project requirement for a multi-container pipeline + API + monitoring setup.
+
+## CI/CD
+
+GitHub Actions provides automated validation and deployment through `.github/workflows/final-project-ci-cd.yml`.
+
+The workflow runs automated tests, deployment-entry-point compilation, dashboard smoke checks, Docker Compose validation, and a monitoring-dashboard health check. After successful validation on the deployment branches, it triggers the Render API deployment through a protected repository secret. The Streamlit applications remain linked to their repository branches and redeploy through Streamlit Community Cloud.
 
 ## Delivery approach
 

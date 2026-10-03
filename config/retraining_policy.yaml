@@ -1,0 +1,15 @@
+retraining:
+  mode: governed_candidate
+  trigger:
+    minimum_new_labelled_rows: 5000
+    require_trustworthy_labels: true
+  evaluation:
+    new_batch_validation_fraction: 0.30
+    random_state: 42
+    minimum_roc_auc: 0.80
+    minimum_top20_capture: 0.50
+    maximum_brier_score: 0.14
+  promotion:
+    automatic_promotion: false
+    require_human_approval: true
+    note: "Passing gates creates a candidate only. The frozen deployed model is not overwritten automatically."

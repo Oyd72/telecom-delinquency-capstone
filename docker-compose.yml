@@ -1,0 +1,39 @@
+services:
+  pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: telecom-delinquency-pipeline
+    volumes:
+      - ./data:/app/data
+      - ./reports:/app/reports
+    restart: "no"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: telecom-delinquency-api
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  stakeholder-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.stakeholder
+    container_name: telecom-delinquency-stakeholder-dashboard
+    ports:
+      - "8501:8501"
+    restart: unless-stopped
+    depends_on:
+      - api
+
+  monitoring-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.monitoring
+    container_name: telecom-delinquency-monitoring-dashboard
+    ports:
+      - "8502:8502"
+    restart: unless-stopped

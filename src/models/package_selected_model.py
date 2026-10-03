@@ -7,7 +7,7 @@ in Module 4:
 - Isotonic calibration: 7-13 July 2016
 - Final holdout: not used for fitting
 
-The resulting local artefact contains:
+The resulting artefact contains:
 - fitted median imputer;
 - fitted Random Forest;
 - fitted isotonic calibrator;
@@ -15,8 +15,9 @@ The resulting local artefact contains:
 - training/calibration dates;
 - model metadata.
 
-The binary artefact stays local under models/. A privacy-safe metadata JSON is written
-alongside it and is allowed to be committed.
+The selected binary artefact and privacy-safe metadata JSON are written under models/.
+For the final capstone repository, the frozen selected artefact is committed so the API,
+dashboards, and Docker deployments are reproducible from source control.
 """
 
 from __future__ import annotations
