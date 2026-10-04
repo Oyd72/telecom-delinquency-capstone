@@ -53,6 +53,8 @@ Raw validation is diagnostic: it is meant to show the defects present in the unt
 
 ## Data and privacy position
 
+**Raw data acquisition.** The raw dataset is not committed to this repository. To reproduce the pipeline, obtain the original Kaggle telecom delinquency dataset and place the source CSV at `data/raw/sample_data_intw.csv`. The repository keeps the `data/raw/` directory visible through `.gitkeep`, while Git excludes the customer-level source file itself.
+
 Raw, interim, processed, and synthetic row-level datasets stay out of GitHub. `.gitignore` excludes their contents while keeping the directory structure visible. Synthetic scenarios are reproducible from the committed generator script; only aggregate summaries and figures are suitable repository evidence.
 
 `msisdn` is kept only for the short part of preprocessing where customer-level chronology is needed. It is removed before the model-ready dataset is written and is never an approved predictor. The processed behavioural data are still treated as restricted analytical data; removing the identifier is not taken to mean that the dataset is fully anonymous.
