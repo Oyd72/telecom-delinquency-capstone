@@ -44,15 +44,11 @@ These files receive the strictest treatment because they combine row-level behav
 
 ### Restricted analytical data
 
-This includes the processed model-ready dataset and other row-level modelling tables after `msisdn` has been removed.
-
-Removing the identifier lowers risk but does not make the behavioural data automatically anonymous. These files remain restricted analytical material.
+This includes the processed model-ready dataset and other row-level modelling tables after `msisdn` has been removed. Removing the identifier lowers risk but does not make the behavioural data automatically anonymous. These files remain restricted analytical material.
 
 ### Controlled project evidence
 
 Cleaning audits, privacy audits, Great Expectations results, representation summaries, model-evaluation tables, and generated figures fall into this category.
-
-They should not contain raw customer identifiers. They can be used as assignment evidence when they do not expose row-level personal data.
 
 ### Repository-safe material
 
@@ -72,7 +68,7 @@ Aggregate reports and documentation may be shared more broadly after checking th
 
 The data may be used to clean and validate the historical extract, derive leakage-conscious features, compare delinquency models, assess calibration and temporal stability, run representation checks, and produce the academic deliverables and reproducibility evidence.
 
-The project does not use the data or model to make autonomous lending decisions, attempt re-identification, infer missing protected characteristics, use `msisdn` as a predictor, or present the academic model as production-ready. The post-23-July all-success block also remains outside ordinary supervised training unless its data-generation anomaly can be explained.
+The project does not use the data or model to make autonomous lending decisions, does not use `msisdn` as a predictor, or present the academic model as production-ready. The post-23-July all-success block also remains outside ordinary supervised training.
 
 ## Data quality controls
 
@@ -80,9 +76,9 @@ Different stages have different validation roles.
 
 Raw Great Expectations checks are diagnostic. Their job is to show what is wrong with the untouched source.
 
-Cleaning follows `docs/governance/data_cleaning_policy.md`, which deliberately avoids changing values simply because they are statistically unusual.
+Cleaning follows `docs/governance/data_cleaning_policy.md`.
 
-Interim validation is blocking. Processed validation is also blocking and includes checks that forbidden identifier fields are absent. Pytest checks reusable transformation and control logic. Prefect preserves the order of these steps and stops the flow if a blocking control fails.
+Interim validation acts as a gate. Processed validation is also blocking and includes checks that forbidden identifier fields are absent. Pytest checks reusable transformation and control logic. Prefect preserves the order of these steps and stops the flow if a blocking control fails.
 
 ## Privacy and identifier minimisation
 
@@ -122,38 +118,34 @@ Privacy-safe logs, aggregate validation outputs, governance documents, code, and
 
 ### Repository material
 
-Code, tests, methodology, governance documentation, and aggregate outputs may remain in GitHub after the course as long as they contain no restricted row-level data, secrets, or direct identifiers.
-
-Deletion should cover unnecessary duplicate copies and exported working files as well as the main project folders.
+Repository content is therefore limited to materials suitable for continued retention and reproducibility. Restricted customer-level data and other unnecessary working copies remain outside the repository and are subject to the project’s retention rules.
 
 ## Audit logging
 
 The pipeline-level privacy audit records pipeline start and completion or failure, raw-data access for validation, validation outcomes, transformations, identifier removal, and execution of representation diagnostics.
 
-It is intentionally separate from the cleaning audit. The cleaning audit records changes to values. The privacy audit records the processing sequence and privacy-relevant controls.
-
 ## Representation and bias governance
 
 The source data do not contain usable demographic protected attributes. The project therefore limits bias assessment to operational slices that are actually present in the data.
 
-The current check compares first-time and returning borrowers and keeps the left-censoring limitation explicit. `pcircle` is constant and cannot support a regional comparison. Differences are reported for interpretation; they are not converted into an automatic declaration that the data are fair or unfair.
+The current check compares first-time and returning borrowers. This comparison is subject to left-censoring because the dataset begins on 1 June 2016, so any borrower activity before that date is invisible. As a result, some customers classified as first-time borrowers may in fact have had earlier transactions that fall outside the observation window. pcircle is constant and therefore cannot support a regional comparison. Differences between the observed groups are reported for interpretation only and are not treated as automatic evidence that the data are fair or unfair.
 
 ## Model and output governance
 
 The model is intended to produce a delinquency probability or risk ranking for analytical use.
 
-The main controls are exclusion of direct identifiers and unresolved fields, chronology-aware feature construction, forward-chaining evaluation, documented calibration limitations, explainability through several methods, and a preference for the simpler 12-feature specification where performance is effectively retained.
+The main controls are exclusion of direct identifiers and unresolved fields, chronology-aware feature construction, forward-chaining evaluation, where each model is trained only on earlier records and then tested on a later time period, documented calibration limitations, explainability through several methods, and selection of a 12-feature specification after comparison with broader and more compact alternatives showed that it preserved nearly all useful predictive performance while reducing model complexity.
 
 The short observation history remains a significant limitation. Any real production use would require fresh validation on representative current data, formal access controls, monitoring, incident handling, named model ownership, and relevant legal/compliance review.
 
 ## Incident and exception handling
 
-Examples of governance exceptions include restricted data being committed to GitHub, a direct identifier appearing in processed output or privacy logs, bypass of a blocking validation failure, use of an excluded leakage-prone field without review, unexplained changes in target prevalence or feature distributions, or loss of lineage evidence.
+Examples of governance violations or control breaches include restricted data being committed to GitHub, a direct identifier appearing in processed output or privacy logs, bypass of a blocking validation failure, use of an excluded leakage-prone field without review, unexplained changes in target prevalence or feature distributions, or loss of lineage evidence.
 
 If that happens, processing should stop where practical. The affected output should not be relied on until the event is documented and the underlying control or data problem has been corrected.
 
 ## Review
 
-Review this framework when the source data change, new collaborators receive access, the model purpose or feature definitions change materially, new personal or protected attributes appear, retention needs change, or the work moves beyond an academic demonstration.
+Review this framework when the source data change, new collaborators receive access, the model purpose or feature definitions change materially, new personal or protected attributes appear, retention needs change, relevant legal, regulatory, or policy requirements change, or the work moves beyond an academic demonstration.
 
 The framework is the umbrella document. The more detailed cleaning, privacy, representation, and modelling files remain the working evidence underneath it.
