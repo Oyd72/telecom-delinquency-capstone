@@ -2,7 +2,7 @@
 
 ## Scope
 
-The dataset does not contain usable demographic protected characteristics such as sex, age group, ethnicity, or disability. I therefore do not infer or manufacture them simply to make a conventional fairness analysis possible.
+The dataset does not contain usable demographic protected characteristics such as gender, age group, ethnicity, or disability. 
 
 What can be assessed is narrower: whether the observed data are unevenly distributed across operational groups that actually exist in the dataset, and whether those differences matter for modelling.
 
