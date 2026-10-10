@@ -26,7 +26,7 @@ The source `label` is removed after `delinquent_5d` has been created. Keeping bo
 
 The source data do not contain usable demographic protected characteristics. The project does not try to manufacture or infer them for privacy or fairness work.
 
-Fields with unresolved meaning are controlled through feature eligibility rather than altered for privacy reasons. The main privacy measure is to avoid retaining data that the model does not need.
+Fields with unresolved meaning are controlled through feature eligibility. The main privacy measure is to avoid retaining data that the model does not need.
 
 ## Why no persistent pseudonym is kept
 
