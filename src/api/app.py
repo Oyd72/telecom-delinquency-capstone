@@ -66,7 +66,12 @@ def get_model_package():
     return joblib.load(DEFAULT_ARTIFACT)
 
 
-@app.get("/health")
+@app.api_route("/", methods=["GET", "HEAD"])
+def root() -> dict[str, str]:
+    return {"status": "ok", "service": "telecom-delinquency-api"}
+
+
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
