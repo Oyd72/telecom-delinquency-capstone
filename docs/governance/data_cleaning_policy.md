@@ -4,7 +4,7 @@ This policy sets out how the Module 3 pipeline handles ambiguous, invalid, conta
 
 ## Evidence used
 
-The supplied Kaggle field description is the main reference for field meaning. I check it against the CSV structure, observed distributions, cross-field relationships, and within-customer history. Statistical anomaly methods are useful for finding suspicious values, but they are not enough on their own to prove that a value is wrong. Where the documentation and the data disagree, the uncertainty is recorded rather than resolved by assumption.
+The supplied Kaggle field description is the main reference for field meaning. Field definitions are assessed against the CSV structure, observed distributions, cross-field relationships, and within-customer history. Statistical anomaly methods are used to identify suspicious values, but are not treated as sufficient evidence that a value is incorrect. Where the documentation and observed data are inconsistent, the uncertainty is documented instead of resolved through unsupported assumptions.
 
 ## General rules
 
@@ -14,7 +14,7 @@ The supplied Kaggle field description is the main reference for field meaning. I
 - Rows are removed only for a defensible record-level reason, such as an exact duplicate or an unusable target/date record.
 - Runtime changes are written to the cleaning audit log. Git history separately records changes to rules and code.
 - `data/processed/` contains only approved predictors, controls, and derived fields.
-- Heavy tails are not clipped or winsorised simply because they are extreme.
+- Unusually high or low values are not automatically changed or capped simply because they are rare. They are altered only when there is a clear reason to conclude that they are invalid, contaminated, or inconsistent with the meaning of the field.
 - Boundaries observed in this dataset are not presented as universal business limits.
 
 ## Structural fields
