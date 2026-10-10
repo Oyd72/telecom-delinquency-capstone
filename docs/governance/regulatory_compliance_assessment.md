@@ -114,7 +114,7 @@ HIPAA is not a general US privacy law. HHS explains that the HIPAA Rules apply t
 
 This telecom microcredit dataset is not described as health information, and the academic project is not operating as a HIPAA covered entity or business associate.
 
-Accordingly, **HIPAA does not appear directly applicable to the project as described**.
+Accordingly, HIPAA does not appear directly applicable to the project as described.
 
 If the system were later used by or for a HIPAA covered entity and involved protected health information, applicability would need to be reassessed, including whether a business-associate relationship existed.
 
