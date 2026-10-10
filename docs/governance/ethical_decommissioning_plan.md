@@ -4,7 +4,7 @@
 
 This plan defines how the telecom delinquency model should be withdrawn when it is no longer suitable, lawful, reliable, or ethically acceptable for its approved use.
 
-Decommissioning is treated as a governed lifecycle activity rather than a simple technical deletion. The objective is to stop inappropriate use, preserve enough evidence for accountability, protect affected data, and ensure that downstream users do not continue relying on an obsolete model.
+Decommissioning is treated as a governed lifecycle activity, not as a simple technical deletion. The objective is to stop inappropriate use, preserve enough evidence for accountability, protect affected data, and ensure that downstream users do not continue relying on an obsolete model.
 
 ## Decommissioning triggers
 
