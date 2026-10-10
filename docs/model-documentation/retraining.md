@@ -22,9 +22,7 @@ deployed model.
 The frozen version 1.0.0 model remains unchanged unless a separate governed promotion
 decision is made.
 
-For the academic demonstration, the existing final holdout may be supplied as the
-chronologically later labelled batch. This demonstrates the mechanics of retraining
-without representing the candidate as a new production model.
+In this academic project, the chronologically later final holdout is reused as the labelled batch for the retraining demonstration. This allows the retraining workflow, quality gates, MLflow tracking, and candidate-evaluation process to be demonstrated using available labelled data. Because the holdout is not genuinely new post-deployment data, the resulting retrained model is treated only as a candidate and not as a new production model.
 
 Run locally after monitoring data have been prepared:
 
