@@ -116,4 +116,4 @@ Current evidence is intentionally narrower:
 - operational robustness is not presented as demographic fairness;
 - the monitoring dashboard keeps this limitation visible.
 
-This plan therefore describes how continuous fairness monitoring would operate without overstating what the current historical dataset can demonstrate.
+This plan describes how continuous fairness monitoring would operate without overstating what the current historical dataset can demonstrate.
