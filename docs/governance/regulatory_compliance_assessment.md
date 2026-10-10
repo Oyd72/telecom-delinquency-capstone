@@ -127,15 +127,15 @@ HHS covered entities and business associates: https://www.hhs.gov/hipaa/for-prof
 | Control theme | Project evidence |
 |---|---|
 | Purpose limitation / intended use | README, data governance framework, model card |
-| Data minimisation | anonymisation plan, removal of `msisdn`, feature review |
+| Data minimisation | Anonymisation plan, removal of `msisdn`, feature review |
 | Data quality | Great Expectations, Prefect pipeline, tests |
-| Transparency | stakeholder dashboard, model card, public trust statement |
-| Human oversight | advisory-only inference, no automatic credit decision |
-| Traceability | model version, SHA-256, Git history, MLflow |
-| Monitoring | custom Python, Evidently AI, performance/calibration monitoring |
+| Transparency | Stakeholder dashboard, model card, public trust statement |
+| Human oversight | Advisory-only inference, no automatic credit decision |
+| Traceability | Model version, SHA-256, Git history, MLflow |
+| Monitoring | Custom Python, Evidently AI, performance/calibration monitoring |
 | Fairness | Fairlearn-supported operational checks + continuous fairness plan |
-| Incident handling | ethical incident-response plan |
-| Lifecycle closure | ethical decommissioning plan |
+| Incident handling | Ethical incident-response plan |
+| Lifecycle closure | Ethical decommissioning plan |
 | Change control | CI/CD, governed retraining candidate process |
 
 ## Compliance gaps before real deployment
@@ -155,6 +155,6 @@ A real deployment would still require organisation-specific work, including:
 
 ## Conclusion
 
-The project contains a substantial governance foundation, but it should be described as **compliance-aware rather than legally certified**.
+The project contains a substantial governance foundation, but it should be described as compliance-aware, not legally certified.
 
 GDPR and the EU AI Act are the most directly relevant frameworks to evaluate for an EU-facing credit-risk deployment. CCPA would depend on California nexus and statutory business thresholds. HIPAA is not directly applicable on the facts currently available.
