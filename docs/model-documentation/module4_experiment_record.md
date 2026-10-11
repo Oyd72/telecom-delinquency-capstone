@@ -1,6 +1,6 @@
 # Module 4 experiment record
 
-This document is the running record of Module 4 modelling experiments, outputs, interpretation, and decisions. Raw machine-readable outputs remain under `reports/tables/`; supporting figures are stored under `reports/figures/module4/`.
+This document provides the chronological record of Module 4 modelling experiments, outputs, interpretation, and decisions. Raw machine-readable outputs remain under `reports/tables/`; supporting figures are stored under `reports/figures/module4/`.
 
 ## 0. Agreed modelling and validation position
 
@@ -209,7 +209,7 @@ The holdout therefore does not support declaring any candidate fully accepted un
 
 **Do not select a final production candidate yet.**
 
-The next modelling step is to assess a leakage-safe calibration strategy using development data only, freeze that calibration approach independently of the holdout results, and then evaluate the calibrated probabilities without additional parameter tuning. Model ranking remains secondary until calibration and stability are considered together.
+The calibration stage therefore assessed a leakage-safe strategy using development data only, with the calibration approach fixed independently of the holdout results before calibrated probabilities were evaluated without additional parameter tuning. Model ranking remained secondary until calibration and stability were considered together.
 
 **Machine-readable outputs:**
 - `reports/tables/module4_final_holdout_metrics.csv`
@@ -360,7 +360,7 @@ The calibrated probabilities slightly underpredict average risk, but the calibra
 
 The result strengthens the case for calibration but does not create a new independent validation result. The original final-holdout assessment remains the formal independent holdout evaluation. These calibrated results are confirmatory/sensitivity evidence.
 
-The remaining model-selection question is now primarily the trade-off between random forest and XGBoost. Their calibrated holdout performance is very close. Random forest has a slightly better Brier score; XGBoost has a marginally higher top-20% capture. Any final choice should therefore return to the agreed complexity-versus-value principle rather than rely on tiny metric differences.
+The remaining model-selection question was primarily the trade-off between Random Forest and XGBoost. Their calibrated holdout performance was very close: Random Forest had a slightly better Brier score, while XGBoost had a marginally higher top-20% capture. The final selection therefore returned to the agreed complexity-versus-value principle instead of relying on very small metric differences.
 
 **Machine-readable outputs:**
 - `reports/tables/module4_calibrated_holdout_metrics.csv`
@@ -413,7 +413,7 @@ Calibration:
 
 The selected random forest still missed the pre-agreed independent-holdout temporal-stability criterion before calibration. Calibration materially improved probability quality but does not remove that stability finding, because calibration does not change the underlying ranking model in a way that restores the original independent holdout result.
 
-The selected model should therefore be described as the **preferred candidate for this assignment**, not as a fully production-validated model. Longer historical coverage would be needed to establish stronger temporal stability.
+The selected model is therefore described as the **preferred academic candidate**, not as a fully production-validated model. Longer historical coverage would be needed to establish stronger temporal stability.
 
 
 
@@ -546,7 +546,7 @@ The realised synthetic delinquency rates closely track the intended scenario mea
 
 ### Interpretation
 
-The scenario dataset gives us three plausible *analytical futures* for exactly the same post-23 July customers and feature values.
+The scenario dataset provides three plausible *analytical futures* for exactly the same post-23 July customers and feature values.
 
 The model-consistent scenario reflects what the selected calibrated model expects from the shifted later population. The historical-prevalence-aligned scenario asks what the same customers would look like if overall delinquency returned to the labelled-period average. The holdout-stress scenario asks what would happen if the later population experienced the higher delinquency level observed in the final holdout.
 
@@ -768,13 +768,13 @@ The global and local explanations are sufficiently coherent for use in the assig
 
 **Status:** **Completed**
 
-The fairness part of this exercise is necessarily limited by the data. None of the modelling fields directly identify protected demographic groups, so there is no defensible basis for producing demographic group-fairness metrics. We deliberately did not manufacture substitute groups from unrelated variables just to fill that space. The remaining uncertainty is whether some behavioural variables could act as indirect proxies, which cannot be resolved from names or SHAP explanations alone.
+The fairness assessment is necessarily limited by the available data. None of the modelling fields directly identify protected demographic groups, so there is no defensible basis for producing demographic group-fairness metrics. Substitute groups are not manufactured from unrelated variables merely to produce fairness statistics. The remaining uncertainty is whether some behavioural variables could act as indirect proxies, which cannot be resolved from names or SHAP explanations alone.
 
 The robustness results are more concrete.
 
 Across account-tenure quartiles, the model remains useful throughout the holdout. ROC-AUC ranges from about **0.81 to 0.85**, and the strongest-tenure group also has the best top-20% capture. That suggests longer observed account history gives the model a cleaner behavioural signal, but the shortest-tenure group is still usable rather than collapsing.
 
-Recharge-based slices look weaker, with ROC-AUC around **0.67-0.69**. I do not interpret that as simple model failure. Recharge activity is one of the model's strongest predictors, so once we divide the population into narrow recharge bands, much of the variation the model normally uses to separate risk has already been removed.
+Recharge-based slices look weaker, with ROC-AUC around **0.67-0.69**. These lower values are not interpreted as simple model failure. Recharge activity is one of the model's strongest predictors, so dividing the population into narrow recharge bands removes much of the variation the model normally uses to separate risk.
 
 The perturbation test adds another perspective. Small input changes usually leave calibrated risk unchanged or nearly unchanged. The larger movements are concentrated mainly in recharge-amount variables. For `sumamnt_ma_rech90`, the 95th-percentile absolute change is about **5.6 percentage points**, but only about **1.15%** of sampled observations move by ten points or more.
 
@@ -792,7 +792,7 @@ flowchart LR
 
 ![Feature sensitivity](../../reports/figures/module4/feature_sensitivity_p95.png)
 
-The conclusion is intentionally uneven. We cannot claim demographic fairness from these data, but we can say that the model is reasonably robust across operational tenure segments and is not generally hypersensitive to modest feature changes. The weaker recharge-slice results are consistent with recharge behaviour being central to the model's overall discrimination.
+The conclusion is intentionally limited. The available data do not support a claim of demographic fairness, but the results show that the model is reasonably robust across operational tenure segments and is not generally hypersensitive to modest feature changes. The weaker recharge-slice results are consistent with recharge behaviour being central to the model's overall discrimination.
 
 The temporal-stability limitation remains separate and unresolved.
 
@@ -811,7 +811,7 @@ The temporal-stability limitation remains separate and unresolved.
 
 **Status:** **Completed**
 
-Because the history covers only a short period, we wanted to know how much useful signal survives when the model is made less dependent on tenure, recency, and variables that had shown the strongest temporal movement.
+Because the historical window is short, an additional analysis tested how much useful signal remains when the model is made less dependent on tenure, recency, and variables that had shown the strongest temporal movement.
 
 The Random Forest settings and isotonic calibration stayed fixed. Only the feature set changed.
 
@@ -835,7 +835,7 @@ flowchart LR
 
 The seven remaining variables are all recharge-behaviour measures. That fits the SHAP result, which had already shown that recharge behaviour dominates the model's internal logic.
 
-This comparison was designed after the holdout had already been opened, so it cannot serve as a fresh validation. What it does show is that the model's usefulness does not disappear when we strip away explicit tenure/recency fields and several strongly drifting activity variables. That made the seven-feature version worth testing again on earlier chronological folds.
+This comparison was designed after the holdout had already been opened, so it cannot serve as a fresh validation. It does show that the model's usefulness does not disappear when explicit tenure/recency fields and several strongly drifting activity variables are removed. That result justified testing the seven-feature version again on earlier chronological folds.
 
 **Outputs:**
 - `reports/tables/module4_temporal_light_model_comparison.csv`
@@ -877,7 +877,7 @@ The average-precision gap comes mostly from late June, where the 12-feature mode
 
 ![Development 12 vs 7 calibration](../../reports/figures/module4/development_12_vs_7_calibration.png)
 
-The important point is that the smaller model is genuinely viable across earlier time windows. At the same time, the loss in average precision is real enough that simplification is not free. We therefore kept the seven-feature version as a serious lower-temporal-dependence challenger rather than replacing the formal model.
+The smaller model is genuinely viable across earlier time windows. At the same time, the loss in average precision is large enough to show that simplification is not cost-free. The seven-feature version is therefore retained as a serious lower-temporal-dependence challenger rather than replacing the formal model.
 
 **Outputs:**
 - `reports/tables/module4_dev_12_vs_7_fold_metrics.csv`
@@ -895,7 +895,7 @@ The important point is that the smaller model is genuinely viable across earlier
 
 **Status:** **Completed**
 
-The 7-vs-12 comparison raised a more useful question than simply asking which model was better: what were the five extra predictors actually buying us?
+The 7-vs-12 comparison raised a more useful question than simply asking which model was better: what incremental value did the five additional predictors provide?
 
 The answer is uneven.
 
@@ -1009,7 +1009,7 @@ That later-period edge is modest, but every reported metric points the same way.
 
 The eight-feature model is therefore more than a stripped-down fallback. It shows that most of the useful signal can be captured with a smaller, cleaner feature set. The 12-feature version, however, appears to retain a small amount of extra resilience in the later holdout.
 
-For the assignment, that is enough reason to keep the 12-feature model as the formal selection while documenting the eight-feature version as a credible challenger. A fresh future validation window would be the right place to revisit that decision.
+On the available evidence, the 12-feature model remains the formal academic selection, while the eight-feature version is retained as a credible challenger. A fresh future validation window would provide the appropriate basis for revisiting that decision.
 
 **Outputs:**
 - `reports/tables/module4_8_vs_12_dev_fold_metrics.csv`
@@ -1044,7 +1044,7 @@ Its SHA-256 fingerprint is:
 
 `b70912867f0838f1e020a973ba5aa3f69e601a1dfce681dbe7d8b84e934dab9e`
 
-That fingerprint gives us a simple integrity check between the metadata and the exact local binary.
+That fingerprint provides a simple integrity check between the metadata and the exact local binary.
 
 ```mermaid
 flowchart LR
@@ -1102,7 +1102,7 @@ collected 3 items
 tests/unit/test_api.py ... [100%]
 ```
 
-The assignment report will link directly to the GitHub implementation where the word limit does not justify reproducing technical detail in the narrative.
+The GitHub implementation provides the detailed technical evidence without reproducing all implementation detail in the narrative documentation.
 
 
 ---
@@ -1113,7 +1113,7 @@ The assignment report will link directly to the GitHub implementation where the 
 
 **Status:** **Completed**
 
-The assignment asks for conventional classification metrics in addition to the ranking and calibration measures that are more natural for this project. We therefore froze an operating threshold using development-only chronological predictions and then applied that threshold unchanged to the final holdout.
+Conventional classification metrics complement the ranking and calibration measures that are more natural for this project. An operating threshold was therefore frozen using development-only chronological predictions and then applied unchanged to the final holdout.
 
 The development selection rule matched the original project criterion: seek at least **50% recall** and **45% precision**, then choose the qualifying threshold with the highest F1. A feasible threshold was found at **0.175141**.
 
@@ -1259,7 +1259,7 @@ The run counts align with the modelling workflow: candidate benchmarking, hyperp
 
 The SQLite database is intentionally not committed. The exported CSV and JSON provide the public audit trail without exposing or versioning the database file itself.
 
-The assignment screenshot is now captured from the `module4_model_tuning` experiment in MLflow's Model training view. It shows the 24 tracked tuning runs together with average precision, Brier score, ROC-AUC, top-20% capture and selected hyperparameters (`max_depth`, `min_samples_leaf`). The final-holdout experiment remains available as linked GitHub evidence, but a second screenshot is not necessary.
+The retained MLflow screenshot captures the `module4_model_tuning` experiment in the Model training view. It shows the 24 tracked tuning runs together with average precision, Brier score, ROC-AUC, top-20% capture and selected hyperparameters (`max_depth`, `min_samples_leaf`). The final-holdout experiment remains available as linked GitHub evidence.
 
 **Outputs:**
 - `reports/module4_mlflow_evidence.md`
