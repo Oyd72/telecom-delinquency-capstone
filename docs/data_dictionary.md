@@ -4,7 +4,7 @@ This dictionary covers the public **Delinquency Telecom Dataset** used in the ca
 
 ## How field meanings are assessed
 
-The supplied Kaggle description is the starting point for field meaning. I then check whether the observed values and structure are consistent with that description. Cross-field and within-customer checks provide further evidence where they are useful. Statistical anomaly methods are treated as diagnostics, not as proof that a value is wrong. Blocking rules are limited to cases where the field meaning supports them. An unusual value is not treated automatically an invalid value.
+The supplied Kaggle description is the starting point for field meaning. Field definitions are assessed against the observed values and structure of the dataset. Cross-field and within-customer checks provide additional evidence where relevant. Statistical anomaly methods are treated as diagnostics, not as proof that a value is wrong. Blocking rules are limited to cases where the field meaning supports them. An unusual value is not treated automatically as an invalid value.
 
 ## Field assessment
 
@@ -91,4 +91,4 @@ Subject to cleaning and point-in-time checks, the candidate families are network
 
 Source: Sivakrishna3311, *Delinquency Telecom Dataset*, Kaggle, together with the field-description image supplied with the dataset.
 
-Status: **working Module 3 data dictionary**. It is aligned with `docs/governance/data_cleaning_policy.md` and replaces the preliminary Module 2 version. Material changes should be supported by source evidence or reproducible analysis and recorded in `docs/data_dictionary_changelog.md` and Git history.
+This dictionary records the current field definitions, quality treatment, and modelling status used by the project. It is aligned with `docs/governance/data_cleaning_policy.md`; material changes are supported by source evidence or reproducible analysis and recorded in `docs/data_dictionary_changelog.md` and Git history.
