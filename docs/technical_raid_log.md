@@ -15,4 +15,4 @@ This log keeps track of the main risks, assumptions, issues, and dependencies th
 
 ## Review approach
 
-Review this log at the end of each sprint and update it when new data-quality, modelling, fairness, or implementation concerns appear.
+The log is reviewed at sprint boundaries and whenever new data-quality, modelling, fairness, or implementation concerns arise.
