@@ -2,7 +2,7 @@
 
 This note documents the deployment path for the Module 5 stakeholder dashboard.
 
-It is intentionally additive. Existing Module 4 evidence paths and linked artefacts are not renamed, moved, or replaced.
+It is intentionally additive. Existing Module 4 evidence paths and linked artefacts are not renamed or replaced.
 
 ## Application entry point
 
