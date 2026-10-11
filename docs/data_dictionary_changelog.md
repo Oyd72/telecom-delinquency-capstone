@@ -5,7 +5,7 @@ This file explains the material changes made to `docs/data_dictionary.md` and wh
 ## Working rules
 
 - Start from the meaning provided with the dataset.
-- Keep source documentation separate from our own analytical interpretation.
+- Source documentation is kept separate from project-specific analytical interpretation.
 - Use the Kaggle description as the main semantic reference for these fields.
 - Check that description against the actual CSV structure and observed values.
 - Use cross-field and within-customer checks where they add useful evidence.
@@ -13,7 +13,7 @@ This file explains the material changes made to `docs/data_dictionary.md` and wh
 - Do not turn a pattern seen in this dataset into a universal validation rule without a sound basis.
 - Treat statistical anomaly detection as diagnostic unless stronger semantic or cross-field evidence supports action.
 - Record important exclusions, derived fields, privacy treatments, and leakage concerns explicitly.
-- Keep the dictionary, cleaning policy, and executable validation logic aligned.
+- The dictionary, cleaning policy, and executable validation logic are kept aligned.
 
 ## Change history
 
@@ -40,7 +40,7 @@ This file explains the material changes made to `docs/data_dictionary.md` and wh
 
 ## Open items
 
-The following points are still unresolved and should only be changed when better evidence is available:
+The following points remain unresolved and are changed only when better evidence becomes available:
 
 - exact construction of the `fr_*` fields;
 - encoding of `medianamnt_loans30` and `medianamnt_loans90`;
@@ -51,6 +51,6 @@ The following points are still unresolved and should only be changed when better
 
 ## Relationship with Git history
 
-This log explains the decisions. Git history remains the exact technical record. A future material change to the data dictionary or cleaning policy should have a meaningful commit message, a short entry here explaining the decision and evidence, and, where useful, a reference to the analysis or validation result that prompted it.
+This log explains the decisions, while Git history remains the exact technical record. Material changes to the data dictionary or cleaning policy are recorded with a meaningful commit message, a short explanation of the decision and supporting evidence, and, where useful, a reference to the analysis or validation result that prompted the change.
 
 The runtime audit log serves a different purpose: it records which values or records were changed, removed, quarantined, or flagged during a pipeline run and which rule was applied.
