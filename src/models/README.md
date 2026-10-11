@@ -49,7 +49,7 @@ The following scripts pre-date the final Module 4 modelling sequence and remain 
 - `temporal_calibration.py`
 - `rolling_calibration_stability.py`
 
-They should not be confused with the current final-model workflow.
+These scripts belong to the historical feature-selection and temporal-analysis path and are separate from the current final-model workflow.
 
 
 ### Packaging, assignment artefacts and experiment evidence
