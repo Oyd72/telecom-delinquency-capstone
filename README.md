@@ -44,7 +44,7 @@ Raw validation is diagnostic: it is meant to show the defects present in the unt
 
 ### Additional project areas
 
-- `notebooks/` – exploratory notebooks if needed; reusable logic belongs in `src/`
+- `notebooks/` – exploratory and explanatory notebooks used for interactive analysis; reusable project logic is implemented in `src/`
 - `models/` – committed selected model binary, privacy-safe metadata, and artefact documentation
 - `dashboards/` – Module 5 stakeholder dashboard, final-project monitoring dashboard, and deployment dependencies
 - `config/` – shared configuration, including monitoring thresholds
