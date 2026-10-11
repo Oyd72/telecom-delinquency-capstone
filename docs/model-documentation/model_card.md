@@ -18,7 +18,7 @@ The packaged Module 4 model is a 12-feature Random Forest with isotonic calibrat
 | Metadata | `models/selected_model_metadata.json` |
 | Artefact SHA-256 | `b70912867f0838f1e020a973ba5aa3f69e601a1dfce681dbe7d8b84e934dab9e` |
 
-The SHA-256 value lets us confirm that the committed binary, deployment artefacts, and metadata all refer to the exact model package that was frozen and tested.
+The SHA-256 value confirms that the committed binary, deployment artefacts, and metadata all refer to the exact model package that was frozen and tested.
 
 ## How the final artefact was fitted
 
@@ -72,7 +72,7 @@ The selected calibrated model achieved the following on 14-23 July:
 | Observed delinquency rate | 20.78% |
 | Mean calibrated predicted risk | 17.85% |
 
-The ranking performance remains useful, and calibration is much more realistic than in the uncalibrated model. The difficult part is temporal stability: the holdout ROC-AUC is lower than development performance by more than the threshold we set before opening the holdout. That limitation stays visible throughout the project and is one reason the model is not presented as production-ready.
+The ranking performance remains useful, and calibration is much more realistic than in the uncalibrated model. The principal limitation is temporal stability: the holdout ROC-AUC is lower than development performance by more than the threshold defined before the holdout was opened. That limitation remains visible throughout the project and is one reason the model is not presented as production-ready.
 
 ## What the model seems to be learning
 
@@ -80,19 +80,19 @@ The SHAP analysis gave a fairly coherent picture. Recharge behaviour dominates t
 
 The same pattern appeared in local explanations. Stronger recharge behaviour often pulled lower-risk cases downward, while `rental30` and some recharge-amount patterns pushed higher-risk cases upward.
 
-This helps with interpretability, but it does not turn association into causation. SHAP tells us how the fitted model uses a feature, not what would happen to repayment behaviour if that feature were changed.
+This helps with interpretability, but it does not turn association into causation. SHAP shows how the fitted model uses a feature, not what would happen to repayment behaviour if that feature were changed.
 
-## Why we did not simply keep simplifying
+## Why further simplification was not selected
 
 The later feature experiments were useful because they showed that the 12-feature specification contains more complexity than is strictly necessary for useful ranking.
 
 A seven-feature recharge-only model remained competitive. Adding back only `daily_decr30` produced an eight-feature challenger that was slightly stronger than the 12-feature model on several development measures. The picture reversed on the already-opened holdout, where the 12-feature model was modestly better across all reported metrics.
 
-That left us with a genuine trade-off rather than a clean winner. The eight-feature model is simpler and less dependent on several temporally unstable or redundant variables. The 12-feature model keeps a small advantage on the later holdout. For the assignment, the latter remains the formal model, while the eight-feature version stays documented as a serious challenger for future validation.
+The comparison produced a genuine trade-off rather than a clean winner. The eight-feature model is simpler and less dependent on several temporally unstable or redundant variables, while the 12-feature model retains a small advantage on the later holdout. The 12-feature specification therefore remains the formal academic model, with the eight-feature version retained as a serious challenger for future validation.
 
-## Fairness, and what we cannot claim
+## Fairness and the limits of available evidence
 
-The dataset does not contain attributes that directly identify protected demographic groups or other clearly defensible fairness groups. We therefore did not manufacture substitute groups simply to produce fairness metrics.
+The dataset does not contain attributes that directly identify protected demographic groups or other clearly defensible fairness groups. The project therefore does not manufacture substitute groups simply to produce fairness metrics.
 
 The consequence is straightforward: this project cannot demonstrate demographic fairness from the available data. It can only document that direct protected-group testing was not supported and that indirect proxy effects remain possible.
 
@@ -136,9 +136,9 @@ The current evidence does not support using the model as the sole basis for auto
 
 ## What would need monitoring in a real deployment
 
-A production version would need much more history than we have here. The monitoring focus should include feature drift, delinquency prevalence, ROC-AUC and average precision once outcomes mature, calibration error, Brier score, top-risk-band capture, missingness, out-of-range inputs, and movement in the overall score distribution.
+A production version would require substantially more historical data than are available in this dataset. The monitoring focus should include feature drift, delinquency prevalence, ROC-AUC and average precision once outcomes mature, calibration error, Brier score, top-risk-band capture, missingness, out-of-range inputs, and movement in the overall score distribution.
 
-The eight-feature challenger is worth keeping in that monitoring framework as well. Fresh data would tell us whether its simpler feature set is genuinely more stable or whether the 12-feature model's small holdout advantage persists.
+The eight-feature challenger remains relevant within that monitoring framework. Fresh data would show whether its simpler feature set is genuinely more stable or whether the 12-feature model's small holdout advantage persists.
 
 ## Current position
 
