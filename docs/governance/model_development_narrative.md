@@ -1,6 +1,6 @@
 # Model development narrative
 
-This file records how the modelling approach developed after the cleaned modelling population was created. It is meant to explain the sequence of decisions: what we tested, what we found, and why the next step changed.
+This file records how the modelling approach developed after the cleaned modelling population was created. It explains the sequence of modelling decisions, the evidence produced at each stage, and how that evidence affected subsequent analysis.
 
 ## Starting modelling population
 
@@ -176,4 +176,4 @@ The repository test suite now contains 12 passing tests across `tests/unit/` and
 
 ## Status of this narrative
 
-This is the running account of material modelling decisions. New evidence that changes the model position should be reflected here and in `model_decision_log.md`. Exact code changes remain in Git history, while generated evidence stays under `reports/`.
+This document provides the chronological record of material modelling decisions. Changes to the model position are also recorded in `model_decision_log.md`, while exact code changes remain in Git history and generated evidence stays under `reports/`.
