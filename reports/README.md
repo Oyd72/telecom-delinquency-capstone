@@ -27,7 +27,7 @@ Do not commit:
 
 The post-23 July synthetic scenarios are reproducible from `src/models/generate_post23_synthetic_scenarios.py`. Their row-level CSV stays local; the aggregate scenario summary and charts are sufficient repository evidence.
 
-The privacy audit log is generated under `reports/privacy/`. It is designed not to contain raw identifiers, but it should still be checked before inclusion in a submission or commit.
+The privacy audit log is generated under `reports/privacy/`. It is designed not to contain raw identifiers and remains subject to the same repository-safety controls as other generated evidence.
 
 ## Source of truth
 
