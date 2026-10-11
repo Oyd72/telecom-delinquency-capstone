@@ -41,8 +41,7 @@ For an assignment screenshot, the local MLflow UI can be opened with:
 mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5000
 ```
 
-Then open `http://127.0.0.1:5000` and select a Module 4 experiment.
-A screenshot should show the experiment name and the visible run/metric table.
+Then open `http://127.0.0.1:5000` and select a Module 4 experiment. The retained screenshot shows the experiment name together with the visible run and metric table.
 
 ## Interpretation
 
