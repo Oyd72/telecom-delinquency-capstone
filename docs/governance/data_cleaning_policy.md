@@ -14,7 +14,7 @@ The supplied Kaggle field description is the main reference for field meaning. F
 - Rows are removed only for a defensible record-level reason, such as an exact duplicate or an unusable target/date record.
 - Runtime changes are written to the cleaning audit log. Git history separately records changes to rules and code.
 - `data/processed/` contains only approved predictors, controls, and derived fields.
-- Unusually high or low values are not automatically changed or capped simply because they are rare. They are altered only when there is a clear reason to conclude that they are invalid, contaminated, or inconsistent with the meaning of the field.
+- Unusually high or low values are not automatically changed or capped simply because they are rare. They are altered only when there is a clear reason to conclude that they are invalid or inconsistent with the meaning of the field.
 - Boundaries observed in this dataset are not presented as universal business limits.
 
 ## Structural fields
