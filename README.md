@@ -132,7 +132,7 @@ The Module 5 dashboard is implemented in `dashboards/streamlit_app.py`. It reuse
 
 Live stakeholder dashboard:
 
-https://telecom-delinquency-capstone-3zecwziyb4rhssv8uavlm2.streamlit.app/
+https://telecom-delinquency-dashboard.streamlit.app/
 
 Dashboard sections:
 
