@@ -4,7 +4,7 @@ Business analytics capstone on five-day repayment delinquency in telecom-enabled
 
 ## Project scope
 
-The project uses historical telecom microcredit data for academic work. The aim is to rank repayment risk at the time of a credit request. It does not automate lending decisions and it does not attempt to predict long-term default.
+The project uses historical telecom microcredit data for academic work. The aim is to rank repayment risk after loan issuance, before the five-day outcome is known. It does not automate lending decisions and it does not attempt to predict long-term default.
 
 The modelling population ends on 23 July 2016. Records after that date are kept outside ordinary supervised modelling because every later outcome is successful repayment and the source material does not explain whether the change comes from sampling, labelling, extraction, or the business process itself.
 
